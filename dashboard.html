@@ -2,55 +2,52 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard RT</title>
+    <title>Dashboard RT Digital</title>
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --warn: #EAB308; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 20px 100px 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0, 184, 148, 0.2); }
+        .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0, 184, 148, 0.2); }
         .list-item { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
         .btn-setor { background: var(--warn); color: #000; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 11px; }
         .btn-scan { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px; background: var(--accent); color: white; padding: 18px; border-radius: 15px; text-align: center; text-decoration: none; font-weight: 800; box-shadow: 0 10px 20px rgba(0,184,148,0.3); z-index: 100; }
-        .filter-box { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 25px; border: 1px solid #334155; }
-        input[type="date"] { background: #0F172A; border: 1px solid #334155; color: white; padding: 8px; border-radius: 8px; width: 38%; font-size: 11px; }
+        .box-tunggakan { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 25px; border: 1px solid #334155; }
+        #search-warga { width: 92%; background: #0F172A; border: 1px solid #334155; color: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
     <div class="header">
         <div><h2 id="p-name" style="margin:0; font-size:16px;">...</h2><p id="p-role" style="margin:0; font-size:11px; color:#94A3B8;"></p></div>
-        <button onclick="localStorage.clear(); location.href='index.html'" style="background:none; border:1px solid #F87171; color:#F87171; padding:5px 10px; border-radius:8px; font-size:10px;">LOGOUT</button>
+        <button onclick="localStorage.clear(); location.href='index.html'" style="background:none; border:1px solid #F87171; color:#F87171; padding:5px 10px; border-radius:8px; font-size:10px; font-weight:bold;">LOGOUT</button>
     </div>
 
     <div class="main-card">
-        <small id="label-kas">SALDO BELUM SETOR</small>
+        <small>DANA BELUM SETOR (KAS BERJALAN)</small>
         <h1 id="total-kas" style="margin:5px 0; font-size: 32px;">Rp 0</h1>
     </div>
 
     <div id="admin-view" style="display:none; margin-top:20px;">
-        <h4 style="color:#94A3B8; font-size:11px; letter-spacing:1px;">UANG DI TANGAN PETUGAS</h4>
+        <h4 style="color:#94A3B8; font-size:11px;">POSISI DANA DI PETUGAS</h4>
         <div id="list-kelompok"></div>
 
-        <div class="filter-box">
-            <h4 style="margin:0 0 10px 0; font-size:13px; color:var(--accent);">Ringkasan Kas Masuk</h4>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <input type="date" id="start-date">
-                <input type="date" id="end-date">
-                <button onclick="fetchHistory()" style="background:var(--accent); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold; font-size:11px;">CEK</button>
-            </div>
-            <div id="history-content" style="margin-top:15px; font-size:12px;"></div>
+        <div class="box-tunggakan">
+            <h4 style="margin:0 0 10px 0; color:var(--warn);">Buku Tagihan Warga</h4>
+            <input type="text" id="search-warga" placeholder="Ketik nama warga untuk menagih..." onkeyup="renderTunggakan()">
+            <div id="tunggakan-list" style="max-height: 400px; overflow-y: auto;">
+                </div>
         </div>
     </div>
 
     <div id="petugas-view" style="display:none; margin-top:20px;">
-        <h4 style="color:#94A3B8; font-size:11px; letter-spacing:1px;">RIWAYAT PENGAMBILAN</h4>
+        <h4 style="color:#94A3B8; font-size:11px;">HASIL SCAN ANDA (BELUM SETOR)</h4>
         <div id="list-petugas"></div>
-        <a href="jimpitan.html" class="btn-scan">📸 AMBIL JIMPITAN</a>
+        <a href="jimpitan.html" class="btn-scan">📸 MULAI SCAN BARCODE</a>
     </div>
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
     const user = JSON.parse(localStorage.getItem("jimpitan_user"));
-    if(!user) location.href = "index.html";
+    let dataTunggakan = {};
 
     function callGAS(params, callback) {
         const cb = "cb_" + Math.round(Math.random() * 1000000);
@@ -60,10 +57,11 @@
         document.body.appendChild(s);
     }
 
-    function loadData() {
-        document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Kelompok " + user.kelompok;
-        document.getElementById('p-role').innerText = user.role === 'admin' ? "Bendahara" : "Petugas Ronda";
+    function loadDashboard() {
+        document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Kelp. " + user.kelompok;
+        document.getElementById('p-role').innerText = user.role === 'admin' ? "Pusat Kontrol" : "Petugas Lapangan";
         
+        // 1. Ambil Rekap Dana
         callGAS(`action=getRekap&petugas=${encodeURIComponent(user.kelompok)}&role=${user.role}`, (res) => {
             document.getElementById('total-kas').innerText = "Rp " + (res.total || 0).toLocaleString('id-ID');
             if(user.role === 'admin') {
@@ -71,46 +69,53 @@
                 let h = "";
                 for(let k in res.data) {
                     h += `<div class="list-item">
-                            <div><b style="color:var(--accent)">Kelompok ${k}</b><br><small>Rp ${res.data[k].toLocaleString('id-ID')}</small></div>
-                            <button class="btn-setor" onclick="setor('${k}')">TERIMA</button>
+                            <div><b>${k}</b><br><small>Rp ${res.data[k].toLocaleString('id-ID')}</small></div>
+                            <button class="btn-setor" onclick="terima('${k}')">TERIMA</button>
                           </div>`;
                 }
-                document.getElementById('list-kelompok').innerHTML = h || "Semua kelompok lunas.";
+                document.getElementById('list-kelompok').innerHTML = h || "Duit sudah masuk kas semua.";
+                loadTunggakan(); // Admin otomatis panggil data tunggakan
             } else {
                 document.getElementById('petugas-view').style.display = 'block';
                 let p = "";
                 for(let t in res.data) {
                     p += `<div class="list-item"><span>${t}</span><b>Rp ${res.data[t].toLocaleString('id-ID')}</b></div>`;
                 }
-                document.getElementById('list-petugas').innerHTML = p || "Belum ada data.";
+                document.getElementById('list-petugas').innerHTML = p || "Belum ada hasil scan.";
             }
         });
     }
 
-    function setor(kel) {
-        if(!confirm("Terima uang dari Kelompok " + kel + "?")) return;
-        callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(kel)}`, (res) => { alert(res.message); loadData(); });
-    }
-
-    function fetchHistory() {
-        const s = document.getElementById('start-date').value;
-        const e = document.getElementById('end-date').value;
-        if(!s || !e) return alert("Pilih tanggal!");
-        callGAS(`action=getHistory&start=${s}&end=${e}`, (res) => {
-            let h = "", total = 0;
-            res.data.forEach(x => {
-                total += x.total;
-                h += `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #334155;">
-                        <span>Kelompok ${x.kelompok}</span><b>Rp ${x.total.toLocaleString('id-ID')}</b>
-                      </div>`;
-            });
-            h += `<div style="display:flex; justify-content:space-between; padding:10px 0; color:var(--warn); font-weight:bold;">
-                    <span>TOTAL KAS MASUK</span><span>Rp ${total.toLocaleString('id-ID')}</span>
-                  </div>`;
-            document.getElementById('history-content').innerHTML = res.data.length ? h : "Tidak ada data.";
+    function loadTunggakan() {
+        callGAS(`action=getTunggakan`, (res) => {
+            dataTunggakan = res.data;
+            renderTunggakan();
         });
     }
-    loadData();
+
+    function renderTunggakan() {
+        const query = document.getElementById('search-warga').value.toLowerCase();
+        let h = "";
+        for (let nama in dataTunggakan) {
+            if (nama.toLowerCase().includes(query)) {
+                h += `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #334155;">
+                        <div><b>${nama}</b><br><small style="color:#94A3B8;">Nunggak ${dataTunggakan[nama].kali} hari</small></div>
+                        <b style="color:#F87171;">Rp ${dataTunggakan[nama].total.toLocaleString('id-ID')}</b>
+                      </div>`;
+            }
+        }
+        document.getElementById('tunggakan-list').innerHTML = h || "<small>Tidak ada tunggakan.</small>";
+    }
+
+    function terima(kel) {
+        if(!confirm("Uang dari Kelompok " + kel + " sudah masuk kas?")) return;
+        callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(kel)}`, (res) => { 
+            alert(res.message); 
+            loadDashboard(); 
+        });
+    }
+
+    loadDashboard();
 </script>
 </body>
 </html>
