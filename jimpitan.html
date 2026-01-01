@@ -5,21 +5,47 @@
     <title>Scan | RT Digital</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --bg: #0F172A; --accent: #00B894; --text: #F8FAFC; }
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; text-align: center; }
-        .btn-back { background: rgba(255,255,255,0.05); color: var(--text); padding: 10px 15px; border-radius: 12px; text-decoration: none; display: inline-block; margin-bottom: 20px; float: left; font-size: 14px; border: 1px solid rgba(255,255,255,0.1); }
-        #reader { border-radius: 24px; overflow: hidden; border: 2px solid var(--accent) !important; margin-top: 10px; clear: both; }
-        .input-box { background: #1E293B; border-radius: 24px; padding: 25px; margin-top: 20px; border: 1px solid rgba(255,255,255,0.05); }
-        .qb { flex: 1; padding: 15px; border-radius: 12px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-weight: 700; margin-bottom: 15px; cursor: pointer; }
-        input { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid #334155; background: #0F172A; color: white; font-size: 18px; text-align: center; box-sizing: border-box; margin-bottom: 20px; }
+        
+        /* Navigasi */
+        .header-nav { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 15px; }
+        .btn-back { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 12px; text-decoration: none; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        
+        /* Container Scanner */
+        #reader { border-radius: 24px; overflow: hidden; border: 2px solid var(--accent) !important; box-shadow: 0 0 25px rgba(0, 184, 148, 0.2); background: #000; }
+        
+        /* Card Petunjuk di Bawah Kamera */
+        .guide-card { background: var(--card); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 16px; margin-top: 20px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .guide-card span { font-size: 14px; color: #94A3B8; font-weight: 500; }
+        .guide-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        /* Form Input */
+        .input-box { background: var(--card); border-radius: 24px; padding: 25px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.05); animation: fadeInUp 0.4s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .qb { flex: 1; padding: 15px; border-radius: 12px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-weight: 700; cursor: pointer; }
+        input { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid #334155; background: #0F172A; color: white; font-size: 18px; text-align: center; box-sizing: border-box; margin: 15px 0; outline: none; }
+        
         .btn-save { width: 100%; padding: 18px; border-radius: 16px; border: none; background: var(--accent); color: white; font-weight: 800; font-size: 16px; box-shadow: 0 10px 20px rgba(0, 184, 148, 0.2); }
-        .btn-cancel { background: transparent; color: #F87171; border: none; margin-top: 15px; cursor: pointer; font-size: 14px; }
+        .btn-cancel { background: transparent; color: var(--danger); border: none; margin-top: 15px; font-weight: 600; cursor: pointer; }
     </style>
 </head>
 <body>
-    <a href="dashboard.html" class="btn-back">← Dashboard</a>
-    <h3 id="step">Arahkan Kamera ke QR</h3>
-    <div id="reader"></div>
+
+    <div class="header-nav">
+        <a href="dashboard.html" class="btn-back">← Dashboard</a>
+    </div>
+
+    <div id="scanner-container">
+        <div id="reader"></div>
+        <div class="guide-card" id="guide">
+            <div class="guide-dot"></div>
+            <span>Arahkan kamera ke QR Code warga</span>
+        </div>
+    </div>
 
     <div id="form-input" style="display:none;">
         <div class="input-box">
@@ -29,7 +55,7 @@
                 <button class="qb" onclick="setNom(1000)">Rp 1.000</button>
             </div>
             <input type="number" id="nom" placeholder="Nominal manual...">
-            <button class="btn-save" id="btn-save" onclick="simpan()">SIMPAN DATA</button>
+            <button class="btn-save" id="btn-save" onclick="simpan()">SIMPAN DATA JIMPITAN</button>
             <button class="btn-cancel" onclick="location.reload()">BATAL / SCAN ULANG</button>
         </div>
     </div>
@@ -44,18 +70,19 @@
 
     scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
         warga = txt; scanner.stop();
-        document.getElementById('reader').style.display = 'none';
-        document.getElementById('step').style.display = 'none';
+        document.getElementById('scanner-container').style.display = 'none';
         document.getElementById('form-input').style.display = 'block';
         document.getElementById('n-warga').innerText = txt;
-    });
+    }).catch(err => { alert("Kamera error: " + err); });
 
     function setNom(a) { document.getElementById('nom').value = a; }
 
     async function simpan() {
         const n = document.getElementById('nom').value;
         if(!n) return alert("Isi nominal!");
-        document.getElementById('btn-save').innerText = "Menyimpan...";
+        const btn = document.getElementById('btn-save');
+        btn.innerText = "Menyimpan..."; btn.disabled = true;
+        
         const cb = "cb_" + Math.round(Math.random() * 1000000);
         const s = document.createElement('script');
         window[cb] = (res) => {
