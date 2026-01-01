@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan | RT Digital</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root { --bg: #0F172A; --accent: #00B894; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; text-align: center; }
+        #reader { border-radius: 24px; overflow: hidden; border: 2px solid var(--accent) !important; margin-top: 20px; }
+        .input-box { background: #1E293B; border-radius: 24px; padding: 20px; margin-top: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .quick-btn { display: flex; gap: 10px; margin-bottom: 15px; }
+        .qb { flex: 1; padding: 15px; border-radius: 12px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-weight: 700; cursor: pointer; }
+        .qb:active { background: var(--accent); color: white; }
+        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #0F172A; color: white; font-size: 18px; text-align: center; box-sizing: border-box; margin-bottom: 15px; }
+        .btn-save { width: 100%; padding: 18px; border-radius: 15px; border: none; background: var(--accent); color: white; font-weight: 800; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h3 id="step">Arahkan Kamera ke QR</h3>
+    <div id="reader"></div>
+
+    <div id="form-input" class="hidden" style="display:none;">
+        <div class="input-box">
+            <h2 id="n-warga" style="margin-top:0; color:var(--accent);"></h2>
+            <div class="quick-btn">
+                <button class="qb" onclick="setNom(500)">Rp 500</button>
+                <button class="qb" onclick="setNom(1000)">Rp 1.000</button>
+            </div>
+            <input type="number" id="nom" placeholder="Nominal manual...">
+            <button class="btn-save" onclick="simpan()">SIMPAN DATA</button>
+        </div>
+    </div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    if(!user) window.location.href = "index.html";
+
+    const scanner = new Html5Qrcode("reader");
+    let warga = "";
+
+    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+        warga = txt; scanner.stop();
+        document.getElementById('reader').style.display = 'none';
+        document.getElementById('step').style.display = 'none';
+        document.getElementById('form-input').style.display = 'block';
+        document.getElementById('n-warga').innerText = txt;
+    });
+
+    function setNom(a) { document.getElementById('nom').value = a; }
+
+    async function simpan() {
+        const n = document.getElementById('nom').value;
+        if(!n) return alert("Isi nominal!");
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        window[cb] = (res) => {
+            alert(res.message); window.location.href = "dashboard.html";
+        };
+        s.src = `${scriptURL}?callback=${cb}&action=simpan&nama=${encodeURIComponent(warga)}&nominal=${n}&petugas=${encodeURIComponent(user.kelompok)}`;
+        document.body.appendChild(s);
+    }
+</script>
+</body>
+</html>
