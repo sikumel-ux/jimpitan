@@ -5,30 +5,32 @@
     <title>Scan | RT Digital</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --bg: #0F172A; --accent: #00B894; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; text-align: center; }
-        #reader { border-radius: 24px; overflow: hidden; border: 2px solid var(--accent) !important; margin-top: 20px; }
-        .input-box { background: #1E293B; border-radius: 24px; padding: 20px; margin-top: 20px; border: 1px solid rgba(255,255,255,0.05); }
-        .quick-btn { display: flex; gap: 10px; margin-bottom: 15px; }
-        .qb { flex: 1; padding: 15px; border-radius: 12px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-weight: 700; cursor: pointer; }
-        .qb:active { background: var(--accent); color: white; }
-        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #0F172A; color: white; font-size: 18px; text-align: center; box-sizing: border-box; margin-bottom: 15px; }
-        .btn-save { width: 100%; padding: 18px; border-radius: 15px; border: none; background: var(--accent); color: white; font-weight: 800; font-size: 16px; }
+        :root { --bg: #0F172A; --accent: #00B894; --text: #F8FAFC; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; text-align: center; }
+        .btn-back { background: rgba(255,255,255,0.05); color: var(--text); padding: 10px 15px; border-radius: 12px; text-decoration: none; display: inline-block; margin-bottom: 20px; float: left; font-size: 14px; border: 1px solid rgba(255,255,255,0.1); }
+        #reader { border-radius: 24px; overflow: hidden; border: 2px solid var(--accent) !important; margin-top: 10px; clear: both; }
+        .input-box { background: #1E293B; border-radius: 24px; padding: 25px; margin-top: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .qb { flex: 1; padding: 15px; border-radius: 12px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-weight: 700; margin-bottom: 15px; cursor: pointer; }
+        input { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid #334155; background: #0F172A; color: white; font-size: 18px; text-align: center; box-sizing: border-box; margin-bottom: 20px; }
+        .btn-save { width: 100%; padding: 18px; border-radius: 16px; border: none; background: var(--accent); color: white; font-weight: 800; font-size: 16px; box-shadow: 0 10px 20px rgba(0, 184, 148, 0.2); }
+        .btn-cancel { background: transparent; color: #F87171; border: none; margin-top: 15px; cursor: pointer; font-size: 14px; }
     </style>
 </head>
 <body>
+    <a href="dashboard.html" class="btn-back">← Dashboard</a>
     <h3 id="step">Arahkan Kamera ke QR</h3>
     <div id="reader"></div>
 
-    <div id="form-input" class="hidden" style="display:none;">
+    <div id="form-input" style="display:none;">
         <div class="input-box">
-            <h2 id="n-warga" style="margin-top:0; color:var(--accent);"></h2>
-            <div class="quick-btn">
+            <h2 id="n-warga" style="color:var(--accent); margin-top:0;"></h2>
+            <div style="display:flex; gap:10px;">
                 <button class="qb" onclick="setNom(500)">Rp 500</button>
                 <button class="qb" onclick="setNom(1000)">Rp 1.000</button>
             </div>
             <input type="number" id="nom" placeholder="Nominal manual...">
-            <button class="btn-save" onclick="simpan()">SIMPAN DATA</button>
+            <button class="btn-save" id="btn-save" onclick="simpan()">SIMPAN DATA</button>
+            <button class="btn-cancel" onclick="location.reload()">BATAL / SCAN ULANG</button>
         </div>
     </div>
 
@@ -53,6 +55,7 @@
     async function simpan() {
         const n = document.getElementById('nom').value;
         if(!n) return alert("Isi nominal!");
+        document.getElementById('btn-save').innerText = "Menyimpan...";
         const cb = "cb_" + Math.round(Math.random() * 1000000);
         const s = document.createElement('script');
         window[cb] = (res) => {
