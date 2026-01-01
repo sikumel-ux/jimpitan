@@ -6,50 +6,57 @@
     <title>Jimpitan Digital RT</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
         .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
         input, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
         button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:active { transform: scale(0.95); }
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; }
+        button:disabled { background: #ccc; }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; margin-top: 10px; }
         .hidden { display: none; }
         .status { margin: 15px 0; font-weight: bold; color: #1a73e8; }
-        .rekap-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
+        .rekap-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        h2 { color: #1a73e8; margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <div id="sec-login">
-        <h2 style="color: #1a73e8;">Jimpitan RT</h2>
+        <h2>Jimpitan RT</h2>
+        <p style="color: #666; font-size: 14px;">Masukkan akun petugas/admin</p>
         <input type="text" id="user" placeholder="Username">
         <input type="password" id="pass" placeholder="Password">
         <button id="btn-login" onclick="login()">MASUK</button>
     </div>
 
     <div id="sec-scanner" class="hidden">
-        <p id="info-petugas" style="margin-bottom: 15px; font-weight: bold;"></p>
+        <p id="info-petugas" style="font-weight: bold; color: #555;"></p>
         <div id="reader"></div>
-        <p id="msg" class="status">Scan QR Rumah Warga</p>
+        <p id="msg" class="status">Arahkan kamera ke QR Rumah</p>
         
         <div id="form-input" class="hidden">
-            <h3 id="nama-warga"></h3>
+            <h3 id="nama-warga" style="margin-top: 0;"></h3>
+            <label style="font-size: 12px; color: #666;">Nominal Jimpitan (Rp):</label>
             <input type="number" id="nom" value="2000">
-            <button onclick="simpan()" style="background: #28a745;">SIMPAN DATA</button>
-            <button onclick="location.reload()" style="background: #666;">BATAL</button>
+            <button onclick="simpan()" style="background: #28a745;">KONFIRMASI SIMPAN</button>
+            <button onclick="location.reload()" style="background: #666;">BATAL / KELUAR</button>
         </div>
     </div>
 
     <div id="sec-admin" class="hidden">
-        <h2>📊 Rekap Kas</h2>
-        <h1 id="total-kas" style="color: #2e7d32;">Rp 0</h1>
+        <h2>📊 Rekapitulasi Kas</h2>
+        <div style="background: #e8f5e9; padding: 20px; border-radius: 15px; margin: 15px 0;">
+            <small>Total Terkumpul:</small>
+            <h1 id="total-kas" style="margin: 5px 0; color: #2e7d32;">Rp 0</h1>
+        </div>
         <div id="list-rekap"></div>
         <button onclick="location.reload()" style="background: #666; margin-top: 20px;">LOGOUT</button>
     </div>
 </div>
 
 <script>
-    // URL GAS KAMU YANG SUDAH AKTIF
+    // URL Web App GAS Kamu
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyXw9o8id8jxwXoAK9-oW01U6vOPSdqa-9XXCkYMrAWu0oCSf5ND_qPBPzqkp9nasgv/exec';
     
     let userKlp = "";
@@ -61,14 +68,15 @@
         const p = document.getElementById('pass').value;
         const btn = document.getElementById('btn-login');
 
-        btn.innerText = "Proses...";
+        if(!u || !p) { alert("Isi Username dan Password!"); return; }
+
+        btn.innerText = "Mengecek...";
         btn.disabled = true;
 
-        // Kirim data tanpa header aneh-aneh agar tidak kena CORS
-        fetch(scriptURL, {
-            method: 'POST',
-            body: JSON.stringify({ action: "login", username: u, password: p })
-        })
+        // Kirim data via Query Parameters (Metode Paling Aman dari Failed to Fetch)
+        const url = `${scriptURL}?action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`;
+
+        fetch(url, { method: 'POST' })
         .then(res => res.json())
         .then(res => {
             if (res.status === "success") {
@@ -80,18 +88,18 @@
                     muatRekap();
                 } else {
                     document.getElementById('sec-scanner').classList.remove('hidden');
-                    document.getElementById('info-petugas').innerText = "Petugas: " + userKlp;
+                    document.getElementById('info-petugas').innerText = "Kelompok: " + userKlp;
                     mulaiScan();
                 }
             } else {
-                alert("Username atau Password salah!");
+                alert("Login Gagal! Akun tidak ditemukan.");
                 btn.innerText = "MASUK";
                 btn.disabled = false;
             }
         })
         .catch(err => {
+            alert("Koneksi Error. Pastikan setingan GAS sudah 'Anyone'.");
             console.error(err);
-            alert("Gagal koneksi ke server. Pastikan Deployment di GAS sudah 'Anyone'.");
             btn.innerText = "MASUK";
             btn.disabled = false;
         });
@@ -104,30 +112,28 @@
             document.getElementById('reader').classList.add('hidden');
             document.getElementById('msg').classList.add('hidden');
             document.getElementById('form-input').classList.remove('hidden');
-            document.getElementById('nama-warga').innerText = "Warga: " + txt;
-        });
+            document.getElementById('nama-warga').innerText = "Rumah: " + txt;
+        }).catch(err => alert("Kamera error: " + err));
     }
 
     function simpan() {
         const n = document.getElementById('nom').value;
-        document.getElementById('form-input').innerHTML = "<h3>Menyimpan...</h3>";
+        const urlSimpan = `${scriptURL}?action=simpan&nama=${encodeURIComponent(wargaTerpilih)}&nominal=${n}&petugas=${encodeURIComponent(userKlp)}`;
 
-        fetch(scriptURL, {
-            method: 'POST',
-            body: JSON.stringify({ action: "simpan", nama: wargaTerpilih, nominal: n, petugas: userKlp })
-        })
+        document.getElementById('form-input').innerHTML = "<h3>Sedang menyimpan...</h3>";
+
+        fetch(urlSimpan, { method: 'POST' })
         .then(res => res.text())
         .then(res => {
             alert(res);
             location.reload();
-        });
+        })
+        .catch(err => alert("Gagal Simpan: " + err));
     }
 
     function muatRekap() {
-        fetch(scriptURL, {
-            method: 'POST',
-            body: JSON.stringify({ action: "getRekap" })
-        })
+        const urlRekap = `${scriptURL}?action=getRekap`;
+        fetch(urlRekap, { method: 'POST' })
         .then(res => res.json())
         .then(res => {
             document.getElementById('total-kas').innerText = "Rp " + res.total.toLocaleString('id-ID');
