@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jimpitan Scanner RT</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root { --primary: #1a73e8; --success: #28a745; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .card { max-width: 450px; width: 100%; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        h2 { color: var(--primary); margin-top: 0; }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; }
+        #status { margin: 20px 0; padding: 15px; border-radius: 10px; font-weight: bold; background: #e8f0fe; color: #1967d2; min-height: 24px; }
+        .input-group { display: none; background: #fff; padding: 20px; border: 2px solid var(--primary); border-radius: 15px; margin-top: 10px; }
+        input[type="number"] { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.98); filter: brightness(0.9); }
+        .footer { margin-top: 20px; font-size: 12px; color: #888; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🌙 Jimpitan Malam</h2>
+    <div id="status">Arahkan kamera ke QR Code warga</div>
+    
+    <div id="reader"></div>
+
+    <div id="input-group" class="input-group">
+        <h3 id="nama-warga" style="margin-top:0; color:#333;"></h3>
+        <label for="nominal">Masukkan Nominal (Rp):</label>
+        <input type="number" id="nominal" value="2000" pattern="\d*">
+        <button onclick="kirimData()">SIMPAN DATA</button>
+        <p style="font-size: 11px; color: #666; margin-top: 10px;">Klik simpan untuk konfirmasi</p>
+    </div>
+
+    <div class="footer">Sistem Jimpitan Digital v1.0</div>
+</div>
+
+<script>
+    // 1. PASTE LINK WEB APP GAS (AKHIRAN /exec) DI SINI
+    const scriptURL = 'MASUKKAN_URL_DEPLOYMENT_GAS_KAMU';
+    
+    let scannedName = "";
+    const html5QrCode = new Html5Qrcode("reader");
+    const statusDiv = document.getElementById('status');
+
+    // Suara notifikasi
+    function playAudio(text) {
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'id-ID';
+        window.speechSynthesis.speak(msg);
+    }
+
+    // Konfigurasi Kamera
+    const config = { fps: 15, qrbox: { width: 250, height: 250 } };
+
+    // Mulai Scanner
+    html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+    .catch(err => {
+        statusDiv.innerText = "Gagal akses kamera. Pastikan HTTPS!";
+        statusDiv.style.color = "red";
+    });
+
+    function onScanSuccess(decodedText) {
+        scannedName = decodedText;
+        playAudio("Diterima");
+        
+        // Stop kamera & tampilkan form
+        html5QrCode.stop().then(() => {
+            document.getElementById('reader').style.display = "none";
+            document.getElementById('nama-warga').innerText = "Warga: " + decodedText;
+            document.getElementById('input-group').style.display = "block";
+            statusDiv.innerText = "Data ditemukan!";
+        });
+    }
+
+    function kirimData() {
+        const nominal = document.getElementById('nominal').value;
+        statusDiv.innerText = "Sedang mencatat ke cloud...";
+        statusDiv.style.color = "orange";
+
+        const data = {
+            nama: scannedName,
+            nominal: nominal
+        };
+
+        // Kirim ke Google Sheets via GAS
+        fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        })
+        .then(response => response.text())
+        .then(hasil => {
+            playAudio("Selesai");
+            alert(hasil);
+            location.reload(); // Refresh untuk scan warga berikutnya
+        })
+        .catch(error => {
+            console.error('Error!', error.message);
+            statusDiv.innerText = "Koneksi Bermasalah!";
+            statusDiv.style.color = "red";
+        });
+    }
+</script>
+
+</body>
+</html>
