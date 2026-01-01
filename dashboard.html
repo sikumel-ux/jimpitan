@@ -5,54 +5,55 @@
     <title>Dashboard | RT Digital</title>
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --warn: #EAB308; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; padding-bottom: 100px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0, 184, 148, 0.2); margin-bottom: 25px;}
-        .list-item { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
-        .btn-setor { background: var(--warn); color: #000; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer; }
-        
-        /* Tombol Scan Floating */
-        .btn-scan { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 350px; background: var(--accent); color: white; padding: 16px; border-radius: 15px; text-align: center; text-decoration: none; font-weight: 800; box-shadow: 0 10px 20px rgba(0, 184, 148, 0.3); z-index: 999; display: block; }
-        
-        .filter-box { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 20px; border: 1px solid #334155; }
-        input[type="date"] { background: #0F172A; border: 1px solid #334155; color: white; padding: 8px; border-radius: 8px; width: 40%; font-size: 12px; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; padding-bottom: 120px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 25px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0, 184, 148, 0.2); }
+        .item { background: var(--card); padding: 18px; border-radius: 15px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
+        .btn-setor { background: var(--warn); color: #000; border: none; padding: 10px 15px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 12px; }
+        .btn-scan { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px; background: var(--accent); color: white; padding: 18px; border-radius: 15px; text-align: center; text-decoration: none; font-weight: 800; box-shadow: 0 10px 25px rgba(0, 184, 148, 0.3); z-index: 100; }
+        .logout { background: rgba(248, 113, 113, 0.1); border: 1px solid #F87171; color: #F87171; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .filter-box { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 25px; border: 1px solid #334155; }
+        input[type="date"] { background: #0F172A; border: 1px solid #334155; color: white; padding: 8px; border-radius: 8px; width: 40%; font-size: 11px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div><h2 id="p-name" style="margin:0; font-size:16px;">Memuat...</h2><p id="p-role" style="margin:0; font-size:11px; color:#94A3B8;"></p></div>
-        <button onclick="localStorage.clear(); window.location.href='index.html'" style="background:rgba(248,113,113,0.1); color:#F87171; border:none; padding:6px 10px; border-radius:8px; font-weight:700; font-size:11px;">LOGOUT</button>
+        <div><h2 id="p-name" style="margin:0; font-size:18px;">Memuat...</h2><p id="p-role" style="margin:0; font-size:12px; color:#94A3B8;"></p></div>
+        <button class="logout" onclick="localStorage.clear(); location.href='index.html'">KELUAR</button>
     </div>
 
     <div class="main-card">
-        <small id="label-total">SALDO BERJALAN</small>
-        <h1 id="total-kas" style="margin:5px 0; font-size:32px;">Rp 0</h1>
+        <small id="label-total">SALDO BELUM SETOR</small>
+        <h1 id="total-kas" style="margin:5px 0; font-size: 32px;">Rp 0</h1>
     </div>
 
-    <div id="admin-view" style="display:none;">
-        <h4 style="color:#94A3B8; font-size:12px; margin-bottom:10px;">DANA DI TANGAN PETUGAS</h4>
+    <div id="admin-view" style="display:none; margin-top:25px;">
+        <h4 style="color:#94A3B8; font-size:12px; letter-spacing: 1px;">TOTAL PER KELOMPOK</h4>
         <div id="list-kelompok"></div>
+
         <div class="filter-box">
-            <h4 style="margin:0 0 10px 0; font-size:13px; color:var(--accent);">History Setoran</h4>
-            <div style="display:flex; justify-content:space-between;">
+            <h4 style="margin:0 0 10px 0; font-size:14px; color:var(--accent);">History Setoran</h4>
+            <div style="display:flex; justify-content:space-between; align-items: center;">
                 <input type="date" id="start-date">
                 <input type="date" id="end-date">
-                <button onclick="filterHistory()" style="background:var(--accent); border:none; color:white; padding:5px 10px; border-radius:8px; font-weight:bold;">Cek</button>
+                <button onclick="filterHistory()" style="background:var(--accent); border:none; color:white; padding:8px 12px; border-radius:8px; font-weight:bold;">CEK</button>
             </div>
-            <div id="history-content" style="font-size:11px; margin-top:10px; color:#94A3B8;"></div>
+            <div id="history-content" style="font-size:11px; margin-top:10px; color:#94A3B8;">Pilih tanggal untuk melihat history rapat.</div>
         </div>
     </div>
 
-    <div id="petugas-view" style="display:none;">
-        <h4 style="color:#94A3B8; font-size:12px; margin-bottom:10px;">RIWAYAT PENGAMBILAN</h4>
+    <div id="petugas-view" style="display:none; margin-top:25px;">
+        <h4 style="color:#94A3B8; font-size:12px; letter-spacing: 1px;">RIWAYAT PENGAMBILAN</h4>
         <div id="list-petugas"></div>
         <a href="jimpitan.html" class="btn-scan">📸 AMBIL JIMPITAN</a>
     </div>
 
 <script>
-    const scriptURL = 'PASTE_URL_DEPLOYMENT_BARU_DI_SINI';
+    // URL GAS SUDAH DIMASUKKAN
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
     const user = JSON.parse(localStorage.getItem("jimpitan_user"));
-    if(!user) window.location.href = "index.html";
+    
+    if(!user) location.href = "index.html";
 
     function callGAS(params, callback) {
         const cb = "cb_" + Math.round(Math.random() * 1000000);
@@ -63,8 +64,8 @@
     }
 
     function loadData() {
-        document.getElementById('p-name').innerText = user.role === 'admin' ? "Panel Admin" : "Kelompok " + user.kelompok;
-        document.getElementById('p-role').innerText = user.role === 'admin' ? "Bendahara RT" : "Petugas Ronda";
+        document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Kelompok " + user.kelompok;
+        document.getElementById('p-role').innerText = user.role === 'admin' ? "Mode Bendahara" : "Petugas Ronda";
         
         callGAS(`action=getRekap&petugas=${encodeURIComponent(user.kelompok)}&role=${user.role}`, (res) => {
             document.getElementById('total-kas').innerText = "Rp " + (res.total || 0).toLocaleString('id-ID');
@@ -73,38 +74,48 @@
                 document.getElementById('admin-view').style.display = 'block';
                 let h = "";
                 for(let k in res.data) {
-                    h += `<div class="list-item">
+                    h += `<div class="item">
                             <div><b style="color:var(--accent)">Kelompok ${k}</b><br><small>Rp ${res.data[k].toLocaleString('id-ID')}</small></div>
-                            <button class="btn-setor" onclick="setorKelompok('${k}')">TERIMA SETORAN</button>
+                            <button class="btn-setor" onclick="terimaSetoran('${k}')">TERIMA</button>
                           </div>`;
                 }
-                document.getElementById('list-kelompok').innerHTML = h || "Semua sudah setor.";
+                document.getElementById('list-kelompok').innerHTML = h || "Semua kelompok sudah setor.";
             } else {
                 document.getElementById('petugas-view').style.display = 'block';
                 let p = "";
                 for(let t in res.data) {
-                    p += `<div class="list-item"><span>${t}</span><b>Rp ${res.data[t].toLocaleString('id-ID')}</b></div>`;
+                    p += `<div class="item"><span>${t}</span><b>Rp ${res.data[t].toLocaleString('id-ID')}</b></div>`;
                 }
                 document.getElementById('list-petugas').innerHTML = p || "Belum ada riwayat pengambilan.";
             }
         });
     }
 
-    function setorKelompok(kel) {
-        if(!confirm("Uang dari Kelompok " + kel + " sudah diterima?")) return;
-        callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(kel)}`, (res) => { alert(res.message); loadData(); });
+    function terimaSetoran(kel) {
+        if(!confirm("Terima setoran dari Kelompok " + kel + "? Saldo kelompok ini akan kembali ke Rp 0.")) return;
+        callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(kel)}`, (res) => {
+            alert(res.message);
+            loadData(); // Refresh tampilan
+        });
     }
 
     function filterHistory() {
         const s = document.getElementById('start-date').value;
         const e = document.getElementById('end-date').value;
-        if(!s || !e) return alert("Pilih tanggal!");
+        if(!s || !e) return alert("Pilih rentang tanggal!");
+        
+        document.getElementById('history-content').innerText = "Mencari...";
         callGAS(`action=getHistory&start=${s}&end=${e}`, (res) => {
             let h = "";
-            res.data.forEach(x => { h += `<div style="border-bottom:1px solid #334155; padding:5px 0;">${x.tgl} | <b>${x.kelompok}</b>: Rp ${x.nom.toLocaleString('id-ID')}</div>`; });
-            document.getElementById('history-content').innerHTML = h || "Tidak ada riwayat.";
+            res.data.forEach(x => {
+                h += `<div style="border-bottom:1px solid #334155; padding:8px 0;">
+                        <span style="color:var(--accent)">${x.tgl}</span> | <b>${x.kelompok}</b>: Rp ${x.nom.toLocaleString('id-ID')}
+                      </div>`;
+            });
+            document.getElementById('history-content').innerHTML = h || "Tidak ada riwayat setoran.";
         });
     }
+
     loadData();
 </script>
 </body>
