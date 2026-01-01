@@ -23,10 +23,10 @@
 <div class="card">
     <div id="sec-login">
         <h2 style="color:#1a73e8">Jimpitan Digital</h2>
-        <p>Silakan login petugas/admin</p>
+        <p>Login Petugas</p>
         <input type="text" id="user" placeholder="Username">
         <input type="password" id="pass" placeholder="Password">
-        <button onclick="login()">MASUK</button>
+        <button id="btn-login" onclick="login()">MASUK</button>
     </div>
 
     <div id="sec-scanner" class="hidden">
@@ -54,7 +54,9 @@
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzWjiXCA9uT-tilqS0R4V8vC412Tz9GiCkiQnglpLRjxVXDe-5uFHgbVsDUoS0Rd1eU/exec'; // GANTI DENGAN LINK EXEC GAS
+    // MASUKKAN URL EXEC GAS KAMU DI SINI
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzWjiXCA9uT-tilqS0R4V8vC412Tz9GiCkiQnglpLRjxVXDe-5uFHgbVsDUoS0Rd1eU/exec'; 
+    
     let userKlp = "";
     let dataWarga = "";
     const scanner = new Html5Qrcode("reader");
@@ -62,13 +64,32 @@
     function login() {
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
-        document.getElementById('sec-login').innerText = "Mengecek akun...";
+        const btn = document.getElementById('btn-login');
         
-        fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "login", username: u, password: p }) })
-        .then(res => res.json()).then(res => {
+        btn.innerText = "Mengecek akun...";
+        btn.disabled = true;
+        
+        fetch(scriptURL, { 
+            method: 'POST', 
+            mode: 'no-cors', // Menghindari masalah CORS di beberapa browser
+            body: JSON.stringify({ action: "login", username: u, password: p }) 
+        })
+        // Karena pakai no-cors, kita tidak bisa baca JSON response secara langsung.
+        // Maka kita ubah strateginya: kirim biasa saja tanpa no-cors tapi dengan header yang benar di GAS.
+        
+        // REVISI FETCH UNTUK HANDLING CORS:
+        fetch(scriptURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: "login", username: u, password: p })
+        })
+        .then(res => res.json())
+        .then(res => {
             if (res.status === "success") {
                 userKlp = res.kelompok;
                 document.getElementById('sec-login').classList.add('hidden');
+                
+                // Cek Role di Frontend berdasarkan response GAS
                 if (res.role === "admin") {
                     document.getElementById('sec-admin').classList.remove('hidden');
                     loadAdmin();
@@ -77,7 +98,15 @@
                     document.getElementById('info-petugas').innerText = "Kelompok: " + userKlp;
                     startScan();
                 }
-            } else { alert("Login Gagal!"); location.reload(); }
+            } else { 
+                alert("Login Gagal! Periksa Username & Password."); 
+                location.reload(); 
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Terjadi kesalahan koneksi ke Google Sheets.");
+            location.reload();
         });
     }
 
@@ -85,27 +114,41 @@
         scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
             dataWarga = txt;
             scanner.stop();
-            document.getElementById('reader').style.display = "none";
-            document.getElementById('msg').style.display = "none";
+            document.getElementById('reader').classList.add('hidden');
+            document.getElementById('msg').classList.add('hidden');
             document.getElementById('form-input').classList.remove('hidden');
-            document.getElementById('target-warga').innerText = txt;
+            document.getElementById('target-warga').innerText = "Rumah: " + txt;
         });
     }
 
     function simpan() {
         const n = document.getElementById('nom').value;
-        document.getElementById('form-input').innerText = "Menyimpan ke Google Sheets...";
-        fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "simpan", nama: dataWarga, nominal: n, petugas: userKlp }) })
-        .then(res => res.text()).then(res => { alert(res); location.reload(); });
+        document.getElementById('form-input').innerHTML = "<h3>Menyimpan...</h3>";
+        
+        fetch(scriptURL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: "simpan", nama: dataWarga, nominal: n, petugas: userKlp }) 
+        })
+        .then(res => res.text())
+        .then(res => { 
+            alert(res); 
+            location.reload(); 
+        });
     }
 
     function loadAdmin() {
-        fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "getRekap" }) })
-        .then(res => res.json()).then(res => {
-            document.getElementById('total-kas').innerText = "Rp " + res.total.toLocaleString();
+        fetch(scriptURL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: "getRekap" }) 
+        })
+        .then(res => res.json())
+        .then(res => {
+            document.getElementById('total-kas').innerText = "Rp " + res.total.toLocaleString('id-ID');
             let h = "";
             for (let k in res.detail) {
-                h += `<div class="item-list"><span>${k}</span><b>Rp ${res.detail[k].toLocaleString()}</b></div>`;
+                h += `<div class="item-list"><span>${k}</span><b>Rp ${res.detail[k].toLocaleString('id-ID')}</b></div>`;
             }
             document.getElementById('list-detail').innerHTML = h;
         });
