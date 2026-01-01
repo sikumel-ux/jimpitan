@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | RT Digital</title>
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --warn: #EAB308; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 20px 100px 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 25px; border-radius: 24px; box-shadow: 0 15px 30px rgba(0, 184, 148, 0.2); }
+        .history-item { background: var(--card); padding: 16px; border-radius: 18px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .btn-reset { width: 100%; padding: 10px; background: var(--warn); border: none; border-radius: 10px; font-weight: 800; margin-top: 12px; cursor: pointer; color: #000; font-size: 12px; }
+        .btn-scan { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 400px; background: var(--accent); color: white; padding: 18px; border-radius: 18px; text-align: center; text-decoration: none; font-weight: 800; box-shadow: 0 10px 25px rgba(0, 184, 148, 0.3); }
+        .logout { background: rgba(248,113,113,0.1); color: #F87171; border: none; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div><h2 id="p-name" style="margin:0; font-size:18px;">Memuat...</h2><p id="p-role" style="margin:0; font-size:12px; color:#94A3B8;"></p></div>
+        <button class="logout" onclick="logout()">LOGOUT</button>
+    </div>
+
+    <div class="main-card">
+        <small id="label-total" style="font-size:11px; opacity:0.8;">SALDO BERJALAN</small>
+        <h1 id="total-kas" style="margin:5px 0; letter-spacing:-1px;">Rp 0</h1>
+    </div>
+
+    <h4 style="color:#94A3B8; margin: 30px 0 15px; font-size: 14px; letter-spacing: 1px;">RIWAYAT BELUM SETOR</h4>
+    <div id="list-harian">Memuat data...</div>
+
+    <a href="jimpitan.html" class="btn-scan" id="scan-link">📸 AMBIL JIMPITAN</a>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    
+    if(!user) window.location.href = "index.html";
+
+    document.getElementById('p-name').innerText = user.role === 'admin' ? "Panel Admin RT" : "Regu " + user.kelompok;
+    document.getElementById('p-role').innerText = user.role === 'admin' ? "Rekap Seluruh Regu" : "Data Kelompok Anda";
+    if(user.role === 'admin') document.getElementById('label-total').innerText = "TOTAL SELURUH JIMPITAN";
+
+    async function loadData() {
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        window[cb] = (res) => {
+            document.getElementById('total-kas').innerText = "Rp " + res.total.toLocaleString('id-ID');
+            let h = "";
+            res.detailHarian.forEach(item => {
+                let btnAdmin = user.role === 'admin' ? 
+                    `<button class="btn-reset" onclick="resetRegu('${item.regu}')">KONFIRMASI TERIMA UANG</button>` : "";
+
+                h += `<div class="history-item">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:12px; color:#94A3B8;">${item.tgl}</span>
+                            <span style="color:var(--accent); font-weight:800; font-size:16px;">Rp ${item.total.toLocaleString('id-ID')}</span>
+                        </div>
+                        <span style="font-size:14px; font-weight:600; color:#55EFC4; margin-top:5px; display:block;">Regu ${item.regu}</span>
+                        ${btnAdmin}
+                      </div>`;
+            });
+            document.getElementById('list-harian').innerHTML = h || "<p style='text-align:center; color:#666;'>Semua setoran sudah beres.</p>";
+            document.body.removeChild(s); delete window[cb];
+        };
+        s.src = `${scriptURL}?callback=${cb}&action=getRekap&petugas=${encodeURIComponent(user.kelompok)}&role=${user.role}`;
+        document.body.appendChild(s);
+    }
+
+    function resetRegu(regu) {
+        if(!confirm("Yakin uang dari " + regu + " sudah diterima secara fisik? Dashboard regu tsb akan kembali ke Rp 0.")) return;
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        window[cb] = (res) => {
+            alert(res.message); loadData();
+            document.body.removeChild(s); delete window[cb];
+        };
+        s.src = `${scriptURL}?callback=${cb}&action=konfirmasiSetor&regu=${encodeURIComponent(regu)}`;
+        document.body.appendChild(s);
+    }
+
+    function logout() { localStorage.clear(); window.location.href = "index.html"; }
+    loadData();
+</script>
+</body>
+</html>
