@@ -6,91 +6,136 @@
     <title>Jimpitan Digital RT</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; }
-        button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        input, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
+        button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.95); }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; }
         .hidden { display: none; }
-        #reader { width: 100%; border-radius: 10px; }
+        .status { margin: 15px 0; font-weight: bold; color: #1a73e8; }
+        .rekap-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
+
 <div class="card">
     <div id="sec-login">
-        <h2>Jimpitan Digital</h2>
+        <h2 style="color: #1a73e8;">Jimpitan RT</h2>
         <input type="text" id="user" placeholder="Username">
         <input type="password" id="pass" placeholder="Password">
-        <button onclick="login()">MASUK</button>
+        <button id="btn-login" onclick="login()">MASUK</button>
     </div>
+
     <div id="sec-scanner" class="hidden">
-        <div id="info-petugas"></div>
+        <p id="info-petugas" style="margin-bottom: 15px; font-weight: bold;"></p>
         <div id="reader"></div>
+        <p id="msg" class="status">Scan QR Rumah Warga</p>
+        
         <div id="form-input" class="hidden">
-            <h3 id="target-warga"></h3>
+            <h3 id="nama-warga"></h3>
             <input type="number" id="nom" value="2000">
-            <button onclick="simpan()">SIMPAN</button>
+            <button onclick="simpan()" style="background: #28a745;">SIMPAN DATA</button>
+            <button onclick="location.reload()" style="background: #666;">BATAL</button>
         </div>
     </div>
+
     <div id="sec-admin" class="hidden">
-        <h2>Rekap RT</h2>
-        <h1 id="total-kas">Rp 0</h1>
-        <div id="list-detail"></div>
-        <button onclick="location.reload()">KELUAR</button>
+        <h2>📊 Rekap Kas</h2>
+        <h1 id="total-kas" style="color: #2e7d32;">Rp 0</h1>
+        <div id="list-rekap"></div>
+        <button onclick="location.reload()" style="background: #666; margin-top: 20px;">LOGOUT</button>
     </div>
 </div>
 
 <script>
+    // URL GAS KAMU YANG SUDAH AKTIF
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyXw9o8id8jxwXoAK9-oW01U6vOPSdqa-9XXCkYMrAWu0oCSf5ND_qPBPzqkp9nasgv/exec';
-    let userKlp = ""; let dataWarga = ""; const scanner = new Html5Qrcode("reader");
+    
+    let userKlp = "";
+    let wargaTerpilih = "";
+    const html5QrCode = new Html5Qrcode("reader");
 
     function login() {
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
+        const btn = document.getElementById('btn-login');
+
+        btn.innerText = "Proses...";
+        btn.disabled = true;
+
+        // Kirim data tanpa header aneh-aneh agar tidak kena CORS
         fetch(scriptURL, {
             method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: "login", username: u, password: p })
         })
         .then(res => res.json())
         .then(res => {
-            if(res.status === "success") {
+            if (res.status === "success") {
                 userKlp = res.kelompok;
                 document.getElementById('sec-login').classList.add('hidden');
-                if(res.role === "admin") {
+                
+                if (res.role === "admin") {
                     document.getElementById('sec-admin').classList.remove('hidden');
-                    loadAdmin();
+                    muatRekap();
                 } else {
                     document.getElementById('sec-scanner').classList.remove('hidden');
                     document.getElementById('info-petugas').innerText = "Petugas: " + userKlp;
-                    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-                        dataWarga = txt; scanner.stop();
-                        document.getElementById('reader').classList.add('hidden');
-                        document.getElementById('form-input').classList.remove('hidden');
-                        document.getElementById('target-warga').innerText = txt;
-                    });
+                    mulaiScan();
                 }
-            } else { alert("Login Gagal!"); }
-        }).catch(err => alert("Koneksi Error: " + err));
+            } else {
+                alert("Username atau Password salah!");
+                btn.innerText = "MASUK";
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Gagal koneksi ke server. Pastikan Deployment di GAS sudah 'Anyone'.");
+            btn.innerText = "MASUK";
+            btn.disabled = false;
+        });
+    }
+
+    function mulaiScan() {
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+            wargaTerpilih = txt;
+            html5QrCode.stop();
+            document.getElementById('reader').classList.add('hidden');
+            document.getElementById('msg').classList.add('hidden');
+            document.getElementById('form-input').classList.remove('hidden');
+            document.getElementById('nama-warga').innerText = "Warga: " + txt;
+        });
     }
 
     function simpan() {
         const n = document.getElementById('nom').value;
+        document.getElementById('form-input').innerHTML = "<h3>Menyimpan...</h3>";
+
         fetch(scriptURL, {
             method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: "simpan", nama: dataWarga, nominal: n, petugas: userKlp })
-        }).then(res => res.text()).then(res => { alert(res); location.reload(); });
+            body: JSON.stringify({ action: "simpan", nama: wargaTerpilih, nominal: n, petugas: userKlp })
+        })
+        .then(res => res.text())
+        .then(res => {
+            alert(res);
+            location.reload();
+        });
     }
 
-    function loadAdmin() {
+    function muatRekap() {
         fetch(scriptURL, {
             method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: "getRekap" })
-        }).then(res => res.json()).then(res => {
-            document.getElementById('total-kas').innerText = "Rp " + res.total.toLocaleString();
-            let h = ""; for(let k in res.detail) { h += `<div>${k}: Rp ${res.detail[k].toLocaleString()}</div>`; }
-            document.getElementById('list-detail').innerHTML = h;
+        })
+        .then(res => res.json())
+        .then(res => {
+            document.getElementById('total-kas').innerText = "Rp " + res.total.toLocaleString('id-ID');
+            let html = "";
+            for (let k in res.detail) {
+                html += `<div class="rekap-item"><span>${k}</span><b>Rp ${res.detail[k].toLocaleString('id-ID')}</b></div>`;
+            }
+            document.getElementById('list-rekap').innerHTML = html;
         });
     }
 </script>
