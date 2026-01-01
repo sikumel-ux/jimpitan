@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard RT</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
+        .container { max-width: 500px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; text-align: center; }
+        .btn-main { background: #1a73e8; color: white; padding: 18px; width: 100%; border-radius: 15px; font-weight: bold; text-decoration: none; display: block; box-sizing: border-box; margin: 10px 0; }
+        .btn-logout { background: #666; color: white; padding: 10px; border-radius: 10px; text-decoration: none; font-size: 12px; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .stat-box { background: #f8f9fa; padding: 10px; border-radius: 10px; border: 1px solid #eee; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin:0; color:#1a73e8;">RT Digital</h2>
+        <a href="#" class="btn-logout" onclick="logout()">Logout</a>
+    </div>
+
+    <div class="card">
+        <small style="color: #888;">Saldo Kas RT</small>
+        <h1 id="total-kas" style="margin: 5px 0;">Rp ...</h1>
+        <div id="info-welcome" style="font-size: 14px; color: #555; margin-top: 10px;"></div>
+    </div>
+
+    <a href="jimpitan.html" class="btn-main">🚀 AMBIL JIMPITAN (SCAN)</a>
+
+    <div style="margin-top: 25px;">
+        <h4 style="color: #666;">Kontribusi Regu:</h4>
+        <div id="list-petugas">Memuat data...</div>
+    </div>
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
+    
+    // Cek Login
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    if(!user) window.location.href = "index.html";
+    document.getElementById('info-welcome').innerText = "Halo, Petugas " + user.kelompok;
+
+    function panggilGAS(params) {
+        return new Promise((resolve) => {
+            const cbName = "cb_" + Math.round(Math.random() * 1000000);
+            const script = document.createElement('script');
+            window[cbName] = (data) => {
+                resolve(data);
+                document.body.removeChild(script);
+                delete window[cbName];
+            };
+            script.src = `${scriptURL}?callback=${cbName}&${params}`;
+            document.body.appendChild(script);
+        });
+    }
+
+    async function loadData() {
+        const res = await panggilGAS(`action=getRekap`);
+        document.getElementById('total-kas').innerText = "Rp " + res.total.toLocaleString('id-ID');
+        
+        let html = "";
+        for (let k in res.detail) {
+            html += `<div style="background:white; padding:12px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; font-size:14px;">
+                        <span>${k}</span><b>Rp ${res.detail[k].toLocaleString('id-ID')}</b>
+                     </div>`;
+        }
+        document.getElementById('list-petugas').innerHTML = html;
+    }
+
+    function logout() {
+        localStorage.removeItem("jimpitan_user");
+        window.location.href = "index.html";
+    }
+
+    loadData();
+</script>
+</body>
+</html>
