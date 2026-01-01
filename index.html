@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Jimpitan Digital</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
+        input, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
+        button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2 style="color: #1a73e8;">Jimpitan RT</h2>
+    <input type="text" id="user" placeholder="Username">
+    <input type="password" id="pass" placeholder="Password">
+    <button id="btn-login" onclick="login()">MASUK</button>
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
+
+    async function login() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        const btn = document.getElementById('btn-login');
+        if(!u || !p) return alert("Isi data!");
+
+        btn.innerText = "Mengecek..."; btn.disabled = true;
+
+        const cbName = "cb_" + Math.round(Math.random() * 1000000);
+        const script = document.createElement('script');
+        window[cbName] = (res) => {
+            if (res.status === "success") {
+                // Simpan data login agar tidak perlu login ulang terus
+                localStorage.setItem("jimpitan_user", JSON.stringify(res));
+                window.location.href = "dashboard.html";
+            } else {
+                alert("Login Gagal!");
+                btn.innerText = "MASUK"; btn.disabled = false;
+            }
+            document.body.removeChild(script);
+            delete window[cbName];
+        };
+        script.src = `${scriptURL}?callback=${cbName}&action=login&username=${u}&password=${p}`;
+        document.body.appendChild(script);
+    }
+</script>
+</body>
+</html>
