@@ -3,158 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jimpitan Digital RT - Debug Mode</title>
+    <title>Jimpitan Digital RT</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; margin: 0; }
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        input, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-        button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; margin-bottom: 15px; background: #000; }
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; }
+        button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; }
         .hidden { display: none; }
-        .status-msg { margin: 15px 0; padding: 10px; border-radius: 8px; background: #e8f0fe; color: #1967d2; font-weight: bold; }
-        .rekap-box { background: #e8f5e9; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
-        .item-list { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; text-align: left; }
+        #reader { width: 100%; border-radius: 10px; }
     </style>
 </head>
 <body>
-
 <div class="card">
     <div id="sec-login">
-        <h2 style="color:#1a73e8">Jimpitan Digital</h2>
-        <p>Login Petugas / Admin</p>
+        <h2>Jimpitan Digital</h2>
         <input type="text" id="user" placeholder="Username">
         <input type="password" id="pass" placeholder="Password">
-        <button id="btn-login" onclick="login()">MASUK</button>
+        <button onclick="login()">MASUK</button>
     </div>
-
     <div id="sec-scanner" class="hidden">
-        <div id="info-petugas" style="font-weight:bold; color:#555; margin-bottom:10px;"></div>
+        <div id="info-petugas"></div>
         <div id="reader"></div>
-        <div id="msg" class="status-msg">Arahkan ke QR Rumah</div>
-        
         <div id="form-input" class="hidden">
-            <h3 id="target-warga" style="margin:0"></h3>
+            <h3 id="target-warga"></h3>
             <input type="number" id="nom" value="2000">
-            <button onclick="simpan()" style="background:#28a745">KONFIRMASI SIMPAN</button>
-            <button onclick="location.reload()" style="background:#dc3545">BATAL</button>
+            <button onclick="simpan()">SIMPAN</button>
         </div>
     </div>
-
     <div id="sec-admin" class="hidden">
-        <h2>📊 Rekap RT</h2>
-        <div class="rekap-box">
-            <small>Total Kas Terkumpul:</small>
-            <h1 id="total-kas" style="margin:5px 0; color:#2e7d32">Rp 0</h1>
-        </div>
+        <h2>Rekap RT</h2>
+        <h1 id="total-kas">Rp 0</h1>
         <div id="list-detail"></div>
-        <button onclick="location.reload()" style="background:#666; margin-top:20px;">LOGOUT</button>
+        <button onclick="location.reload()">KELUAR</button>
     </div>
 </div>
 
 <script>
-    // --- GANTI URL DI BAWAH INI DENGAN URL WEB APP GAS KAMU ---
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbz3_Fdnajx_N86_2T2I2VzwU6luyRP03nrRiJOAb_BR7ojgxVc6eTfaOE3Py9smK_Uj/exec'; 
-    
-    let userKlp = "";
-    let dataWarga = "";
-    const scanner = new Html5Qrcode("reader");
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbz3_Fdnajx_N86_2T2I2VzwU6luyRP03nrRiJOAb_BR7ojgxVc6eTfaOE3Py9smK_Uj/exec';
+    let userKlp = ""; let dataWarga = ""; const scanner = new Html5Qrcode("reader");
 
     function login() {
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
-        const btn = document.getElementById('btn-login');
-        
-        if (!u || !p) { alert("Isi username dan password!"); return; }
-        
-        btn.innerText = "Mengecek akun...";
-        btn.disabled = true;
-        
         fetch(scriptURL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ action: "login", username: u, password: p })
         })
+        .then(res => res.json())
         .then(res => {
-            if (!res.ok) throw new Error('Server merespon dengan status: ' + res.status);
-            return res.json();
-        })
-        .then(res => {
-            if (res.status === "success") {
+            if(res.status === "success") {
                 userKlp = res.kelompok;
                 document.getElementById('sec-login').classList.add('hidden');
-                
-                if (res.role === "admin") {
+                if(res.role === "admin") {
                     document.getElementById('sec-admin').classList.remove('hidden');
                     loadAdmin();
                 } else {
                     document.getElementById('sec-scanner').classList.remove('hidden');
-                    document.getElementById('info-petugas').innerText = "Kelompok: " + userKlp;
-                    startScan();
+                    document.getElementById('info-petugas').innerText = "Petugas: " + userKlp;
+                    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+                        dataWarga = txt; scanner.stop();
+                        document.getElementById('reader').classList.add('hidden');
+                        document.getElementById('form-input').classList.remove('hidden');
+                        document.getElementById('target-warga').innerText = txt;
+                    });
                 }
-            } else { 
-                alert("Login Gagal! Akun tidak ditemukan atau password salah."); 
-                btn.innerText = "MASUK";
-                btn.disabled = false;
-            }
-        })
-        .catch(err => {
-            console.error('Debug Error:', err);
-            alert("Kesalahan Koneksi:\n" + err.message + "\n\n1. Pastikan URL GAS benar.\n2. Pastikan GAS diset ke 'Anyone'.\n3. Cek koneksi internet.");
-            btn.innerText = "MASUK";
-            btn.disabled = false;
-        });
-    }
-
-    function startScan() {
-        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-            dataWarga = txt;
-            scanner.stop();
-            document.getElementById('reader').classList.add('hidden');
-            document.getElementById('msg').classList.add('hidden');
-            document.getElementById('form-input').classList.remove('hidden');
-            document.getElementById('target-warga').innerText = "Rumah: " + txt;
-        });
+            } else { alert("Login Gagal!"); }
+        }).catch(err => alert("Koneksi Error: " + err));
     }
 
     function simpan() {
         const n = document.getElementById('nom').value;
-        document.getElementById('form-input').innerHTML = "<h3>Menyimpan...</h3>";
-        
-        fetch(scriptURL, { 
-            method: 'POST', 
+        fetch(scriptURL, {
+            method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: "simpan", nama: dataWarga, nominal: n, petugas: userKlp }) 
-        })
-        .then(res => res.text())
-        .then(res => { 
-            alert(res); 
-            location.reload(); 
-        })
-        .catch(err => {
-            alert("Gagal simpan: " + err.message);
-            location.reload();
-        });
+            body: JSON.stringify({ action: "simpan", nama: dataWarga, nominal: n, petugas: userKlp })
+        }).then(res => res.text()).then(res => { alert(res); location.reload(); });
     }
 
     function loadAdmin() {
-        fetch(scriptURL, { 
-            method: 'POST', 
+        fetch(scriptURL, {
+            method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ action: "getRekap" }) 
-        })
-        .then(res => res.json())
-        .then(res => {
-            document.getElementById('total-kas').innerText = "Rp " + res.total.toLocaleString('id-ID');
-            let h = "";
-            for (let k in res.detail) {
-                h += `<div class="item-list"><span>${k}</span><b>Rp ${res.detail[k].toLocaleString('id-ID')}</b></div>`;
-            }
+            body: JSON.stringify({ action: "getRekap" })
+        }).then(res => res.json()).then(res => {
+            document.getElementById('total-kas').innerText = "Rp " + res.total.toLocaleString();
+            let h = ""; for(let k in res.detail) { h += `<div>${k}: Rp ${res.detail[k].toLocaleString()}</div>`; }
             document.getElementById('list-detail').innerHTML = h;
-        })
-        .catch(err => {
-            alert("Gagal memuat rekap: " + err.message);
         });
     }
 </script>
