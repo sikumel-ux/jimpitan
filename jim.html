@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan | RT Digital</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; text-align: center; }
+        
+        /* Header & Back Button */
+        .header-nav { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 20px; }
+        .btn-back { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 12px; text-decoration: none; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        
+        #reader { border-radius: 24px; overflow: hidden; border: 2px solid var(--accent) !important; margin-top: 10px; box-shadow: 0 0 20px rgba(0, 184, 148, 0.2); }
+        
+        .input-box { background: var(--card); border-radius: 24px; padding: 25px; margin-top: 20px; border: 1px solid rgba(255,255,255,0.05); animation: fadeInUp 0.4s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .quick-btn { display: flex; gap: 10px; margin-bottom: 20px; }
+        .qb { flex: 1; padding: 15px; border-radius: 12px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .qb:active { background: var(--accent); color: white; }
+        
+        input { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid #334155; background: #0F172A; color: white; font-size: 18px; text-align: center; box-sizing: border-box; margin-bottom: 20px; outline: none; }
+        input:focus { border-color: var(--accent); }
+
+        .btn-save { width: 100%; padding: 18px; border-radius: 16px; border: none; background: var(--accent); color: white; font-weight: 800; font-size: 16px; cursor: pointer; margin-bottom: 12px; box-shadow: 0 10px 20px rgba(0, 184, 148, 0.2); }
+        .btn-cancel { width: 100%; padding: 14px; border-radius: 16px; border: 1px solid rgba(248, 113, 113, 0.3); background: transparent; color: var(--danger); font-weight: 600; font-size: 14px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="header-nav">
+        <a href="dashboard.html" class="btn-back">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            Dashboard
+        </a>
+    </div>
+
+    <h3 id="step-title" style="font-weight: 500; color: #94A3B8;">Arahkan Kamera ke QR</h3>
+    
+    <div id="reader"></div>
+
+    <div id="form-input" style="display:none;">
+        <div class="input-box">
+            <h2 id="n-warga" style="margin-top:0; color:var(--accent); font-size: 24px;"></h2>
+            <p style="font-size: 12px; color: #94A3B8; margin-bottom: 15px;">Pilih atau isi nominal jimpitan:</p>
+            
+            <div class="quick-btn">
+                <button class="qb" onclick="setNom(500)">Rp 500</button>
+                <button class="qb" onclick="setNom(1000)">Rp 1.000</button>
+            </div>
+            
+            <input type="number" id="nom" placeholder="Nominal manual...">
+            
+            <button class="btn-save" id="btn-save" onclick="simpan()">SIMPAN DATA</button>
+            <button class="btn-cancel" onclick="batalScan()">BATAL / SCAN ULANG</button>
+        </div>
+    </div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
+    
+    // Proteksi Halaman
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    if(!user) window.location.href = "index.html";
+
+    const scanner = new Html5Qrcode("reader");
+    let warga = "";
+
+    // Memulai Scanner
+    function startScanner() {
+        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+            warga = txt; 
+            scanner.stop();
+            document.getElementById('reader').style.display = 'none';
+            document.getElementById('step-title').style.display = 'none';
+            document.getElementById('form-input').style.display = 'block';
+            document.getElementById('n-warga').innerText = txt;
+        }).catch(err => {
+            console.error("Gagal akses kamera", err);
+            alert("Berikan izin kamera untuk memulai scan.");
+        });
+    }
+
+    function setNom(a) { document.getElementById('nom').value = a; }
+
+    function batalScan() {
+        // Balik ke mode scan tanpa reload halaman
+        document.getElementById('form-input').style.display = 'none';
+        document.getElementById('reader').style.display = 'block';
+        document.getElementById('step-title').style.display = 'block';
+        document.getElementById('nom').value = "";
+        startScanner();
+    }
+
+    async function simpan() {
+        const n = document.getElementById('nom').value;
+        const btn = document.getElementById('btn-save');
+        if(!n) return alert("Harap isi nominal!");
+        
+        btn.innerText = "Sedang Menyimpan...";
+        btn.disabled = true;
+
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        window[cb] = (res) => {
+            if(res.status === "success") {
+                alert(res.message); 
+                window.location.href = "dashboard.html";
+            } else {
+                alert("Gagal: " + res.message);
+                btn.innerText = "SIMPAN DATA";
+                btn.disabled = false;
+            }
+            document.body.removeChild(s); delete window[cb];
+        };
+        s.src = `${scriptURL}?callback=${cb}&action=simpan&nama=${encodeURIComponent(warga)}&nominal=${n}&petugas=${encodeURIComponent(user.kelompok)}`;
+        document.body.appendChild(s);
+    }
+
+    // Jalankan scanner saat halaman dibuka
+    startScanner();
+</script>
+</body>
+</html>
