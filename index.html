@@ -2,43 +2,44 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Jimpitan Digital</title>
+    <title>Login | Jimpitan Digital</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
-        input, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-        button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; }
+        :root { --primary: #2D3436; --accent: #00B894; --bg: #0F172A; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; }
+        .login-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); padding: 40px 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 320px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .logo { font-size: 28px; font-weight: 800; margin-bottom: 8px; background: linear-gradient(to right, #00B894, #55EFC4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p { color: #94A3B8; font-size: 14px; margin-bottom: 30px; }
+        input { width: 100%; padding: 15px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #1E293B; color: white; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
+        input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(0, 184, 148, 0.1); }
+        button { width: 100%; padding: 16px; margin-top: 20px; border-radius: 12px; border: none; background: var(--accent); color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.98); opacity: 0.9; }
     </style>
 </head>
 <body>
-<div class="card">
-    <h2 style="color: #1a73e8;">Jimpitan RT</h2>
-    <input type="text" id="user" placeholder="Username">
+<div class="login-card">
+    <div class="logo">RT DIGITAL</div>
+    <p>Selamat datang, silakan login.</p>
+    <input type="text" id="user" placeholder="Username" spellcheck="false">
     <input type="password" id="pass" placeholder="Password">
-    <button id="btn-login" onclick="login()">MASUK</button>
+    <button id="btn-login" onclick="login()">Masuk Sekarang</button>
 </div>
-
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
-
     async function login() {
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
         const btn = document.getElementById('btn-login');
-        if(!u || !p) return alert("Isi data!");
-
-        btn.innerText = "Mengecek..."; btn.disabled = true;
-
+        if(!u || !p) return;
+        btn.innerText = "Mendata..."; btn.disabled = true;
         const cbName = "cb_" + Math.round(Math.random() * 1000000);
         const script = document.createElement('script');
         window[cbName] = (res) => {
             if (res.status === "success") {
-                // Simpan data login agar tidak perlu login ulang terus
                 localStorage.setItem("jimpitan_user", JSON.stringify(res));
                 window.location.href = "dashboard.html";
             } else {
-                alert("Login Gagal!");
-                btn.innerText = "MASUK"; btn.disabled = false;
+                alert("Akun tidak ditemukan");
+                btn.innerText = "Masuk Sekarang"; btn.disabled = false;
             }
             document.body.removeChild(script);
             delete window[cbName];
