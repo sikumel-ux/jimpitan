@@ -3,101 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Jimpitan Digital</title>
+    <title>Jimpitan Digital RT</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: sans-serif; background: #f4f7f9; display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-        button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; }
-        #reader { width: 100%; border-radius: 10px; margin-bottom: 10px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        input, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
+        button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.98); }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; margin-bottom: 15px; background: #000; }
         .hidden { display: none; }
-        .rekap-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .status-msg { margin: 15px 0; padding: 10px; border-radius: 8px; background: #e8f0fe; color: #1967d2; font-weight: bold; }
+        .rekap-box { background: #e8f5e9; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+        .item-list { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; text-align: left; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <div id="sec-login">
-        <h2>🔑 Login Jimpitan</h2>
+        <h2 style="color:#1a73e8">Jimpitan Digital</h2>
+        <p>Silakan login petugas/admin</p>
         <input type="text" id="user" placeholder="Username">
         <input type="password" id="pass" placeholder="Password">
-        <button onclick="login()">Masuk</button>
+        <button onclick="login()">MASUK</button>
     </div>
 
     <div id="sec-scanner" class="hidden">
-        <h3 id="info-user"></h3>
+        <div id="info-petugas" style="font-weight:bold; color:#555; margin-bottom:10px;"></div>
         <div id="reader"></div>
-        <div id="status">Siap scan...</div>
-        <div id="form-nominal" class="hidden">
-            <p id="nama-warga" style="font-weight:bold"></p>
-            <input type="number" id="nominal" value="2000">
-            <button onclick="simpanData()" style="background:#28a745">Simpan</button>
+        <div id="msg" class="status-msg">Arahkan ke QR Rumah</div>
+        
+        <div id="form-input" class="hidden">
+            <h3 id="target-warga" style="margin:0"></h3>
+            <input type="number" id="nom" value="2000">
+            <button onclick="simpan()" style="background:#28a745">KONFIRMASI SIMPAN</button>
+            <button onclick="location.reload()" style="background:#dc3545">BATAL</button>
         </div>
     </div>
 
     <div id="sec-admin" class="hidden">
-        <h2>📊 Dashboard RT</h2>
-        <div style="background:#e8f5e9; padding:15px; border-radius:10px;">
-            <span>Total Kas Terkumpul:</span>
-            <h1 id="total-kas">Rp 0</h1>
+        <h2>📊 Rekap RT</h2>
+        <div class="rekap-box">
+            <small>Total Kas Terkumpul:</small>
+            <h1 id="total-kas" style="margin:5px 0; color:#2e7d32">Rp 0</h1>
         </div>
-        <div id="list-rekap" style="margin-top:20px; text-align:left;"></div>
-        <button onclick="location.reload()" style="background:#666">Keluar</button>
+        <div id="list-detail"></div>
+        <button onclick="location.reload()" style="background:#666; margin-top:20px;">LOGOUT</button>
     </div>
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzWjiXCA9uT-tilqS0R4V8vC412Tz9GiCkiQnglpLRjxVXDe-5uFHgbVsDUoS0Rd1eU/exec'; // GANTI INI
-    let currentKlp = "";
-    let scannedName = "";
-    const html5QrCode = new Html5Qrcode("reader");
+    const scriptURL = 'URL_WEB_APP_GAS_KAMU'; // GANTI DENGAN LINK EXEC GAS
+    let userKlp = "";
+    let dataWarga = "";
+    const scanner = new Html5Qrcode("reader");
 
     function login() {
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
+        document.getElementById('sec-login').innerText = "Mengecek akun...";
+        
         fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "login", username: u, password: p }) })
-        .then(res => res.json()).then(data => {
-            if (data.status === "success") {
-                currentKlp = data.kelompok;
+        .then(res => res.json()).then(res => {
+            if (res.status === "success") {
+                userKlp = res.kelompok;
                 document.getElementById('sec-login').classList.add('hidden');
-                if (data.role === "admin") {
+                if (res.role === "admin") {
                     document.getElementById('sec-admin').classList.remove('hidden');
-                    loadDashboard();
+                    loadAdmin();
                 } else {
                     document.getElementById('sec-scanner').classList.remove('hidden');
-                    document.getElementById('info-user').innerText = "Petugas: " + currentKlp;
+                    document.getElementById('info-petugas').innerText = "Kelompok: " + userKlp;
                     startScan();
                 }
-            } else { alert("User/Pass Salah!"); }
+            } else { alert("Login Gagal!"); location.reload(); }
         });
     }
 
     function startScan() {
-        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-            scannedName = text;
-            html5QrCode.stop();
-            document.getElementById('reader').classList.add('hidden');
-            document.getElementById('form-nominal').classList.remove('hidden');
-            document.getElementById('nama-warga').innerText = "Rumah: " + text;
+        scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
+            dataWarga = txt;
+            scanner.stop();
+            document.getElementById('reader').style.display = "none";
+            document.getElementById('msg').style.display = "none";
+            document.getElementById('form-input').classList.remove('hidden');
+            document.getElementById('target-warga').innerText = txt;
         });
     }
 
-    function simpanData() {
-        const nom = document.getElementById('nominal').value;
-        fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "simpan", nama: scannedName, nominal: nom, petugas: currentKlp }) })
-        .then(res => res.text()).then(msg => { alert(msg); location.reload(); });
+    function simpan() {
+        const n = document.getElementById('nom').value;
+        document.getElementById('form-input').innerText = "Menyimpan ke Google Sheets...";
+        fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "simpan", nama: dataWarga, nominal: n, petugas: userKlp }) })
+        .then(res => res.text()).then(res => { alert(res); location.reload(); });
     }
 
-    function loadDashboard() {
+    function loadAdmin() {
         fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "getRekap" }) })
-        .then(res => res.json()).then(data => {
-            document.getElementById('total-kas').innerText = "Rp " + data.total.toLocaleString();
-            let html = "";
-            for (let k in data.detail) {
-                html += `<div class="rekap-item"><span>${k}</span><b>Rp ${data.detail[k].toLocaleString()}</b></div>`;
+        .then(res => res.json()).then(res => {
+            document.getElementById('total-kas').innerText = "Rp " + res.total.toLocaleString();
+            let h = "";
+            for (let k in res.detail) {
+                h += `<div class="item-list"><span>${k}</span><b>Rp ${res.detail[k].toLocaleString()}</b></div>`;
             }
-            document.getElementById('list-rekap').innerHTML = html;
+            document.getElementById('list-detail').innerHTML = h;
         });
     }
 </script>
