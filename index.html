@@ -4,22 +4,18 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Jimpitan Digital</title>
     <style>
-        :root { --primary: #2D3436; --accent: #00B894; --bg: #0F172A; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; }
-        .login-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); padding: 40px 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 320px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .logo { font-size: 28px; font-weight: 800; margin-bottom: 8px; background: linear-gradient(to right, #00B894, #55EFC4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        p { color: #94A3B8; font-size: 14px; margin-bottom: 30px; }
-        input { width: 100%; padding: 15px; margin: 8px 0; border-radius: 12px; border: 1px solid #334155; background: #1E293B; color: white; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
-        input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(0, 184, 148, 0.1); }
-        button { width: 100%; padding: 16px; margin-top: 20px; border-radius: 12px; border: none; background: var(--accent); color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        button:active { transform: scale(0.98); opacity: 0.9; }
+        :root { --accent: #00B894; --bg: #0F172A; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; }
+        .card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); padding: 40px 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 320px; text-align: center; }
+        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #334155; background: #1E293B; color: white; font-size: 16px; box-sizing: border-box; }
+        button { width: 100%; padding: 16px; margin-top: 20px; border-radius: 12px; border: none; background: var(--accent); color: white; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
-<div class="login-card">
-    <div class="logo">RT DIGITAL</div>
-    <p>Selamat datang, silakan login.</p>
-    <input type="text" id="user" placeholder="Username" spellcheck="false">
+<div class="card">
+    <h2 style="color:var(--accent); margin:0;">RT DIGITAL</h2>
+    <p style="color:#94A3B8; font-size:14px;">Silakan login petugas ronda</p>
+    <input type="text" id="user" placeholder="Username">
     <input type="password" id="pass" placeholder="Password">
     <button id="btn-login" onclick="login()">Masuk Sekarang</button>
 </div>
@@ -29,23 +25,21 @@
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
         const btn = document.getElementById('btn-login');
-        if(!u || !p) return;
-        btn.innerText = "Mendata..."; btn.disabled = true;
-        const cbName = "cb_" + Math.round(Math.random() * 1000000);
-        const script = document.createElement('script');
-        window[cbName] = (res) => {
+        if(!u || !p) return alert("Isi Username & Password");
+        btn.innerText = "Proses..."; btn.disabled = true;
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        window[cb] = (res) => {
             if (res.status === "success") {
                 localStorage.setItem("jimpitan_user", JSON.stringify(res));
                 window.location.href = "dashboard.html";
             } else {
-                alert("Akun tidak ditemukan");
-                btn.innerText = "Masuk Sekarang"; btn.disabled = false;
+                alert("Login Gagal!"); btn.innerText = "Masuk Sekarang"; btn.disabled = false;
             }
-            document.body.removeChild(script);
-            delete window[cbName];
+            document.body.removeChild(s); delete window[cb];
         };
-        script.src = `${scriptURL}?callback=${cbName}&action=login&username=${u}&password=${p}`;
-        document.body.appendChild(script);
+        s.src = `${scriptURL}?callback=${cb}&action=login&username=${u}&password=${p}`;
+        document.body.appendChild(s);
     }
 </script>
 </body>
