@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | RT Digital</title>
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: #F8FAFC; margin: 0; padding: 20px; padding-bottom: 100px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .welcome-text h2 { margin: 0; font-size: 20px; }
+        .welcome-text p { margin: 4px 0 0; font-size: 13px; color: #94A3B8; }
+        .logout-btn { padding: 8px 16px; border-radius: 10px; background: rgba(248, 113, 113, 0.1); color: #F87171; text-decoration: none; font-size: 12px; font-weight: 600; }
+        
+        .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 25px; border-radius: 24px; margin-bottom: 25px; box-shadow: 0 20px 40px -10px rgba(0, 184, 148, 0.3); }
+        .main-card small { font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+        .main-card h1 { margin: 10px 0 0; font-size: 36px; }
+
+        .btn-scan { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 400px; background: var(--accent); color: white; padding: 20px; border-radius: 20px; text-align: center; text-decoration: none; font-weight: 800; font-size: 18px; box-shadow: 0 10px 30px rgba(0, 184, 148, 0.4); display: flex; justify-content: center; align-items: center; gap: 10px; }
+        
+        .section-title { font-size: 16px; font-weight: 700; margin-bottom: 15px; color: #94A3B8; }
+        .regu-item { background: var(--card); padding: 16px; border-radius: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
+        .regu-name { font-weight: 600; }
+        .regu-val { color: var(--accent); font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="welcome-text">
+            <h2 id="petugas-name">Petugas RT</h2>
+            <p>Laporan Jimpitan Digital</p>
+        </div>
+        <a href="#" class="logout-btn" onclick="logout()">LOGOUT</a>
+    </div>
+
+    <div class="main-card">
+        <small>Total Kas Terkumpul</small>
+        <h1 id="total-kas">Rp ...</h1>
+    </div>
+
+    <div class="section-title">KONTRIBUSI REGU</div>
+    <div id="list-petugas"></div>
+
+    <a href="jimpitan.html" class="btn-scan">
+        <span>📸</span> MULAI SCAN QR
+    </a>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    if(!user) window.location.href = "index.html";
+    document.getElementById('petugas-name').innerText = "Regu: " + user.kelompok;
+
+    async function loadData() {
+        const cbName = "cb_" + Math.round(Math.random() * 1000000);
+        const script = document.createElement('script');
+        window[cbName] = (res) => {
+            document.getElementById('total-kas').innerText = "Rp " + res.total.toLocaleString('id-ID');
+            let html = "";
+            for (let k in res.detail) {
+                html += `<div class="regu-item">
+                            <span class="regu-name">${k}</span>
+                            <span class="regu-val">Rp ${res.detail[k].toLocaleString('id-ID')}</span>
+                         </div>`;
+            }
+            document.getElementById('list-petugas').innerHTML = html;
+            document.body.removeChild(script);
+            delete window[cbName];
+        };
+        script.src = `${scriptURL}?callback=${cbName}&action=getRekap`;
+        document.body.appendChild(script);
+    }
+    function logout() { localStorage.removeItem("jimpitan_user"); window.location.href = "index.html"; }
+    loadData();
+</script>
+</body>
+</html>
