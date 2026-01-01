@@ -3,107 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jimpitan Scanner RT</title>
+    <title>Sistem Jimpitan Digital</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        :root { --primary: #1a73e8; --success: #28a745; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .card { max-width: 450px; width: 100%; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        h2 { color: var(--primary); margin-top: 0; }
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; background: #000; }
-        #status { margin: 20px 0; padding: 15px; border-radius: 10px; font-weight: bold; background: #e8f0fe; color: #1967d2; min-height: 24px; }
-        .input-group { display: none; background: #fff; padding: 20px; border: 2px solid var(--primary); border-radius: 15px; margin-top: 10px; }
-        input[type="number"] { width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #ddd; border-radius: 10px; font-size: 18px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: var(--success); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:active { transform: scale(0.98); filter: brightness(0.9); }
-        .footer { margin-top: 20px; font-size: 12px; color: #888; }
+        body { font-family: sans-serif; background: #f4f7f9; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
+        button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; }
+        #reader { width: 100%; border-radius: 10px; margin-bottom: 10px; }
+        .hidden { display: none; }
+        .rekap-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>🌙 Jimpitan Malam</h2>
-    <div id="status">Arahkan kamera ke QR Code warga</div>
-    
-    <div id="reader"></div>
-
-    <div id="input-group" class="input-group">
-        <h3 id="nama-warga" style="margin-top:0; color:#333;"></h3>
-        <label for="nominal">Masukkan Nominal (Rp):</label>
-        <input type="number" id="nominal" value="2000" pattern="\d*">
-        <button onclick="kirimData()">SIMPAN DATA</button>
-        <p style="font-size: 11px; color: #666; margin-top: 10px;">Klik simpan untuk konfirmasi</p>
+    <div id="sec-login">
+        <h2>🔑 Login Jimpitan</h2>
+        <input type="text" id="user" placeholder="Username">
+        <input type="password" id="pass" placeholder="Password">
+        <button onclick="login()">Masuk</button>
     </div>
 
-    <div class="footer">Sistem Jimpitan Digital Sekawan</div>
+    <div id="sec-scanner" class="hidden">
+        <h3 id="info-user"></h3>
+        <div id="reader"></div>
+        <div id="status">Siap scan...</div>
+        <div id="form-nominal" class="hidden">
+            <p id="nama-warga" style="font-weight:bold"></p>
+            <input type="number" id="nominal" value="2000">
+            <button onclick="simpanData()" style="background:#28a745">Simpan</button>
+        </div>
+    </div>
+
+    <div id="sec-admin" class="hidden">
+        <h2>📊 Dashboard RT</h2>
+        <div style="background:#e8f5e9; padding:15px; border-radius:10px;">
+            <span>Total Kas Terkumpul:</span>
+            <h1 id="total-kas">Rp 0</h1>
+        </div>
+        <div id="list-rekap" style="margin-top:20px; text-align:left;"></div>
+        <button onclick="location.reload()" style="background:#666">Keluar</button>
+    </div>
 </div>
 
 <script>
-    // 1. PASTE LINK WEB APP GAS (AKHIRAN /exec) DI SINI
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzWjiXCA9uT-tilqS0R4V8vC412Tz9GiCkiQnglpLRjxVXDe-5uFHgbVsDUoS0Rd1eU/exec';
-    
+    const scriptURL = 'URL_WEB_APP_GAS_KAMU'; // GANTI INI
+    let currentKlp = "";
     let scannedName = "";
     const html5QrCode = new Html5Qrcode("reader");
-    const statusDiv = document.getElementById('status');
 
-    // Suara notifikasi
-    function playAudio(text) {
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'id-ID';
-        window.speechSynthesis.speak(msg);
-    }
-
-    // Konfigurasi Kamera
-    const config = { fps: 15, qrbox: { width: 250, height: 250 } };
-
-    // Mulai Scanner
-    html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
-    .catch(err => {
-        statusDiv.innerText = "Gagal akses kamera. Pastikan HTTPS!";
-        statusDiv.style.color = "red";
-    });
-
-    function onScanSuccess(decodedText) {
-        scannedName = decodedText;
-        playAudio("Diterima");
-        
-        // Stop kamera & tampilkan form
-        html5QrCode.stop().then(() => {
-            document.getElementById('reader').style.display = "none";
-            document.getElementById('nama-warga').innerText = "Warga: " + decodedText;
-            document.getElementById('input-group').style.display = "block";
-            statusDiv.innerText = "Data ditemukan!";
+    function login() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "login", username: u, password: p }) })
+        .then(res => res.json()).then(data => {
+            if (data.status === "success") {
+                currentKlp = data.kelompok;
+                document.getElementById('sec-login').classList.add('hidden');
+                if (data.role === "admin") {
+                    document.getElementById('sec-admin').classList.remove('hidden');
+                    loadDashboard();
+                } else {
+                    document.getElementById('sec-scanner').classList.remove('hidden');
+                    document.getElementById('info-user').innerText = "Petugas: " + currentKlp;
+                    startScan();
+                }
+            } else { alert("User/Pass Salah!"); }
         });
     }
 
-    function kirimData() {
-        const nominal = document.getElementById('nominal').value;
-        statusDiv.innerText = "Sedang mencatat ke cloud...";
-        statusDiv.style.color = "orange";
+    function startScan() {
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+            scannedName = text;
+            html5QrCode.stop();
+            document.getElementById('reader').classList.add('hidden');
+            document.getElementById('form-nominal').classList.remove('hidden');
+            document.getElementById('nama-warga').innerText = "Rumah: " + text;
+        });
+    }
 
-        const data = {
-            nama: scannedName,
-            nominal: nominal
-        };
+    function simpanData() {
+        const nom = document.getElementById('nominal').value;
+        fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "simpan", nama: scannedName, nominal: nom, petugas: currentKlp }) })
+        .then(res => res.text()).then(msg => { alert(msg); location.reload(); });
+    }
 
-        // Kirim ke Google Sheets via GAS
-        fetch(scriptURL, {
-            method: 'POST',
-            body: JSON.stringify(data)
-        })
-        .then(response => response.text())
-        .then(hasil => {
-            playAudio("Selesai");
-            alert(hasil);
-            location.reload(); // Refresh untuk scan warga berikutnya
-        })
-        .catch(error => {
-            console.error('Error!', error.message);
-            statusDiv.innerText = "Koneksi Bermasalah!";
-            statusDiv.style.color = "red";
+    function loadDashboard() {
+        fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: "getRekap" }) })
+        .then(res => res.json()).then(data => {
+            document.getElementById('total-kas').innerText = "Rp " + data.total.toLocaleString();
+            let html = "";
+            for (let k in data.detail) {
+                html += `<div class="rekap-item"><span>${k}</span><b>Rp ${data.detail[k].toLocaleString()}</b></div>`;
+            }
+            document.getElementById('list-rekap').innerHTML = html;
         });
     }
 </script>
-
 </body>
 </html>
