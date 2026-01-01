@@ -7,31 +7,24 @@
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 20px 100px 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .logout-btn { padding: 8px 16px; border-radius: 10px; background: rgba(248, 113, 113, 0.1); color: #F87171; text-decoration: none; font-size: 12px; font-weight: 600; }
-        .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 25px; border-radius: 24px; margin-bottom: 25px; box-shadow: 0 15px 30px rgba(0, 184, 148, 0.2); }
-        .main-card h1 { margin: 5px 0 0; font-size: 32px; letter-spacing: -1px; }
-        .section-title { font-size: 14px; font-weight: 700; margin-bottom: 15px; color: #94A3B8; letter-spacing: 1px; }
+        .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 25px; border-radius: 24px; box-shadow: 0 15px 30px rgba(0, 184, 148, 0.2); }
         .history-item { background: var(--card); padding: 16px; border-radius: 18px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        .history-row { display: flex; justify-content: space-between; align-items: center; }
-        .tgl { font-size: 12px; color: #94A3B8; }
-        .val { color: var(--accent); font-weight: 800; font-size: 16px; }
-        .regu-tag { margin-top: 8px; font-size: 14px; font-weight: 600; color: #55EFC4; display: block; }
-        .btn-scan { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 400px; background: var(--accent); color: white; padding: 18px; border-radius: 18px; text-align: center; text-decoration: none; font-weight: 800; font-size: 16px; box-shadow: 0 10px 25px rgba(0, 184, 148, 0.3); }
+        .btn-scan { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 400px; background: var(--accent); color: white; padding: 18px; border-radius: 18px; text-align: center; text-decoration: none; font-weight: 800; box-shadow: 0 10px 25px rgba(0, 184, 148, 0.3); }
     </style>
 </head>
 <body>
     <div class="header">
-        <div><h2 id="p-name" style="margin:0; font-size:18px;">Memuat...</h2><p style="margin:0; font-size:12px; color:#94A3B8;">Jimpitan Digital</p></div>
-        <a href="#" class="logout-btn" onclick="logout()">LOGOUT</a>
+        <div><h2 id="p-name" style="margin:0;">Regu ...</h2><p style="margin:0; font-size:12px; color:#94A3B8;">Laporan Anda</p></div>
+        <button onclick="logout()" style="background:rgba(248,113,113,0.1); color:#F87171; border:none; padding:8px 12px; border-radius:10px; font-weight:600;">LOGOUT</button>
     </div>
 
     <div class="main-card">
-        <small style="font-size:11px; opacity:0.8;">TOTAL KAS TERKUMPUL</small>
-        <h1 id="total-kas">Rp 0</h1>
+        <small style="font-size:11px; opacity:0.8;">SALDO KUMPULAN REGU</small>
+        <h1 id="total-kas" style="margin:5px 0;">Rp 0</h1>
     </div>
 
-    <div class="section-title">RIWAYAT PENGAMBILAN</div>
-    <div id="list-harian"></div>
+    <h4 style="color:#94A3B8; margin: 25px 0 15px;">RIWAYAT PENGAMBILAN</h4>
+    <div id="list-harian">Memuat riwayat...</div>
 
     <a href="jimpitan.html" class="btn-scan">📸 MULAI SCAN QR</a>
 
@@ -49,17 +42,20 @@
             let h = "";
             res.detailHarian.forEach(item => {
                 h += `<div class="history-item">
-                        <div class="history-row"><span class="tgl">${item.tgl}</span><span class="val">Rp ${item.total.toLocaleString('id-ID')}</span></div>
-                        <span class="regu-tag">Regu ${item.regu}</span>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="font-size:12px; color:#94A3B8;">${item.tgl}</span>
+                            <span style="color:var(--accent); font-weight:800;">Rp ${item.total.toLocaleString('id-ID')}</span>
+                        </div>
+                        <span style="font-size:14px; font-weight:600; color:#55EFC4; margin-top:5px; display:block;">Regu ${item.regu}</span>
                       </div>`;
             });
-            document.getElementById('list-harian').innerHTML = h || "<p>Belum ada data.</p>";
+            document.getElementById('list-harian').innerHTML = h || "<p style='color:#666; text-align:center;'>Belum ada data.</p>";
             document.body.removeChild(s); delete window[cb];
         };
-        s.src = `${scriptURL}?callback=${cb}&action=getRekap`;
+        s.src = `${scriptURL}?callback=${cb}&action=getRekap&petugas=${encodeURIComponent(user.kelompok)}&role=${user.role}`;
         document.body.appendChild(s);
     }
-    function logout() { localStorage.removeItem("jimpitan_user"); window.location.href = "index.html"; }
+    function logout() { localStorage.clear(); window.location.href = "index.html"; }
     loadData();
 </script>
 </body>
