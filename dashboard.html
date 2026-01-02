@@ -44,7 +44,7 @@
         <h4 style="color:#94A3B8; font-size:11px;">POSISI DANA DI PETUGAS</h4>
         <div id="list-kelompok"></div>
         <div class="box-tunggakan">
-            <h4 style="margin:0 0 15px 0; color:var(--warn);">Data Tunggakan Jimpitan</h4>
+            <h4 style="margin:0 0 15px 0; color:var(--warn);">Buku Piutang Warga</h4>
             <select id="filter-kelompok" onchange="renderTunggakan()">
                 <option value="ALL">Semua Kelompok</option>
                 <option value="Senin">Senin</option><option value="Selasa">Selasa</option>
@@ -89,10 +89,11 @@
                 <button class="btn-pdf" onclick="generatePDF()">📥 DOWNLOAD LAPORAN PDF</button>
             </div>
         </div>
-        <a href="jimpitan.html" class="btn-scan">SCAN JIMPITAN</a>
+        <a href="jimpitan.html" class="btn-scan">📸 SCAN JIMPITAN</a>
     </div>
 
 <script>
+    // GANTI URL DI BAWAH INI DENGAN URL WEB APP BARU ANDA
     const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
     const user = JSON.parse(localStorage.getItem("jimpitan_user"));
     let dataPiutang = {};
@@ -104,6 +105,15 @@
         window[cb] = (res) => { callback(res); document.body.removeChild(s); delete window[cb]; };
         s.src = `${scriptURL}?callback=${cb}&${params}`;
         document.body.appendChild(s);
+    }
+
+    // Fungsi format seragam dd-mm-yyyy
+    function formatTglIndo(d) {
+        const dateObj = new Date(d);
+        const tgl = ("0" + dateObj.getDate()).slice(-2);
+        const bln = ("0" + (dateObj.getMonth() + 1)).slice(-2);
+        const thn = dateObj.getFullYear();
+        return tgl + "-" + bln + "-" + thn;
     }
 
     function init() {
@@ -159,8 +169,9 @@
     }
 
     function loadPresensi() {
-        const tglPilihan = document.getElementById('filter-tanggal-ronda').value; // YYYY-MM-DD
-        if(!tglPilihan) return;
+        const rawTgl = document.getElementById('filter-tanggal-ronda').value;
+        if(!rawTgl) return;
+        const tglPilihan = formatTglIndo(rawTgl); // Konversi ke dd-mm-yyyy
 
         callGAS(`action=getWarga`, (resW) => {
             const listWarga = resW.data;
@@ -171,9 +182,8 @@
 
                 for(let n in resT.data) {
                     resT.data[n].rincian.forEach(r => { 
-                        // Perbandingan Tanggal Format YYYY-MM-DD
+                        // Perbandingan teks dd-mm-yyyy (Anti Rp 0)
                         if(r.tgl.toString().trim() === tglPilihan.toString().trim()) {
-                            // Filter Kelompok (Jika bukan admin)
                             let kelSama = r.kel.toString().trim().toLowerCase() === user.kelompok.toString().trim().toLowerCase();
                             if(user.role === 'petugas' && !kelSama) return;
 
@@ -204,7 +214,7 @@
     function generatePDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        const tgl = document.getElementById('filter-tanggal-ronda').value;
+        const tgl = formatTglIndo(document.getElementById('filter-tanggal-ronda').value);
         const total = document.getElementById('total-malam-ini').innerText;
 
         doc.setFontSize(18);
@@ -240,4 +250,5 @@
     init();
 </script>
 </body>
-</html>
+                </html>
+                        
