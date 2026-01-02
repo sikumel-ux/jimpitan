@@ -93,7 +93,7 @@
     </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
+    const scriptURL = 'GANTI_DENGAN_URL_WEBAPP_BARU_ANDA';
     const user = JSON.parse(localStorage.getItem("jimpitan_user"));
     let dataPiutang = {};
     let currentLaporanDana = [];
@@ -159,9 +159,8 @@
     }
 
     function loadPresensi() {
-        const tglPilihan = document.getElementById('filter-tanggal-ronda').value;
+        const tglPilihan = document.getElementById('filter-tanggal-ronda').value; // YYYY-MM-DD
         if(!tglPilihan) return;
-        const formattedTgl = formatTgl(new Date(tglPilihan));
 
         callGAS(`action=getWarga`, (resW) => {
             const listWarga = resW.data;
@@ -172,12 +171,12 @@
 
                 for(let n in resT.data) {
                     resT.data[n].rincian.forEach(r => { 
-                        let tglSama = r.tgl.toString().trim() === formattedTgl.toString().trim();
-                        let kelSama = r.kel.toString().trim().toLowerCase() === user.kelompok.toString().trim().toLowerCase();
-                        
-                        // Filter: Harus tanggal yang sama, dan jika petugas, harus kelompok yang sama
-                        if(tglSama) {
+                        // Perbandingan Tanggal Format YYYY-MM-DD
+                        if(r.tgl.toString().trim() === tglPilihan.toString().trim()) {
+                            // Filter Kelompok (Jika bukan admin)
+                            let kelSama = r.kel.toString().trim().toLowerCase() === user.kelompok.toString().trim().toLowerCase();
                             if(user.role === 'petugas' && !kelSama) return;
+
                             sudah.push(n); 
                             currentLaporanDana.push([n, "Rp " + r.nom.toLocaleString('id-ID')]);
                             totalDana += r.nom;
@@ -211,7 +210,7 @@
         doc.setFontSize(18);
         doc.text("LAPORAN JIMPITAN WARGA", 14, 20);
         doc.setFontSize(11);
-        doc.text("Tanggal: " + formatTgl(new Date(tgl)), 14, 30);
+        doc.text("Tanggal: " + tgl, 14, 30);
         doc.text("Petugas: Kelompok " + user.kelompok, 14, 37);
 
         doc.autoTable({
@@ -231,12 +230,6 @@
         document.getElementById('cont-t2').style.display = n==2?'block':'none';
         document.getElementById('t1').className = n==1?'tab-btn tab-active':'tab-btn';
         document.getElementById('t2').className = n==2?'tab-btn tab-active':'tab-btn';
-    }
-
-    function formatTgl(d) {
-        const dateObj = new Date(d);
-        const bln = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-        return dateObj.getDate() + " " + bln[dateObj.getMonth()] + " " + dateObj.getFullYear();
     }
 
     function terima(k) {
