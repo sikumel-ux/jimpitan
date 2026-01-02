@@ -40,23 +40,6 @@
         <h1 id="total-kas" style="margin:5px 0; font-size: 30px;">Rp 0</h1>
     </div>
 
-    <div id="admin-view" style="display:none; margin-top:20px;">
-        <h4 style="color:#94A3B8; font-size:11px;">POSISI DANA DI PETUGAS</h4>
-        <div id="list-kelompok"></div>
-        <div class="box-tunggakan">
-            <h4 style="margin:0 0 15px 0; color:var(--warn);">Buku Piutang Warga</h4>
-            <select id="filter-kelompok" onchange="renderTunggakan()">
-                <option value="ALL">Semua Kelompok</option>
-                <option value="Senin">Senin</option><option value="Selasa">Selasa</option>
-                <option value="Rabu">Rabu</option><option value="Kamis">Kamis</option>
-                <option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option>
-                <option value="Minggu">Minggu</option>
-            </select>
-            <input type="text" id="search-nama" placeholder="Cari nama warga..." onkeyup="renderTunggakan()">
-            <div class="scroll"><table><tbody id="tunggakan-list"></tbody></table></div>
-        </div>
-    </div>
-
     <div id="petugas-view" style="display:none; margin-top:20px;">
         <div class="tabs">
             <button id="t1" class="tab-btn tab-active" onclick="switchTab(1)">RIWAYAT SCAN</button>
@@ -85,16 +68,32 @@
                     <span style="font-size:12px; font-weight:bold;">TOTAL TERKUMPUL</span>
                     <span style="font-size:12px; font-weight:bold; color:var(--warn);" id="total-malam-ini">Rp 0</span>
                 </div>
-
                 <button class="btn-pdf" onclick="generatePDF()">📥 DOWNLOAD LAPORAN PDF</button>
             </div>
         </div>
         <a href="jimpitan.html" class="btn-scan">📸 SCAN JIMPITAN</a>
     </div>
 
+    <div id="admin-view" style="display:none; margin-top:20px;">
+        <h4 style="color:#94A3B8; font-size:11px;">POSISI DANA DI PETUGAS</h4>
+        <div id="list-kelompok"></div>
+        <div class="box-tunggakan">
+            <h4 style="margin:0 0 15px 0; color:var(--warn);">Buku Piutang Warga</h4>
+            <select id="filter-kelompok" onchange="renderTunggakan()">
+                <option value="ALL">Semua Kelompok</option>
+                <option value="Senin">Senin</option><option value="Selasa">Selasa</option>
+                <option value="Rabu">Rabu</option><option value="Kamis">Kamis</option>
+                <option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option>
+                <option value="Minggu">Minggu</option>
+            </select>
+            <input type="text" id="search-nama" placeholder="Cari nama warga..." onkeyup="renderTunggakan()">
+            <div class="scroll"><table><tbody id="tunggakan-list"></tbody></table></div>
+        </div>
+    </div>
+
 <script>
-    // MASUKKAN URL BARU SETELAH DEPLOY DI SINI
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec'; 
+    // GANTI URL DI BAWAH INI DENGAN URL BARU SETELAH DEPLOY
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
     const user = JSON.parse(localStorage.getItem("jimpitan_user"));
     let dataPiutang = {};
     let currentLaporanDana = [];
@@ -107,11 +106,11 @@
         document.body.appendChild(s);
     }
 
-    function formatTglDatabase(d) {
-        const dateObj = new Date(d);
-        const tgl = ("0" + dateObj.getDate()).slice(-2);
-        const bln = ("0" + (dateObj.getMonth() + 1)).slice(-2);
-        const thn = dateObj.getFullYear();
+    function formatTglIndo(rawDate) {
+        const d = new Date(rawDate);
+        const tgl = ("0" + d.getDate()).slice(-2);
+        const bln = ("0" + (d.getMonth() + 1)).slice(-2);
+        const thn = d.getFullYear();
         return tgl + "-" + bln + "-" + thn;
     }
 
@@ -120,8 +119,9 @@
         document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Kelp. " + user.kelompok;
         document.getElementById('p-role').innerText = user.role === 'admin' ? "Bendahara" : "Petugas Ronda";
         
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('filter-tanggal-ronda').value = today;
+        // Set default kalender ke hari ini
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById('filter-tanggal-ronda').value = todayStr;
 
         callGAS(`action=getRekap&petugas=${encodeURIComponent(user.kelompok)}&role=${user.role}`, (res) => {
             document.getElementById('total-kas').innerText = "Rp " + (res.total || 0).toLocaleString('id-ID');
@@ -146,6 +146,51 @@
         });
     }
 
+    function loadPresensi() {
+        const rawTgl = document.getElementById('filter-tanggal-ronda').value;
+        if(!rawTgl) return;
+        const tglFilter = formatTglIndo(rawTgl); // Format: dd-mm-yyyy
+
+        callGAS(`action=getWarga`, (resW) => {
+            const listWarga = resW.data;
+            callGAS(`action=getTunggakan`, (resT) => {
+                let sudah = [];
+                currentLaporanDana = [];
+                let totalDana = 0;
+
+                for(let namaWarga in resT.data) {
+                    resT.data[namaWarga].rincian.forEach(r => { 
+                        // Perbandingan teks ketat
+                        if(r.tgl.toString().trim() === tglFilter.trim()) {
+                            // Filter kelompok jika petugas
+                            if(user.role === 'petugas' && r.kel.toString().trim().toLowerCase() !== user.kelompok.toString().trim().toLowerCase()) return;
+                            
+                            sudah.push(namaWarga); 
+                            currentLaporanDana.push([namaWarga, "Rp " + r.nom.toLocaleString('id-ID')]);
+                            totalDana += r.nom;
+                        } 
+                    });
+                }
+
+                // Render Daftar Warga
+                let hP = "";
+                listWarga.sort((a,b) => sudah.includes(a) - sudah.includes(b)).forEach(nama => {
+                    const done = sudah.includes(nama);
+                    hP += `<tr><td>${nama}</td><td style="text-align:right;"><span class="badge ${done?'badge-done':'badge-not'}">${done?'ISI':'KOSONG'}</span></td></tr>`;
+                });
+                document.getElementById('list-presensi').innerHTML = hP;
+
+                // Render Rincian Dana
+                let hD = "";
+                currentLaporanDana.forEach(d => {
+                    hD += `<tr><td>${d[0]}</td><td style="text-align:right;">${d[1]}</td></tr>`;
+                });
+                document.getElementById('list-laporan-dana').innerHTML = hD || "<tr><td colspan='2' style='text-align:center;'>Tidak ada data.</td></tr>";
+                document.getElementById('total-malam-ini').innerText = "Rp " + totalDana.toLocaleString('id-ID');
+            });
+        });
+    }
+
     function loadTunggakan() {
         callGAS(`action=getTunggakan`, (res) => { dataPiutang = res.data; renderTunggakan(); });
     }
@@ -167,72 +212,18 @@
         document.getElementById('tunggakan-list').innerHTML = h || "<tr><td>Kosong</td></tr>";
     }
 
-    function loadPresensi() {
-        const rawTgl = document.getElementById('filter-tanggal-ronda').value;
-        if(!rawTgl) return;
-        const tglPilihan = formatTglDatabase(rawTgl);
-
-        callGAS(`action=getWarga`, (resW) => {
-            const listWarga = resW.data;
-            callGAS(`action=getTunggakan`, (resT) => {
-                let sudah = [];
-                currentLaporanDana = [];
-                let totalDana = 0;
-
-                for(let n in resT.data) {
-                    resT.data[n].rincian.forEach(r => { 
-                        // Membersihkan kutip dan spasi agar perbandingan akurat
-                        let tglDataSheet = r.tgl.toString().replace(/'/g, "").trim();
-                        if(tglDataSheet === tglPilihan.trim()) {
-                            let kelSama = r.kel.toString().trim().toLowerCase() === user.kelompok.toString().trim().toLowerCase();
-                            if(user.role === 'petugas' && !kelSama) return;
-
-                            sudah.push(n); 
-                            currentLaporanDana.push([n, "Rp " + r.nom.toLocaleString('id-ID')]);
-                            totalDana += r.nom;
-                        } 
-                    });
-                }
-
-                let hP = "";
-                listWarga.sort((a,b) => sudah.includes(a) - sudah.includes(b)).forEach(nama => {
-                    const done = sudah.includes(nama);
-                    hP += `<tr><td>${nama}</td><td style="text-align:right;"><span class="badge ${done?'badge-done':'badge-not'}">${done?'ISI':'KOSONG'}</span></td></tr>`;
-                });
-                document.getElementById('list-presensi').innerHTML = hP;
-
-                let hD = "";
-                currentLaporanDana.forEach(d => {
-                    hD += `<tr><td>${d[0]}</td><td style="text-align:right;">${d[1]}</td></tr>`;
-                });
-                document.getElementById('list-laporan-dana').innerHTML = hD || "<tr><td colspan='2' style='text-align:center;'>Tidak ada data.</td></tr>";
-                document.getElementById('total-malam-ini').innerText = "Rp " + totalDana.toLocaleString('id-ID');
-            });
-        });
-    }
-
     function generatePDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        const tgl = formatTglDatabase(document.getElementById('filter-tanggal-ronda').value);
-        const total = document.getElementById('total-malam-ini').innerText;
-
-        doc.setFontSize(18);
-        doc.text("LAPORAN JIMPITAN WARGA", 14, 20);
-        doc.setFontSize(11);
-        doc.text("Tanggal: " + tgl, 14, 30);
-        doc.text("Petugas: Kelompok " + user.kelompok, 14, 37);
-
+        const tgl = formatTglIndo(document.getElementById('filter-tanggal-ronda').value);
+        doc.text("LAPORAN JIMPITAN - " + tgl, 14, 20);
         doc.autoTable({
-            startY: 45,
-            head: [['Nama Warga', 'Nominal']],
+            startY: 30,
+            head: [['Nama', 'Nominal']],
             body: currentLaporanDana,
-            theme: 'grid',
-            headStyles: { fillColor: [0, 184, 148] }
+            theme: 'grid'
         });
-
-        doc.text("TOTAL TERKUMPUL: " + total, 14, doc.lastAutoTable.finalY + 10);
-        doc.save(`Laporan_Jimpitan_${tgl}.pdf`);
+        doc.save(`Laporan_${tgl}.pdf`);
     }
 
     function switchTab(n) {
@@ -243,7 +234,7 @@
     }
 
     function terima(k) {
-        if(confirm("Terima setoran dari " + k + "?")) callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(k)}`, (res)=>{alert(res.message); init();});
+        if(confirm("Terima setoran " + k + "?")) callGAS(`action=konfirmasiSetor&kelompok=${k}`, (res)=>{alert(res.message); init();});
     }
 
     function logout() { localStorage.clear(); location.href='index.html'; }
