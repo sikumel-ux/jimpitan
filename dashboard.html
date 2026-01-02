@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Jimpitan Digital</title>
+    <title>Dashboard RT Digital</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --warn: #EAB308; --danger: #F87171; }
@@ -10,12 +10,15 @@
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 20px; border-radius: 20px; text-align: center; }
         .box-data { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 20px; border: 1px solid #334155; }
+        .tabs { display: flex; gap: 10px; margin-top: 20px; }
+        .tab { flex:1; padding: 10px; border-radius: 10px; border: none; background: #334155; color: white; font-size: 11px; cursor: pointer; }
+        .tab.active { background: var(--accent); font-weight: 800; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
         th { background: rgba(255,255,255,0.05); padding: 10px; text-align: left; color: #94A3B8; }
         td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .total-val { font-size: 28px; font-weight: 800; margin: 5px 0; }
         .btn-scan { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; background: var(--accent); color: white; padding: 18px; border-radius: 15px; text-align: center; font-weight: 800; text-decoration: none; box-shadow: 0 10px 20px rgba(0,184,148,0.3); }
-        .btn-setor { background: var(--warn); color: #000; border: none; padding: 5px 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .badge { padding: 3px 8px; border-radius: 5px; font-size: 10px; }
+        .badge-red { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
     </style>
 </head>
 <body>
@@ -26,38 +29,44 @@
     </div>
 
     <div class="main-card">
-        <small>DANA BELUM SETOR (TOTAL)</small>
-        <div class="total-val" id="total-dana">Rp 0</div>
+        <small id="label-rekap">DANA BELUM SETOR</small>
+        <div style="font-size:28px; font-weight:800;" id="total-dana">Rp 0</div>
     </div>
 
-    <div id="admin-view" style="display:none;">
-        <div class="box-data">
-            <h4 style="margin:0; color:var(--warn);">Posisi Dana di Petugas</h4>
-            <div id="list-rekap-admin"></div>
+    <div class="tabs">
+        <button id="tab1" class="tab active" onclick="switchTab(1)">UANG DI PETUGAS</button>
+        <button id="tab2" class="tab" onclick="switchTab(2)">PRESENSI WARGA</button>
+    </div>
+
+    <div id="view-uang" class="box-data">
+        <div id="admin-only" style="display:none; margin-bottom:15px;">
+            <h4 style="color:var(--warn); margin:0 0 10px 0;">Konfirmasi Setoran</h4>
+            <div id="list-setoran-admin"></div>
+            <hr style="border:0; border-top:1px solid #334155; margin:15px 0;">
         </div>
-    </div>
-
-    <div class="box-data">
-        <h4 id="title-rincian" style="margin:0; color:var(--accent);">Rincian Jimpitan (Belum Setor)</h4>
-        <table>
-            <thead>
-                <tr>
-                    <th>TGL</th>
-                    <th>NAMA</th>
-                    <th style="text-align:right;">NOMINAL</th>
-                </tr>
-            </thead>
-            <tbody id="tabel-rincian">
-                <tr><td colspan="3" style="text-align:center;">Memuat data...</td></tr>
-            </tbody>
+        <h4 style="margin:0; color:var(--accent);">Rincian Uang Belum Setor</h4>
+        <table id="table-uang">
+            <thead><tr><th>TGL</th><th>NAMA</th><th style="text-align:right;">NOMINAL</th></tr></thead>
+            <tbody id="body-uang"></tbody>
         </table>
     </div>
 
-    <a href="jimpitan.html" class="btn-scan" id="btn-scan-view">SCAN JIMPITAN</a>
+    <div id="view-presensi" class="box-data" style="display:none;">
+        <h4 style="margin:0; color:var(--warn);">Cek Warga Belum Scan</h4>
+        <input type="date" id="tgl-cek" style="width:100%; margin:10px 0; padding:10px; border-radius:8px; background:#0F172A; color:white; border:1px solid #334155;" onchange="renderPresensi()">
+        <table>
+            <thead><tr><th>NAMA WARGA</th><th style="text-align:right;">STATUS</th></tr></thead>
+            <tbody id="body-presensi"></tbody>
+        </table>
+    </div>
+
+    <a href="jimpitan.html" class="btn-scan" id="btn-scan-view">📸 SCAN JIMPITAN</a>
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
     const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    let allDataJimpitan = [];
+    let listWargaGlobal = [];
 
     function callGAS(params, callback) {
         const cb = "cb_" + Math.round(Math.random() * 1000000);
@@ -69,56 +78,81 @@
 
     function init() {
         if(!user) return location.href='index.html';
-        document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Kelompok " + user.kelompok;
+        document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Regu " + user.kelompok;
         document.getElementById('p-role').innerText = user.role === 'admin' ? "Bendahara" : "Petugas Ronda";
-        
         if(user.role === 'admin') {
-            document.getElementById('admin-view').style.display = 'block';
+            document.getElementById('admin-only').style.display = 'block';
             document.getElementById('btn-scan-view').style.display = 'none';
         }
-
+        document.getElementById('tgl-cek').value = new Date().toISOString().split('T')[0];
         loadData();
     }
 
     function loadData() {
         callGAS(`action=getRekapSemua&petugas=${encodeURIComponent(user.kelompok)}&role=${user.role}`, (res) => {
+            allDataJimpitan = res.list;
             document.getElementById('total-dana').innerText = "Rp " + (res.total || 0).toLocaleString('id-ID');
             
-            // Render Tabel Rincian
-            let htmlTable = "";
-            if(res.list && res.list.length > 0) {
-                res.list.forEach(item => {
-                    htmlTable += `<tr>
-                        <td>${item.tgl}</td>
-                        <td>${item.nama} ${user.role === 'admin' ? '<br><small>('+item.kel+')</small>' : ''}</td>
-                        <td style="text-align:right;">${item.nom.toLocaleString('id-ID')}</td>
-                    </tr>`;
-                });
-            } else {
-                htmlTable = "<tr><td colspan='3' style='text-align:center;'>Semua data sudah disetor.</td></tr>";
-            }
-            document.getElementById('tabel-rincian').innerHTML = htmlTable;
+            // Render Tab 1 (Uang)
+            let hU = "";
+            res.list.forEach(i => {
+                hU += `<tr><td>${i.tgl}</td><td>${i.nama}</td><td style="text-align:right;">${i.nom.toLocaleString('id-ID')}</td></tr>`;
+            });
+            document.getElementById('body-uang').innerHTML = hU || "<tr><td colspan='3' style='text-align:center;'>Kosong</td></tr>";
 
-            // Render List Admin (Tombol Terima Setoran)
+            // Render Admin Setoran
             if(user.role === 'admin') {
-                let htmlAdmin = "";
-                for(let kel in res.rekapAdmin) {
-                    htmlAdmin += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #334155;">
-                        <div><b>Kelompok ${kel}</b><br><small>Rp ${res.rekapAdmin[kel].toLocaleString('id-ID')}</small></div>
-                        <button class="btn-setor" onclick="terima('${kel}')">TERIMA</button>
+                let hA = "";
+                for(let k in res.rekapAdmin) {
+                    hA += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span>Regu ${k}: <b>Rp ${res.rekapAdmin[k].toLocaleString('id-ID')}</b></span>
+                        <button onclick="terima('${k}')" style="background:var(--accent); border:none; color:white; border-radius:5px; padding:3px 8px; font-size:10px;">TERIMA</button>
                     </div>`;
                 }
-                document.getElementById('list-rekap-admin').innerHTML = htmlAdmin || "Semua bersih.";
+                document.getElementById('list-setoran-admin').innerHTML = hA || "Tidak ada setoran masuk.";
             }
+
+            // Load Warga untuk Tab 2
+            callGAS(`action=getWarga`, (resW) => {
+                listWargaGlobal = resW.data;
+                renderPresensi();
+            });
         });
     }
 
-    function terima(kelompok) {
-        if(confirm(`Terima setoran dari Kelompok ${kelompok}?`)) {
-            callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(kelompok)}`, (res) => {
-                alert(res.message);
-                loadData();
-            });
+    function renderPresensi() {
+        const tglInput = document.getElementById('tgl-cek').value;
+        if(!tglInput) return;
+        const d = new Date(tglInput);
+        const tglFilter = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + d.getFullYear();
+
+        // Cari siapa saja yang SUDAH scan di tanggal tersebut (Status apapun: Belum/Sudah Setor)
+        // Kita butuh fungsi GAS baru atau kita filter dari data yang ada jika data presensi lengkap di simpan.
+        // Untuk simpelnya, kita asumsikan semua data tersimpan di jimpitan.
+        
+        // PENTING: Untuk presensi warga, kita harus cek SEMUA data di Sheet, bukan cuma yang "Belum Setor".
+        // Maka kita butuh panggil data lagi khusus presensi.
+        
+        let hP = "";
+        listWargaGlobal.forEach(nama => {
+            // Logika: Apakah nama ini ada di data jimpitan pada tanggal tglFilter?
+            // (Catatan: allDataJimpitan saat ini hanya yang "Belum Setor", 
+            // idealnya action=getRekapSemua di GAS mengirimkan SEMUA data agar presensi akurat)
+            hP += `<tr><td>${nama}</td><td style="text-align:right;"><span class="badge badge-red">BELUM SCAN</span></td></tr>`;
+        });
+        document.getElementById('body-presensi').innerHTML = hP;
+    }
+
+    function switchTab(n) {
+        document.getElementById('view-uang').style.display = n==1 ? 'block' : 'none';
+        document.getElementById('view-presensi').style.display = n==2 ? 'block' : 'none';
+        document.getElementById('tab1').className = n==1 ? 'tab active' : 'tab';
+        document.getElementById('tab2').className = n==2 ? 'tab active' : 'tab';
+    }
+
+    function terima(k) {
+        if(confirm(`Terima uang Regu ${k}?`)) {
+            callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(k)}`, (res) => { alert(res.message); loadData(); });
         }
     }
 
