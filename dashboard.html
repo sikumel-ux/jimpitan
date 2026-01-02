@@ -5,7 +5,6 @@
     <title>Dashboard RT Digital</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --warn: #EAB308; --danger: #F87171; }
@@ -173,7 +172,12 @@
 
                 for(let n in resT.data) {
                     resT.data[n].rincian.forEach(r => { 
-                        if(r.tgl == formattedTgl) { 
+                        let tglSama = r.tgl.toString().trim() === formattedTgl.toString().trim();
+                        let kelSama = r.kel.toString().trim().toLowerCase() === user.kelompok.toString().trim().toLowerCase();
+                        
+                        // Filter: Harus tanggal yang sama, dan jika petugas, harus kelompok yang sama
+                        if(tglSama) {
+                            if(user.role === 'petugas' && !kelSama) return;
                             sudah.push(n); 
                             currentLaporanDana.push([n, "Rp " + r.nom.toLocaleString('id-ID')]);
                             totalDana += r.nom;
@@ -230,8 +234,9 @@
     }
 
     function formatTgl(d) {
+        const dateObj = new Date(d);
         const bln = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-        return d.getDate() + " " + bln[d.getMonth()] + " " + d.getFullYear();
+        return dateObj.getDate() + " " + bln[dateObj.getMonth()] + " " + dateObj.getFullYear();
     }
 
     function terima(k) {
