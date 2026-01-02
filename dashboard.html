@@ -69,7 +69,7 @@
 
     function init() {
         if(!user) return location.href='index.html';
-        document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Kelp. " + user.kelompok;
+        document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Kelompok " + user.kelompok;
         document.getElementById('p-role').innerText = user.role === 'admin' ? "Bendahara" : "Petugas Ronda";
         
         if(user.role === 'admin') {
@@ -104,7 +104,7 @@
                 let htmlAdmin = "";
                 for(let kel in res.rekapAdmin) {
                     htmlAdmin += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #334155;">
-                        <div><b>Kelp. ${kel}</b><br><small>Rp ${res.rekapAdmin[kel].toLocaleString('id-ID')}</small></div>
+                        <div><b>Kelompok ${kel}</b><br><small>Rp ${res.rekapAdmin[kel].toLocaleString('id-ID')}</small></div>
                         <button class="btn-setor" onclick="terima('${kel}')">TERIMA</button>
                     </div>`;
                 }
