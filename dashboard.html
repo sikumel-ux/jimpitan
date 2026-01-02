@@ -2,182 +2,80 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard RT Digital</title>
+    <title>Presensi Jimpitan RT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --warn: #EAB308; --danger: #F87171; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 20px 100px 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 20px; border-radius: 20px; text-align: center; }
-        .box-data { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 20px; border: 1px solid #334155; }
-        .tabs { display: flex; gap: 10px; margin-top: 20px; }
-        .tab { flex:1; padding: 12px; border-radius: 12px; border: none; background: #334155; color: white; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .tab.active { background: var(--accent); box-shadow: 0 4px 10px rgba(0, 184, 148, 0.3); }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
-        th { background: rgba(255,255,255,0.05); padding: 10px; text-align: left; color: #94A3B8; }
-        td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; }
-        .badge-red { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
-        .badge-green { background: rgba(0, 184, 148, 0.2); color: var(--accent); }
-        .btn-scan { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; background: var(--accent); color: white; padding: 18px; border-radius: 15px; text-align: center; font-weight: 800; text-decoration: none; }
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .box { background: var(--card); padding: 20px; border-radius: 20px; border: 1px solid #334155; }
+        h3 { margin-top: 0; color: var(--accent); }
+        input[type="date"] { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0F172A; color: white; margin: 15px 0; font-size: 16px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 10px; color: #94A3B8; font-size: 12px; border-bottom: 2px solid #334155; }
+        td { padding: 15px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+        .status { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; }
+        .sudah { background: rgba(0, 184, 148, 0.2); color: var(--accent); }
+        .belum { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
+        .btn-scan { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; background: var(--accent); color: white; padding: 18px; border-radius: 15px; text-align: center; font-weight: 800; text-decoration: none; box-shadow: 0 10px 20px rgba(0,184,148,0.3); }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div><h2 id="p-name">...</h2><p id="p-role" style="font-size:11px; color:#94A3B8; margin:0;"></p></div>
-        <button onclick="logout()" style="background:none; border:1px solid #F87171; color:#F87171; padding:5px 10px; border-radius:8px; font-size:11px;">LOGOUT</button>
-    </div>
+    <div class="box">
+        <h3>Cek Setoran Warga</h3>
+        <label style="font-size: 12px; color: #94A3B8;">Pilih Tanggal Ronda:</label>
+        <input type="date" id="tgl-input" onchange="muatPresensi()">
 
-    <div class="main-card">
-        <small id="label-rekap">DANA BELUM SETOR (DI REGU)</small>
-        <div style="font-size:28px; font-weight:800;" id="total-dana">Rp 0</div>
-    </div>
-
-    <div class="tabs">
-        <button id="tab1" class="tab active" onclick="switchTab(1)">KEUANGAN</button>
-        <button id="tab2" class="tab" onclick="switchTab(2)">PRESENSI WARGA</button>
-    </div>
-
-    <div id="view-uang" class="box-data">
-        <div id="admin-only" style="display:none; margin-bottom:15px; background: rgba(234, 179, 8, 0.05); padding: 10px; border-radius: 10px; border: 1px dashed var(--warn);">
-            <h4 style="color:var(--warn); margin:0 0 10px 0;">Konfirmasi Setoran Regu</h4>
-            <div id="list-setoran-admin"></div>
-        </div>
-        <h4 style="margin:0; color:var(--accent);">Rincian Uang di Tangan</h4>
         <table>
-            <thead><tr><th>TGL</th><th>NAMA</th><th style="text-align:right;">NOMINAL</th></tr></thead>
-            <tbody id="body-uang"></tbody>
+            <thead>
+                <tr>
+                    <th>NAMA WARGA</th>
+                    <th style="text-align:right;">STATUS</th>
+                </tr>
+            </thead>
+            <tbody id="tabel-body">
+                <tr><td colspan="2" style="text-align:center; color:#94A3B8;">Memuat data...</td></tr>
+            </tbody>
         </table>
     </div>
 
-    <div id="view-presensi" class="box-data" style="display:none;">
-        <h4 style="margin:0; color:var(--warn);">Cek Warga Belum Scan</h4>
-        <input type="date" id="tgl-cek" style="width:100%; margin:10px 0; padding:12px; border-radius:10px; background:#0F172A; color:white; border:1px solid #334155;" onchange="renderPresensi()">
-        
-        <table id="table-presensi">
-            <thead><tr><th>NAMA WARGA</th><th style="text-align:right;">STATUS</th></tr></thead>
-            <tbody id="body-presensi"></tbody>
-        </table>
-    </div>
-
-    <a href="jimpitan.html" class="btn-scan" id="btn-scan-view">📸 SCAN JIMPITAN</a>
+    <a href="jimpitan.html" class="btn-scan" id="btn-scan">📸 MULAI SCAN JIMPITAN</a>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
-    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
-    let globalScanData = [];
-    let listWarga = [];
+    const scriptURL = 'URL_WEB_APP_GAS_KAMU_DI_SINI';
+    
+    // Set default tanggal hari ini
+    const today = new Date();
+    document.getElementById('tgl-input').value = today.toISOString().split('T')[0];
 
-    function callGAS(params, callback) {
+    function muatPresensi() {
+        const tglRaw = document.getElementById('tgl-input').value; // yyyy-mm-dd
+        const p = tglRaw.split('-');
+        const tglFormat = p[2] + "-" + p[1] + "-" + p[0]; // dd-mm-yyyy
+
         const cb = "cb_" + Math.round(Math.random() * 1000000);
         const s = document.createElement('script');
-        window[cb] = (res) => { callback(res); document.body.removeChild(s); delete window[cb]; };
-        s.src = `${scriptURL}?callback=${cb}&${params}`;
+        window[cb] = (res) => {
+            let html = "";
+            res.data.forEach(item => {
+                const styleClass = item.status === "SUDAH" ? "sudah" : "belum";
+                html += `<tr>
+                    <td>${item.nama}</td>
+                    <td style="text-align:right;">
+                        <span class="status ${styleClass}">${item.status} SCAN</span>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('tabel-body').innerHTML = html;
+            document.body.removeChild(s);
+            delete window[cb];
+        };
+        s.src = `${scriptURL}?callback=${cb}&action=getPresensi&tanggal=${tglFormat}`;
         document.body.appendChild(s);
     }
 
-    function init() {
-        if(!user) return location.href='index.html';
-        document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Regu " + user.kelompok;
-        document.getElementById('p-role').innerText = user.role === 'admin' ? "Bendahara" : "Petugas Ronda";
-        if(user.role === 'admin') {
-            document.getElementById('admin-only').style.display = 'block';
-            document.getElementById('btn-scan-view').style.display = 'none';
-        }
-        document.getElementById('tgl-cek').value = new Date().toISOString().split('T')[0];
-        loadSemuaData();
-    }
-
-    function loadSemuaData() {
-        // 1. Ambil Semua Riwayat Scan
-        callGAS(`action=getAllJimpitan`, (resJ) => {
-            globalScanData = resJ.data;
-            
-            // 2. Ambil Daftar Warga
-            callGAS(`action=getWarga`, (resW) => {
-                listWarga = resW.data;
-                renderUI();
-            });
-        });
-    }
-
-    function renderUI() {
-        // Render Uang Belum Setor (Filter status === 'Belum Setor')
-        let totalBelumSetor = 0;
-        let rekapAdmin = {};
-        let hU = "";
-        
-        globalScanData.forEach(i => {
-            if(i.stat.toLowerCase().trim() === 'belum setor') {
-                let kelMatch = (user.role === 'admin' || i.kel.toString().trim() === user.kelompok.toString().trim());
-                if(kelMatch) {
-                    totalBelumSetor += i.nom;
-                    hU += `<tr><td>${i.tgl}</td><td>${i.nama} <br><small>(${i.kel})</small></td><td style="text-align:right;">${i.nom.toLocaleString('id-ID')}</td></tr>`;
-                    rekapAdmin[i.kel] = (rekapAdmin[i.kel] || 0) + i.nom;
-                }
-            }
-        });
-
-        document.getElementById('total-dana').innerText = "Rp " + totalBelumSetor.toLocaleString('id-ID');
-        document.getElementById('body-uang').innerHTML = hU || "<tr><td colspan='3' style='text-align:center;'>Kosong</td></tr>";
-
-        // Render Tombol Admin
-        if(user.role === 'admin') {
-            let hA = "";
-            for(let k in rekapAdmin) {
-                hA += `<div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
-                    <span style="font-size:12px;">Regu ${k}: <b>Rp ${rekapAdmin[k].toLocaleString('id-ID')}</b></span>
-                    <button onclick="terima('${k}')" style="background:var(--warn); border:none; color:black; border-radius:6px; padding:5px 10px; font-size:10px; font-weight:800;">TERIMA</button>
-                </div>`;
-            }
-            document.getElementById('list-setoran-admin').innerHTML = hA || "<small>Tidak ada setoran tertunda.</small>";
-        }
-
-        renderPresensi();
-    }
-
-    function renderPresensi() {
-        const tglInput = document.getElementById('tgl-cek').value;
-        const d = new Date(tglInput);
-        const tglFilter = ("0" + d.getDate()).slice(-2) + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + d.getFullYear();
-
-        // Cari siapa saja yang sudah scan di tanggal tersebut
-        let wargaSudahScan = globalScanData
-            .filter(i => i.tgl === tglFilter)
-            .map(i => i.nama.toString().trim());
-
-        let hP = "";
-        listWarga.forEach(nama => {
-            const isDone = wargaSudahScan.includes(nama.trim());
-            hP += `<tr>
-                <td>${nama}</td>
-                <td style="text-align:right;">
-                    <span class="badge ${isDone ? 'badge-green' : 'badge-red'}">${isDone ? 'SUDAH SCAN' : 'BELUM SCAN'}</span>
-                </td>
-            </tr>`;
-        });
-        document.getElementById('body-presensi').innerHTML = hP;
-    }
-
-    function switchTab(n) {
-        document.getElementById('view-uang').style.display = n==1 ? 'block' : 'none';
-        document.getElementById('view-presensi').style.display = n==2 ? 'block' : 'none';
-        document.getElementById('tab1').className = n==1 ? 'tab active' : 'tab';
-        document.getElementById('tab2').className = n==2 ? 'tab active' : 'tab';
-    }
-
-    function terima(k) {
-        if(confirm(`Konfirmasi uang fisik dari Regu ${k} sudah diterima?`)) {
-            callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(k)}`, (res) => {
-                alert(res.message);
-                loadSemuaData(); // Reload semua biar status update
-            });
-        }
-    }
-
-    function logout() { localStorage.clear(); location.href='index.html'; }
-    init();
+    // Jalankan saat pertama buka
+    muatPresensi();
 </script>
 </body>
 </html>
