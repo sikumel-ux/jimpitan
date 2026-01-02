@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard RT Digital</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -10,57 +9,70 @@
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 20px 100px 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0, 184, 148, 0.2); }
-        .list-item { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
-        .btn-setor { background: var(--warn); color: #000; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 11px; }
-        .btn-scan { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px; background: var(--accent); color: white; padding: 18px; border-radius: 15px; text-align: center; text-decoration: none; font-weight: 800; box-shadow: 0 10px 20px rgba(0,184,148,0.3); z-index: 100; }
+        .list-item { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 10px; display: flex; justify-content: space-between; border: 1px solid rgba(255,255,255,0.05); }
+        .btn-setor { background: var(--warn); color: #000; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer; }
+        .btn-scan { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px; background: var(--accent); color: white; padding: 18px; border-radius: 15px; text-align: center; font-weight: 800; text-decoration: none; box-shadow: 0 10px 20px rgba(0,184,148,0.3); z-index: 100; }
         .box-tunggakan { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 25px; border: 1px solid #334155; }
-        .scroll-area { max-height: 400px; overflow-y: auto; margin-top: 10px; }
-        .tabel-tagihan { width: 100%; border-collapse: collapse; }
-        .tabel-tagihan td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
-        select, input { width: 100%; background: #0F172A; border: 1px solid #475569; color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; box-sizing: border-box; }
+        .scroll { max-height: 400px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
+        .badge-done { background: rgba(0, 184, 148, 0.2); color: var(--accent); }
+        .badge-not { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
+        .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { background: #1E293B; color: #94A3B8; border: none; padding: 12px; border-radius: 10px; font-size: 11px; cursor: pointer; }
+        .tab-active { background: var(--accent); color: white; }
+        select, input { width: 100%; background: #0F172A; border: 1px solid #334155; color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div><h2 id="p-name" style="margin:0; font-size:16px;">Memuat...</h2><p id="p-role" style="margin:0; font-size:11px; color:#94A3B8;"></p></div>
-        <button onclick="logout()" style="background:none; border:1px solid #F87171; color:#F87171; padding:5px 10px; border-radius:8px; font-size:10px; font-weight:bold;">LOGOUT</button>
+        <div><h2 id="p-name" style="margin:0; font-size:16px;">...</h2><p id="p-role" style="margin:0; font-size:11px; color:#94A3B8;"></p></div>
+        <button onclick="logout()" style="background:none; border:1px solid #F87171; color:#F87171; padding:5px 10px; border-radius:8px; font-size:10px;">LOGOUT</button>
     </div>
 
     <div class="main-card">
         <small id="label-kas">TOTAL SALDO BERJALAN</small>
-        <h1 id="total-kas" style="margin:5px 0; font-size: 32px;">Rp 0</h1>
+        <h1 id="total-kas" style="margin:5px 0; font-size: 30px;">Rp 0</h1>
     </div>
 
     <div id="admin-view" style="display:none; margin-top:20px;">
-        <h4 style="color:#94A3B8; font-size:11px;">SALDO DI TANGAN PETUGAS</h4>
+        <h4 style="color:#94A3B8; font-size:11px;">POSISI DANA DI PETUGAS</h4>
         <div id="list-kelompok"></div>
 
         <div class="box-tunggakan">
             <h4 style="margin:0 0 15px 0; color:var(--warn);">Buku Piutang Warga</h4>
             <select id="filter-kelompok" onchange="renderTunggakan()">
-                <option value="ALL">Semua Kelompok (Global)</option>
-                <option value="Senin">Jatah Kelompok Senin</option>
-                <option value="Selasa">Jatah Kelompok Selasa</option>
-                <option value="Rabu">Jatah Kelompok Rabu</option>
-                <option value="Kamis">Jatah Kelompok Kamis</option>
-                <option value="Jumat">Jatah Kelompok Jumat</option>
-                <option value="Sabtu">Jatah Kelompok Sabtu</option>
-                <option value="Minggu">Jatah Kelompok Minggu</option>
+                <option value="ALL">Semua Kelompok</option>
+                <option value="Senin">Senin</option><option value="Selasa">Selasa</option>
+                <option value="Rabu">Rabu</option><option value="Kamis">Kamis</option>
+                <option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option>
+                <option value="Minggu">Minggu</option>
             </select>
             <input type="text" id="search-nama" placeholder="Cari nama warga..." onkeyup="renderTunggakan()">
-            <div class="scroll-area">
-                <table class="tabel-tagihan">
-                    <tbody id="tunggakan-list"></tbody>
-                </table>
-            </div>
+            <div class="scroll"><table><tbody id="tunggakan-list"></tbody></table></div>
         </div>
     </div>
 
     <div id="petugas-view" style="display:none; margin-top:20px;">
-        <h4 style="color:#94A3B8; font-size:11px;">HASIL SCAN ANDA</h4>
-        <div id="list-petugas"></div>
-        <a href="jimpitan.html" class="btn-scan">📸 MULAI SCAN</a>
+        <div class="tabs">
+            <button id="t1" class="tab-btn tab-active" onclick="switchTab(1)">RIWAYAT SCAN</button>
+            <button id="t2" class="tab-btn" onclick="switchTab(2)">PRESENSI WARGA</button>
+        </div>
+
+        <div id="cont-t1">
+            <h4 style="color:#94A3B8; font-size:11px;">DANA BELUM SETOR</h4>
+            <div id="list-petugas"></div>
+        </div>
+
+        <div id="cont-t2" style="display:none;">
+            <div class="box-tunggakan" style="margin-top:0;">
+                <h4 style="margin:0 0 10px 0; color:var(--accent);">Cek Pengisian Malam Ini</h4>
+                <div class="scroll"><table><tbody id="list-presensi"></tbody></table></div>
+            </div>
+        </div>
+        <a href="jimpitan.html" class="btn-scan">📸 SCAN JIMPITAN</a>
     </div>
 
 <script>
@@ -77,22 +89,20 @@
     }
 
     function init() {
-        if(!user) { location.href = 'index.html'; return; }
+        if(!user) return location.href='index.html';
         document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Kelp. " + user.kelompok;
-        document.getElementById('p-role').innerText = user.role === 'admin' ? "Pusat Kontrol" : "Petugas Lapangan";
-        
+        document.getElementById('p-role').innerText = user.role === 'admin' ? "Bendahara" : "Petugas Ronda";
+
         callGAS(`action=getRekap&petugas=${encodeURIComponent(user.kelompok)}&role=${user.role}`, (res) => {
             document.getElementById('total-kas').innerText = "Rp " + (res.total || 0).toLocaleString('id-ID');
             if(user.role === 'admin') {
                 document.getElementById('admin-view').style.display = 'block';
                 let h = "";
                 for(let k in res.data) {
-                    h += `<div class="list-item">
-                            <div><b>${k}</b><br><small>Rp ${res.data[k].toLocaleString('id-ID')}</small></div>
-                            <button class="btn-setor" onclick="terima('${k}')">TERIMA</button>
-                          </div>`;
+                    h += `<div class="list-item"><div><b>${k}</b><br><small>Rp ${res.data[k].toLocaleString('id-ID')}</small></div>
+                          <button class="btn-setor" onclick="terima('${k}')">TERIMA</button></div>`;
                 }
-                document.getElementById('list-kelompok').innerHTML = h || "<small>Duit sudah masuk kas semua.</small>";
+                document.getElementById('list-kelompok').innerHTML = h || "<small>Kosong.</small>";
                 loadTunggakan();
             } else {
                 document.getElementById('petugas-view').style.display = 'block';
@@ -100,16 +110,14 @@
                 for(let t in res.data) {
                     p += `<div class="list-item"><span>${t}</span><b>Rp ${res.data[t].toLocaleString('id-ID')}</b></div>`;
                 }
-                document.getElementById('list-petugas').innerHTML = p || "<small>Belum ada data.</small>";
+                document.getElementById('list-petugas').innerHTML = p || "<small>Belum ada scan.</small>";
+                loadPresensi();
             }
         });
     }
 
     function loadTunggakan() {
-        callGAS(`action=getTunggakan`, (res) => {
-            dataPiutang = res.data;
-            renderTunggakan();
-        });
+        callGAS(`action=getTunggakan`, (res) => { dataPiutang = res.data; renderTunggakan(); });
     }
 
     function renderTunggakan() {
@@ -117,28 +125,54 @@
         const q = document.getElementById('search-nama').value.toLowerCase();
         let h = "";
         const sorted = Object.keys(dataPiutang).sort((a,b) => dataPiutang[b].total - dataPiutang[a].total);
-
         sorted.forEach(nama => {
             const w = dataPiutang[nama];
-            const filteredRincian = f === "ALL" ? w.rincian : w.rincian.filter(r => r.kel === f);
-            if (filteredRincian.length > 0 && nama.toLowerCase().includes(q)) {
-                const total = filteredRincian.reduce((s, i) => s + i.nom, 0);
-                const detail = filteredRincian.map(r => r.tgl).join(', ');
-                h += `<tr>
-                    <td><b>${nama}</b><br><small style="color:#94A3B8;">${filteredRincian.length}x: ${detail}</small></td>
-                    <td style="text-align:right; color:var(--danger); font-weight:bold;">Rp ${total.toLocaleString('id-ID')}</td>
-                </tr>`;
+            const filter = f === "ALL" ? w.rincian : w.rincian.filter(r => r.kel === f);
+            if(filter.length > 0 && nama.toLowerCase().includes(q)) {
+                const total = filter.reduce((s, i) => s + i.nom, 0);
+                h += `<tr><td><b>${nama}</b><br><small>${filter.map(r=>r.tgl).join(', ')}</small></td>
+                    <td style="text-align:right; color:var(--danger); font-weight:bold;">Rp ${total.toLocaleString('id-ID')}</td></tr>`;
             }
         });
-        document.getElementById('tunggakan-list').innerHTML = h || "<tr><td colspan='2' style='text-align:center;'>Data Kosong</td></tr>";
+        document.getElementById('tunggakan-list').innerHTML = h || "<tr><td>Kosong</td></tr>";
     }
 
-    function terima(kel) {
-        if(!confirm("Terima uang dari " + kel + "?")) return;
-        callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(kel)}`, (res) => { alert(res.message); init(); });
+    function loadPresensi() {
+        callGAS(`action=getWarga`, (resW) => {
+            const listWarga = resW.data;
+            callGAS(`action=getTunggakan`, (resT) => {
+                const tglSkrg = formatTgl(new Date());
+                let sudah = [];
+                for(let n in resT.data) {
+                    resT.data[n].rincian.forEach(r => { if(r.tgl == tglSkrg && r.kel == user.kelompok) sudah.push(n); });
+                }
+                let h = "";
+                listWarga.sort((a,b) => sudah.includes(a) - sudah.includes(b)).forEach(nama => {
+                    const done = sudah.includes(nama);
+                    h += `<tr><td>${nama}</td><td style="text-align:right;"><span class="badge ${done?'badge-done':'badge-not'}">${done?'SUDAH':'BELUM'}</span></td></tr>`;
+                });
+                document.getElementById('list-presensi').innerHTML = h;
+            });
+        });
     }
 
-    function logout() { localStorage.clear(); location.href = 'index.html'; }
+    function switchTab(n) {
+        document.getElementById('cont-t1').style.display = n==1?'block':'none';
+        document.getElementById('cont-t2').style.display = n==2?'block':'none';
+        document.getElementById('t1').className = n==1?'tab-btn tab-active':'tab-btn';
+        document.getElementById('t2').className = n==2?'tab-btn tab-active':'tab-btn';
+    }
+
+    function formatTgl(d) {
+        const bln = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+        return d.getDate() + " " + bln[d.getMonth()] + " " + d.getFullYear();
+    }
+
+    function terima(k) {
+        if(confirm("Terima setoran dari " + k + "?")) callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(k)}`, (res)=>{alert(res.message); init();});
+    }
+
+    function logout() { localStorage.clear(); location.href='index.html'; }
     init();
 </script>
 </body>
