@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard RT Digital</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --warn: #EAB308; --danger: #F87171; }
@@ -13,15 +16,16 @@
         .btn-setor { background: var(--warn); color: #000; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer; }
         .btn-scan { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px; background: var(--accent); color: white; padding: 18px; border-radius: 15px; text-align: center; font-weight: 800; text-decoration: none; box-shadow: 0 10px 20px rgba(0,184,148,0.3); z-index: 100; }
         .box-tunggakan { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 25px; border: 1px solid #334155; }
-        .scroll { max-height: 400px; overflow-y: auto; }
+        .scroll { max-height: 250px; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; }
-        td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+        td, th { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; text-align: left; }
         .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
         .badge-done { background: rgba(0, 184, 148, 0.2); color: var(--accent); }
         .badge-not { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
         .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .tab-btn { background: #1E293B; color: #94A3B8; border: none; padding: 12px; border-radius: 10px; font-size: 11px; cursor: pointer; }
         .tab-active { background: var(--accent); color: white; }
+        .btn-pdf { width: 100%; background: #F87171; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; margin-top: 15px; cursor: pointer; font-size: 12px; }
         select, input { width: 100%; background: #0F172A; border: 1px solid #334155; color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; box-sizing: border-box; }
     </style>
 </head>
@@ -40,7 +44,6 @@
     <div id="admin-view" style="display:none; margin-top:20px;">
         <h4 style="color:#94A3B8; font-size:11px;">POSISI DANA DI PETUGAS</h4>
         <div id="list-kelompok"></div>
-
         <div class="box-tunggakan">
             <h4 style="margin:0 0 15px 0; color:var(--warn);">Buku Piutang Warga</h4>
             <select id="filter-kelompok" onchange="renderTunggakan()">
@@ -58,7 +61,7 @@
     <div id="petugas-view" style="display:none; margin-top:20px;">
         <div class="tabs">
             <button id="t1" class="tab-btn tab-active" onclick="switchTab(1)">RIWAYAT SCAN</button>
-            <button id="t2" class="tab-btn" onclick="switchTab(2)">PRESENSI WARGA</button>
+            <button id="t2" class="tab-btn" onclick="switchTab(2)">LAPORAN PER TANGGAL</button>
         </div>
 
         <div id="cont-t1">
@@ -68,8 +71,23 @@
 
         <div id="cont-t2" style="display:none;">
             <div class="box-tunggakan" style="margin-top:0;">
-                <h4 style="margin:0 0 10px 0; color:var(--accent);">Cek Pengisian Malam Ini</h4>
+                <h4 style="margin:0 0 5px 0; color:var(--accent);">Cek Data Ronda</h4>
+                <input type="date" id="filter-tanggal-ronda" onchange="loadPresensi()">
+                
+                <p style="font-size:11px; color:#94A3B8; margin-bottom:5px;">HASIL PENGISIAN:</p>
                 <div class="scroll"><table><tbody id="list-presensi"></tbody></table></div>
+
+                <h4 style="margin:15px 0 5px 0; color:var(--warn); font-size:12px;">RINCIAN DANA MASUK:</h4>
+                <div class="scroll">
+                    <table style="font-size:12px;"><tbody id="list-laporan-dana"></tbody></table>
+                </div>
+                
+                <div style="margin-top:10px; padding:10px; background:rgba(255,255,255,0.05); border-radius:10px; display:flex; justify-content:space-between;">
+                    <span style="font-size:12px; font-weight:bold;">TOTAL TERKUMPUL</span>
+                    <span style="font-size:12px; font-weight:bold; color:var(--warn);" id="total-malam-ini">Rp 0</span>
+                </div>
+
+                <button class="btn-pdf" onclick="generatePDF()">📥 DOWNLOAD LAPORAN PDF</button>
             </div>
         </div>
         <a href="jimpitan.html" class="btn-scan">📸 SCAN JIMPITAN</a>
@@ -79,6 +97,7 @@
     const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
     const user = JSON.parse(localStorage.getItem("jimpitan_user"));
     let dataPiutang = {};
+    let currentLaporanDana = [];
 
     function callGAS(params, callback) {
         const cb = "cb_" + Math.round(Math.random() * 1000000);
@@ -92,6 +111,9 @@
         if(!user) return location.href='index.html';
         document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Kelp. " + user.kelompok;
         document.getElementById('p-role').innerText = user.role === 'admin' ? "Bendahara" : "Petugas Ronda";
+        
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('filter-tanggal-ronda').value = today;
 
         callGAS(`action=getRekap&petugas=${encodeURIComponent(user.kelompok)}&role=${user.role}`, (res) => {
             document.getElementById('total-kas').innerText = "Rp " + (res.total || 0).toLocaleString('id-ID');
@@ -138,22 +160,66 @@
     }
 
     function loadPresensi() {
+        const tglPilihan = document.getElementById('filter-tanggal-ronda').value;
+        if(!tglPilihan) return;
+        const formattedTgl = formatTgl(new Date(tglPilihan));
+
         callGAS(`action=getWarga`, (resW) => {
             const listWarga = resW.data;
             callGAS(`action=getTunggakan`, (resT) => {
-                const tglSkrg = formatTgl(new Date());
                 let sudah = [];
+                currentLaporanDana = [];
+                let totalDana = 0;
+
                 for(let n in resT.data) {
-                    resT.data[n].rincian.forEach(r => { if(r.tgl == tglSkrg && r.kel == user.kelompok) sudah.push(n); });
+                    resT.data[n].rincian.forEach(r => { 
+                        if(r.tgl == formattedTgl) { 
+                            sudah.push(n); 
+                            currentLaporanDana.push([n, "Rp " + r.nom.toLocaleString('id-ID')]);
+                            totalDana += r.nom;
+                        } 
+                    });
                 }
-                let h = "";
+
+                let hP = "";
                 listWarga.sort((a,b) => sudah.includes(a) - sudah.includes(b)).forEach(nama => {
                     const done = sudah.includes(nama);
-                    h += `<tr><td>${nama}</td><td style="text-align:right;"><span class="badge ${done?'badge-done':'badge-not'}">${done?'SUDAH':'BELUM'}</span></td></tr>`;
+                    hP += `<tr><td>${nama}</td><td style="text-align:right;"><span class="badge ${done?'badge-done':'badge-not'}">${done?'ISI':'KOSONG'}</span></td></tr>`;
                 });
-                document.getElementById('list-presensi').innerHTML = h;
+                document.getElementById('list-presensi').innerHTML = hP;
+
+                let hD = "";
+                currentLaporanDana.forEach(d => {
+                    hD += `<tr><td>${d[0]}</td><td style="text-align:right;">${d[1]}</td></tr>`;
+                });
+                document.getElementById('list-laporan-dana').innerHTML = hD || "<tr><td colspan='2' style='text-align:center;'>Tidak ada data.</td></tr>";
+                document.getElementById('total-malam-ini').innerText = "Rp " + totalDana.toLocaleString('id-ID');
             });
         });
+    }
+
+    function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const tgl = document.getElementById('filter-tanggal-ronda').value;
+        const total = document.getElementById('total-malam-ini').innerText;
+
+        doc.setFontSize(18);
+        doc.text("LAPORAN JIMPITAN WARGA", 14, 20);
+        doc.setFontSize(11);
+        doc.text("Tanggal: " + formatTgl(new Date(tgl)), 14, 30);
+        doc.text("Petugas: Kelompok " + user.kelompok, 14, 37);
+
+        doc.autoTable({
+            startY: 45,
+            head: [['Nama Warga', 'Nominal']],
+            body: currentLaporanDana,
+            theme: 'grid',
+            headStyles: { fillColor: [0, 184, 148] }
+        });
+
+        doc.text("TOTAL TERKUMPUL: " + total, 14, doc.lastAutoTable.finalY + 10);
+        doc.save(`Laporan_Jimpitan_${tgl}.pdf`);
     }
 
     function switchTab(n) {
