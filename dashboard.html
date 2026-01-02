@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard RT Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --warn: #EAB308; --danger: #F87171; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 20px 100px 20px; }
@@ -12,40 +14,54 @@
         .btn-setor { background: var(--warn); color: #000; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 11px; }
         .btn-scan { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px; background: var(--accent); color: white; padding: 18px; border-radius: 15px; text-align: center; text-decoration: none; font-weight: 800; box-shadow: 0 10px 20px rgba(0,184,148,0.3); z-index: 100; }
         
-        /* Table Style */
         .box-tunggakan { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 25px; border: 1px solid #334155; }
-        .tabel-tagihan { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .scroll-area { max-height: 400px; overflow-y: auto; margin-top: 10px; }
+        .tabel-tagihan { width: 100%; border-collapse: collapse; }
         .tabel-tagihan th { text-align: left; color: #94A3B8; font-size: 10px; padding: 10px 5px; border-bottom: 1px solid #334155; }
         .tabel-tagihan td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
-        #search-warga { width: 92%; background: #0F172A; border: 1px solid #334155; color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 14px; }
-        .scroll-area { max-height: 400px; overflow-y: auto; }
+        
+        select, input { width: 100%; background: #0F172A; border: 1px solid #475569; color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; box-sizing: border-box; }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <div><h2 id="p-name" style="margin:0; font-size:16px;">...</h2><p id="p-role" style="margin:0; font-size:11px; color:#94A3B8;"></p></div>
-        <button onclick="localStorage.clear(); location.href='index.html'" style="background:none; border:1px solid #F87171; color:#F87171; padding:5px 10px; border-radius:8px; font-size:10px; font-weight:bold;">LOGOUT</button>
+        <div><h2 id="p-name" style="margin:0; font-size:16px;">Memuat...</h2><p id="p-role" style="margin:0; font-size:11px; color:#94A3B8;"></p></div>
+        <button onclick="logout()" style="background:none; border:1px solid #F87171; color:#F87171; padding:5px 10px; border-radius:8px; font-size:10px; font-weight:bold;">LOGOUT</button>
     </div>
 
     <div class="main-card">
-        <small>TOTAL SALDO BERJALAN</small>
+        <small id="label-kas">TOTAL SALDO BERJALAN</small>
         <h1 id="total-kas" style="margin:5px 0; font-size: 32px;">Rp 0</h1>
     </div>
 
     <div id="admin-view" style="display:none; margin-top:20px;">
-        <h4 style="color:#94A3B8; font-size:11px; letter-spacing:1px;">SALDO PER KELOMPOK</h4>
+        <h4 style="color:#94A3B8; font-size:11px; letter-spacing:1px;">SALDO DI TANGAN PETUGAS</h4>
         <div id="list-kelompok"></div>
 
         <div class="box-tunggakan">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h4 style="margin:0; color:var(--warn);">Data Tunggakan Jimpitan</h4>
+                <h4 style="margin:0; color:var(--warn);">Buku Piutang Warga (70 KK)</h4>
                 <small id="count-warga" style="color:#94A3B8;"></small>
             </div>
-            <input type="text" id="search-warga" placeholder="Cari nama warga..." onkeyup="renderTunggakan()">
+            
+            <select id="filter-kelompok" onchange="renderTunggakan()">
+                <option value="ALL">Semua Kelompok (Global)</option>
+                <option value="Senin">Jatah Kelompok Senin</option>
+                <option value="Selasa">Jatah Kelompok Selasa</option>
+                <option value="Rabu">Jatah Kelompok Rabu</option>
+                <option value="Kamis">Jatah Kelompok Kamis</option>
+                <option value="Jumat">Jatah Kelompok Jumat</option>
+                <option value="Sabtu">Jatah Kelompok Sabtu</option>
+                <option value="Minggu">Jatah Kelompok Minggu</option>
+            </select>
+            
+            <input type="text" id="search-nama" placeholder="Cari nama warga..." onkeyup="renderTunggakan()">
+
             <div class="scroll-area">
                 <table class="tabel-tagihan">
                     <thead>
-                        <tr><th>NAMA</th><th style="text-align:right;">TUNGGAKAN</th></tr>
+                        <tr><th>NAMA WARGA</th><th style="text-align:right;">TOTAL</th></tr>
                     </thead>
                     <tbody id="tunggakan-list"></tbody>
                 </table>
@@ -54,15 +70,17 @@
     </div>
 
     <div id="petugas-view" style="display:none; margin-top:20px;">
-        <h4 style="color:#94A3B8; font-size:11px;">RIWAYAT SCAN ANDA</h4>
+        <h4 style="color:#94A3B8; font-size:11px;">RIWAYAT SCAN ANDA (BELUM SETOR)</h4>
         <div id="list-petugas"></div>
-        <a href="jimpitan.html" class="btn-scan">📸 MULAI SCAN</a>
+        <a href="jimpitan.html" class="btn-scan">📸 MULAI SCAN BARCODE</a>
     </div>
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
     const user = JSON.parse(localStorage.getItem("jimpitan_user"));
     let dataPiutang = {};
+
+    if(!user) location.href = 'index.html';
 
     function callGAS(params, callback) {
         const cb = "cb_" + Math.round(Math.random() * 1000000);
@@ -74,28 +92,30 @@
 
     function init() {
         document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Kelp. " + user.kelompok;
-        document.getElementById('p-role').innerText = user.role === 'admin' ? "Pusat Data" : "Petugas Ronda";
+        document.getElementById('p-role').innerText = user.role === 'admin' ? "Pusat Kontrol" : "Petugas Lapangan";
         
         callGAS(`action=getRekap&petugas=${encodeURIComponent(user.kelompok)}&role=${user.role}`, (res) => {
             document.getElementById('total-kas').innerText = "Rp " + (res.total || 0).toLocaleString('id-ID');
+            
             if(user.role === 'admin') {
                 document.getElementById('admin-view').style.display = 'block';
                 let h = "";
                 for(let k in res.data) {
                     h += `<div class="list-item">
-                            <div><b>${k}</b><br><small>Rp ${res.data[k].toLocaleString('id-ID')}</small></div>
-                            <button class="btn-setor" onclick="terima('${k}')">TERIMA</button>
+                            <div><b>Kelompok ${k}</b><br><small>Rp ${res.data[k].toLocaleString('id-ID')}</small></div>
+                            <button class="btn-setor" onclick="terimaSetoran('${k}')">TERIMA</button>
                           </div>`;
                 }
-                document.getElementById('list-kelompok').innerHTML = h || "Semua sudah setor.";
+                document.getElementById('list-kelompok').innerHTML = h || "<small>Semua kelompok sudah setor.</small>";
                 loadTunggakan();
             } else {
                 document.getElementById('petugas-view').style.display = 'block';
+                document.getElementById('label-kas').innerText = "SALDO DI TANGAN ANDA";
                 let p = "";
                 for(let t in res.data) {
-                    p += `<div class="list-item"><span>${t}</span><b>Rp ${res.data[t].toLocaleString('id-ID')}</b></div>`;
+                    p += `<div class="list-item"><span>Tanggal ${t}</span><b>Rp ${res.data[t].toLocaleString('id-ID')}</b></div>`;
                 }
-                document.getElementById('list-petugas').innerHTML = p || "Belum ada data.";
+                document.getElementById('list-petugas').innerHTML = p || "<small>Belum ada data scan.</small>";
             }
         });
     }
@@ -108,32 +128,54 @@
     }
 
     function renderTunggakan() {
-        const query = document.getElementById('search-warga').value.toLowerCase();
+        const filterKel = document.getElementById('filter-kelompok').value;
+        const searchNama = document.getElementById('search-nama').value.toLowerCase();
         let h = "";
         let count = 0;
-        const sorted = Object.keys(dataPiutang).sort((a,b) => dataPiutang[b].total - dataPiutang[a].total);
 
-        sorted.forEach(nama => {
-            if(nama.toLowerCase().includes(query)) {
+        // Urutkan warga berdasarkan total tunggakan terbesar
+        const sortedWarga = Object.keys(dataPiutang).sort((a,b) => dataPiutang[b].total - dataPiutang[a].total);
+
+        sortedWarga.forEach(nama => {
+            const warga = dataPiutang[nama];
+            
+            // Filter rincian berdasarkan pilihan Kelompok Ronda
+            const rincianFiltered = filterKel === "ALL" 
+                ? warga.rincian 
+                : warga.rincian.filter(r => r.kel === filterKel);
+
+            if (rincianFiltered.length > 0 && nama.toLowerCase().includes(searchNama)) {
                 count++;
+                const subTotal = rincianFiltered.reduce((sum, item) => sum + item.nom, 0);
+                const listDetail = rincianFiltered.map(r => `${r.tgl}`).join(', ');
+
                 h += `<tr>
                     <td>
-                        <b>${nama}</b><br>
-                        <small style="color:#94A3B8;">${dataPiutang[nama].kali}x (${dataPiutang[nama].detail.join(', ')})</small>
+                        <b style="font-size:14px; color:white;">${nama}</b><br>
+                        <small style="color:#94A3B8;">${rincianFiltered.length}x nunggak: ${listDetail}</small>
                     </td>
-                    <td style="text-align:right; color:var(--danger); font-weight:bold;">
-                        Rp ${dataPiutang[nama].total.toLocaleString('id-ID')}
+                    <td style="text-align:right;">
+                        <b style="color:var(--danger);">Rp ${subTotal.toLocaleString('id-ID')}</b>
                     </td>
                 </tr>`;
             }
         });
-        document.getElementById('tunggakan-list').innerHTML = h || "<tr><td colspan='2' style='text-align:center;'>Kosong</td></tr>";
+
+        document.getElementById('tunggakan-list').innerHTML = h || "<tr><td colspan='2' style='text-align:center; padding:20px;'>Tidak ada tunggakan.</td></tr>";
         document.getElementById('count-warga').innerText = count + " KK";
     }
 
-    function terima(kel) {
-        if(!confirm("Terima setoran dari Kelompok " + kel + "?")) return;
-        callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(kel)}`, (res) => { alert(res.message); init(); });
+    function terimaSetoran(kel) {
+        if(!confirm("Konfirmasi terima uang dari Kelompok " + kel + "?")) return;
+        callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(kel)}`, (res) => {
+            alert(res.message);
+            init();
+        });
+    }
+
+    function logout() {
+        localStorage.clear();
+        location.href = 'index.html';
     }
 
     init();
