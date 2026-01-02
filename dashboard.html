@@ -44,7 +44,7 @@
         <h4 style="color:#94A3B8; font-size:11px;">POSISI DANA DI PETUGAS</h4>
         <div id="list-kelompok"></div>
         <div class="box-tunggakan">
-            <h4 style="margin:0 0 15px 0; color:var(--warn);">Buku Piutang Warga</h4>
+            <h4 style="margin:0 0 15px 0; color:var(--warn);">Data Tunggakan Jimpitan</h4>
             <select id="filter-kelompok" onchange="renderTunggakan()">
                 <option value="ALL">Semua Kelompok</option>
                 <option value="Senin">Senin</option><option value="Selasa">Selasa</option>
@@ -89,11 +89,11 @@
                 <button class="btn-pdf" onclick="generatePDF()">📥 DOWNLOAD LAPORAN PDF</button>
             </div>
         </div>
-        <a href="jimpitan.html" class="btn-scan">📸 SCAN JIMPITAN</a>
+        <a href="jimpitan.html" class="btn-scan">SCAN JIMPITAN</a>
     </div>
 
 <script>
-    const scriptURL = 'GANTI_DENGAN_URL_WEBAPP_BARU_ANDA';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
     const user = JSON.parse(localStorage.getItem("jimpitan_user"));
     let dataPiutang = {};
     let currentLaporanDana = [];
