@@ -4,15 +4,21 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard RT Digital</title>
     <style>
-        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --warn: #EAB308; }
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --warn: #EAB308; --danger: #F87171; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 20px 100px 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0, 184, 148, 0.2); }
         .list-item { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
         .btn-setor { background: var(--warn); color: #000; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 11px; }
         .btn-scan { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); width: 85%; max-width: 400px; background: var(--accent); color: white; padding: 18px; border-radius: 15px; text-align: center; text-decoration: none; font-weight: 800; box-shadow: 0 10px 20px rgba(0,184,148,0.3); z-index: 100; }
+        
+        /* Table Style */
         .box-tunggakan { background: var(--card); padding: 15px; border-radius: 15px; margin-top: 25px; border: 1px solid #334155; }
-        #search-warga { width: 92%; background: #0F172A; border: 1px solid #334155; color: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; }
+        .tabel-tagihan { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .tabel-tagihan th { text-align: left; color: #94A3B8; font-size: 10px; padding: 10px 5px; border-bottom: 1px solid #334155; }
+        .tabel-tagihan td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+        #search-warga { width: 92%; background: #0F172A; border: 1px solid #334155; color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 14px; }
+        .scroll-area { max-height: 400px; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -22,32 +28,41 @@
     </div>
 
     <div class="main-card">
-        <small>DANA BELUM SETOR (KAS BERJALAN)</small>
+        <small>TOTAL SALDO BERJALAN</small>
         <h1 id="total-kas" style="margin:5px 0; font-size: 32px;">Rp 0</h1>
     </div>
 
     <div id="admin-view" style="display:none; margin-top:20px;">
-        <h4 style="color:#94A3B8; font-size:11px;">POSISI DANA DI PETUGAS</h4>
+        <h4 style="color:#94A3B8; font-size:11px; letter-spacing:1px;">SALDO PER KELOMPOK</h4>
         <div id="list-kelompok"></div>
 
         <div class="box-tunggakan">
-            <h4 style="margin:0 0 10px 0; color:var(--warn);">Buku Tagihan Warga</h4>
-            <input type="text" id="search-warga" placeholder="Ketik nama warga untuk menagih..." onkeyup="renderTunggakan()">
-            <div id="tunggakan-list" style="max-height: 400px; overflow-y: auto;">
-                </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h4 style="margin:0; color:var(--warn);">Buku Piutang Warga</h4>
+                <small id="count-warga" style="color:#94A3B8;"></small>
+            </div>
+            <input type="text" id="search-warga" placeholder="Cari nama warga..." onkeyup="renderTunggakan()">
+            <div class="scroll-area">
+                <table class="tabel-tagihan">
+                    <thead>
+                        <tr><th>NAMA</th><th style="text-align:right;">TUNGGAKAN</th></tr>
+                    </thead>
+                    <tbody id="tunggakan-list"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <div id="petugas-view" style="display:none; margin-top:20px;">
-        <h4 style="color:#94A3B8; font-size:11px;">HASIL SCAN ANDA (BELUM SETOR)</h4>
+        <h4 style="color:#94A3B8; font-size:11px;">RIWAYAT SCAN ANDA</h4>
         <div id="list-petugas"></div>
-        <a href="jimpitan.html" class="btn-scan">📸 MULAI SCAN BARCODE</a>
+        <a href="jimpitan.html" class="btn-scan">📸 MULAI SCAN</a>
     </div>
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
     const user = JSON.parse(localStorage.getItem("jimpitan_user"));
-    let dataTunggakan = {};
+    let dataPiutang = {};
 
     function callGAS(params, callback) {
         const cb = "cb_" + Math.round(Math.random() * 1000000);
@@ -57,11 +72,10 @@
         document.body.appendChild(s);
     }
 
-    function loadDashboard() {
+    function init() {
         document.getElementById('p-name').innerText = user.role === 'admin' ? "Admin RT" : "Kelp. " + user.kelompok;
-        document.getElementById('p-role').innerText = user.role === 'admin' ? "Pusat Kontrol" : "Petugas Lapangan";
+        document.getElementById('p-role').innerText = user.role === 'admin' ? "Pusat Data" : "Petugas Ronda";
         
-        // 1. Ambil Rekap Dana
         callGAS(`action=getRekap&petugas=${encodeURIComponent(user.kelompok)}&role=${user.role}`, (res) => {
             document.getElementById('total-kas').innerText = "Rp " + (res.total || 0).toLocaleString('id-ID');
             if(user.role === 'admin') {
@@ -73,22 +87,22 @@
                             <button class="btn-setor" onclick="terima('${k}')">TERIMA</button>
                           </div>`;
                 }
-                document.getElementById('list-kelompok').innerHTML = h || "Duit sudah masuk kas semua.";
-                loadTunggakan(); // Admin otomatis panggil data tunggakan
+                document.getElementById('list-kelompok').innerHTML = h || "Semua sudah setor.";
+                loadTunggakan();
             } else {
                 document.getElementById('petugas-view').style.display = 'block';
                 let p = "";
                 for(let t in res.data) {
                     p += `<div class="list-item"><span>${t}</span><b>Rp ${res.data[t].toLocaleString('id-ID')}</b></div>`;
                 }
-                document.getElementById('list-petugas').innerHTML = p || "Belum ada hasil scan.";
+                document.getElementById('list-petugas').innerHTML = p || "Belum ada data.";
             }
         });
     }
 
     function loadTunggakan() {
         callGAS(`action=getTunggakan`, (res) => {
-            dataTunggakan = res.data;
+            dataPiutang = res.data;
             renderTunggakan();
         });
     }
@@ -96,26 +110,33 @@
     function renderTunggakan() {
         const query = document.getElementById('search-warga').value.toLowerCase();
         let h = "";
-        for (let nama in dataTunggakan) {
-            if (nama.toLowerCase().includes(query)) {
-                h += `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #334155;">
-                        <div><b>${nama}</b><br><small style="color:#94A3B8;">Nunggak ${dataTunggakan[nama].kali} hari</small></div>
-                        <b style="color:#F87171;">Rp ${dataTunggakan[nama].total.toLocaleString('id-ID')}</b>
-                      </div>`;
+        let count = 0;
+        const sorted = Object.keys(dataPiutang).sort((a,b) => dataPiutang[b].total - dataPiutang[a].total);
+
+        sorted.forEach(nama => {
+            if(nama.toLowerCase().includes(query)) {
+                count++;
+                h += `<tr>
+                    <td>
+                        <b>${nama}</b><br>
+                        <small style="color:#94A3B8;">${dataPiutang[nama].kali}x (${dataPiutang[nama].detail.join(', ')})</small>
+                    </td>
+                    <td style="text-align:right; color:var(--danger); font-weight:bold;">
+                        Rp ${dataPiutang[nama].total.toLocaleString('id-ID')}
+                    </td>
+                </tr>`;
             }
-        }
-        document.getElementById('tunggakan-list').innerHTML = h || "<small>Tidak ada tunggakan.</small>";
+        });
+        document.getElementById('tunggakan-list').innerHTML = h || "<tr><td colspan='2' style='text-align:center;'>Kosong</td></tr>";
+        document.getElementById('count-warga').innerText = count + " KK";
     }
 
     function terima(kel) {
-        if(!confirm("Uang dari Kelompok " + kel + " sudah masuk kas?")) return;
-        callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(kel)}`, (res) => { 
-            alert(res.message); 
-            loadDashboard(); 
-        });
+        if(!confirm("Terima setoran dari Kelompok " + kel + "?")) return;
+        callGAS(`action=konfirmasiSetor&kelompok=${encodeURIComponent(kel)}`, (res) => { alert(res.message); init(); });
     }
 
-    loadDashboard();
+    init();
 </script>
 </body>
 </html>
