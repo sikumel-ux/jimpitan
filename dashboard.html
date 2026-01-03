@@ -2,123 +2,100 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Jimpitan RT</title>
+    <title>Dashboard RT</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; --warn: #EAB308; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 20px 100px 20px; }
-        .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; }
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
         .box { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid #334155; margin-bottom: 15px; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab { flex:1; padding: 10px; border-radius: 10px; border: none; background: #334155; color: white; font-size: 11px; cursor: pointer; }
-        .tab.active { background: var(--accent); font-weight: 800; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        td, th { padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .status { padding: 4px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; }
+        td, th { padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: left; }
+        .status-badge { padding: 4px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; }
         .sudah { background: rgba(0, 184, 148, 0.2); color: var(--accent); }
         .belum { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
-        .btn-scan { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; background: var(--accent); color: white; padding: 18px; border-radius: 15px; text-align: center; font-weight: 800; text-decoration: none; z-index: 100; }
-        .btn-setor { width: 100%; background: var(--warn); color: black; border: none; padding: 10px; border-radius: 10px; font-weight: 800; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="main-card">
-        <small>TOTAL SALDO BERJALAN</small>
-        <h1 id="total-dana" style="margin:5px 0;">Rp 0</h1>
-        <button id="admin-btn-setor" class="btn-setor" style="display:none;" onclick="konfirmasiSetor()">KONFIRMASI TERIMA UANG</button>
-    </div>
-
-    <div class="tabs">
-        <button id="t1" class="tab active" onclick="switchTab(1)">UANG DI PETUGAS</button>
-        <button id="t2" class="tab" onclick="switchTab(2)">ABSENSI WARGA</button>
-    </div>
-
-    <div id="view-uang">
-        <div class="box">
-            <h4 style="margin:0 0 10px 0; color:var(--accent);">Rincian Belum Setor</h4>
-            <table id="table-uang">
-                <thead><tr><th>TGL</th><th>NAMA</th><th style="text-align:right;">RP</th></tr></thead>
-                <tbody id="body-uang"></tbody>
-            </table>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h3 style="margin:0;">Halo, <span id="user-display">Petugas</span></h3>
         </div>
+        <button onclick="logout()" style="background:none; border:1px solid #F87171; color:#F87171; padding:5px 10px; border-radius:8px;">LOGOUT</button>
     </div>
 
-    <div id="view-presensi" style="display:none;">
-        <div class="box">
-            <h4 style="margin:0; color:var(--warn);">Cek Warga Per Tanggal</h4>
-            <input type="date" id="tgl-input" style="width:100%; padding:10px; margin:10px 0; border-radius:8px; background:#0F172A; color:white; border:1px solid #334155;" onchange="loadData()">
-            <table>
-                <thead><tr><th>NAMA WARGA</th><th style="text-align:right;">STATUS</th></tr></thead>
-                <tbody id="body-presensi"></tbody>
-            </table>
-        </div>
+    <div class="box" style="background: linear-gradient(135deg, #00B894, #00897B); text-align: center;">
+        <small>TOTAL SALDO BELUM SETOR</small>
+        <h1 id="total-dana">Rp 0</h1>
     </div>
 
-    <a href="jimpitan.html" class="btn-scan">📸 MULAI SCAN JIMPITAN</a>
+    <div style="display:flex; gap:10px; margin-bottom:15px;">
+        <button onclick="showTab('uang')" style="flex:1; padding:10px; border-radius:10px; border:none; background:#334155; color:white;">KEUANGAN</button>
+        <button onclick="showTab('absen')" style="flex:1; padding:10px; border-radius:10px; border:none; background:#334155; color:white;">PRESENSI</button>
+    </div>
 
-<script>
-    // MASUKKAN URL WEB APP GAS KAMU DI SINI
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
-    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    <div id="tab-uang" class="box">
+        <h4>Uang Belum Setor</h4>
+        <table>
+            <tbody id="body-uang"><tr><td>Memuat...</td></tr></tbody>
+        </table>
+    </div>
 
-    // Set default tanggal hari ini
-    document.getElementById('tgl-input').value = new Date().toISOString().split('T')[0];
+    <div id="tab-absen" class="box" style="display:none;">
+        <h4>Presensi Warga</h4>
+        <input type="date" id="tgl-cek" onchange="muatData()" style="width:100%; padding:10px; margin-bottom:10px; border-radius:8px; background:#0F172A; color:white; border:1px solid #334155;">
+        <table>
+            <tbody id="body-presensi"><tr><td>Memuat...</td></tr></tbody>
+        </table>
+    </div>
 
-    function callGAS(params, callback) {
-        const cb = "cb_" + Math.round(Math.random() * 1000000);
-        const s = document.createElement('script');
-        window[cb] = (res) => { callback(res); document.body.removeChild(s); delete window[cb]; };
-        s.src = `${scriptURL}?callback=${cb}&${params}`;
-        document.body.appendChild(s);
-    }
+    <script>
+        const scriptURL = 'PASTE_URL_WEB_APP_KAMU_DISINI';
+        const user = JSON.parse(localStorage.getItem("jimpitan_user"));
 
-    function loadData() {
-        if(!user) return location.href='index.html';
-        if(user.role === 'admin') document.getElementById('admin-btn-setor').style.display = 'block';
+        document.getElementById('tgl-cek').value = new Date().toISOString().split('T')[0];
 
-        const tglInput = document.getElementById('tgl-input').value;
-        const p = tglInput.split('-');
-        const tglFormat = p[2] + "-" + p[1] + "-" + p[0];
+        function muatData() {
+            if(!user) { location.href='index.html'; return; }
+            document.getElementById('user-display').innerText = user.kelompok || "Petugas";
 
-        callGAS(`action=getDataFull&tanggal=${tglFormat}`, (res) => {
-            // 1. Render Saldo
-            document.getElementById('total-dana').innerText = "Rp " + res.total.toLocaleString('id-ID');
+            const tglRaw = document.getElementById('tgl-cek').value;
+            const p = tglRaw.split('-');
+            const tglFormat = p[2] + "-" + p[1] + "-" + p[0];
 
-            // 2. Render Rincian Uang
-            let hU = "";
-            res.uang.forEach(i => {
-                hU += `<tr><td>${i.tgl}</td><td>${i.nama}</td><td style="text-align:right;">${i.nom.toLocaleString('id-ID')}</td></tr>`;
-            });
-            document.getElementById('body-uang').innerHTML = hU || "<tr><td colspan='3' style='text-align:center;'>Saldo Bersih.</td></tr>";
+            const cb = "cb_" + Math.round(Math.random() * 1000000);
+            const s = document.createElement('script');
+            window[cb] = (res) => {
+                // Render Saldo
+                document.getElementById('total-dana').innerText = "Rp " + res.total.toLocaleString('id-ID');
+                
+                // Render Uang
+                let hU = "";
+                res.uang.forEach(i => { hU += `<tr><td>${i.nama}</td><td style="text-align:right;">${i.nom}</td></tr>`; });
+                document.getElementById('body-uang').innerHTML = hU || "<tr><td>Kosong</td></tr>";
 
-            // 3. Render Presensi
-            let hP = "";
-            res.presensi.forEach(i => {
-                const cls = i.status === "SUDAH" ? "sudah" : "belum";
-                hP += `<tr><td>${i.nama}</td><td style="text-align:right;"><span class="status ${cls}">${i.status} SCAN</span></td></tr>`;
-            });
-            document.getElementById('body-presensi').innerHTML = hP;
-        });
-    }
+                // Render Presensi
+                let hP = "";
+                res.presensi.forEach(i => {
+                    const cls = i.status === "SUDAH" ? "sudah" : "belum";
+                    hP += `<tr><td>${i.nama}</td><td style="text-align:right;"><span class="status-badge ${cls}">${i.status}</span></td></tr>`;
+                });
+                document.getElementById('body-presensi').innerHTML = hP;
 
-    function switchTab(n) {
-        document.getElementById('view-uang').style.display = n==1 ? 'block' : 'none';
-        document.getElementById('view-presensi').style.display = n==2 ? 'block' : 'none';
-        document.getElementById('t1').className = n==1 ? 'tab active' : 'tab';
-        document.getElementById('t2').className = n==2 ? 'tab active' : 'tab';
-    }
-
-    function konfirmasiSetor() {
-        if(confirm("Apakah Anda sudah menerima uang fisik dari petugas? Klik OK untuk mengosongkan saldo berjalan.")) {
-            callGAS(`action=setorSemua`, (res) => {
-                alert(res.message);
-                loadData();
-            });
+                document.body.removeChild(s); delete window[cb];
+            };
+            s.src = `${scriptURL}?callback=${cb}&action=getDataFull&tanggal=${tglFormat}`;
+            document.body.appendChild(s);
         }
-    }
 
-    loadData();
-</script>
+        function showTab(t) {
+            document.getElementById('tab-uang').style.display = t === 'uang' ? 'block' : 'none';
+            document.getElementById('tab-absen').style.display = t === 'absen' ? 'block' : 'none';
+        }
+
+        function logout() { localStorage.clear(); location.href='index.html'; }
+        
+        muatData();
+    </script>
 </body>
 </html>
