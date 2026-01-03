@@ -1,94 +1,197 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scan | RT Digital</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Jimpitan RT</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; text-align: center; }
+        :root { 
+            --bg: #0F172A; 
+            --card: #1E293B; 
+            --accent: #00B894; 
+            --text: #F8FAFC; 
+            --border: #334155;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+        }
+        #reader { 
+            width: 100%; 
+            max-width: 400px;
+            border-radius: 20px; 
+            overflow: hidden; 
+            border: 2px solid var(--accent); 
+            background: #000;
+            margin-bottom: 20px;
+        }
+        .box { 
+            background: var(--card); 
+            padding: 20px; 
+            border-radius: 20px; 
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        h3 { margin-top: 0; font-weight: 800; color: var(--accent); }
         
-        /* Navigasi */
-        .header-nav { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 15px; }
-        .btn-back { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 12px; text-decoration: none; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        
-        /* Container Scanner */
-        #reader { border-radius: 24px; overflow: hidden; border: 2px solid var(--accent) !important; box-shadow: 0 0 25px rgba(0, 184, 148, 0.2); background: #000; }
-        
-        /* Card Petunjuk di Bawah Kamera */
-        .guide-card { background: var(--card); border: 1px solid rgba(255,255,255,0.05); padding: 12px; border-radius: 16px; margin-top: 20px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .guide-card span { font-size: 14px; color: #94A3B8; font-weight: 500; }
-        .guide-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 1.5s infinite; }
-        
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        input { 
+            width: 100%; 
+            padding: 15px; 
+            border-radius: 12px; 
+            border: 2px solid var(--border); 
+            background: #0F172A; 
+            color: white; 
+            margin-bottom: 15px; 
+            box-sizing: border-box; 
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
 
-        /* Form Input */
-        .input-box { background: var(--card); border-radius: 24px; padding: 25px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.05); animation: fadeInUp 0.4s ease; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .qb { flex: 1; padding: 15px; border-radius: 12px; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-weight: 700; cursor: pointer; }
-        input { width: 100%; padding: 16px; border-radius: 12px; border: 1px solid #334155; background: #0F172A; color: white; font-size: 18px; text-align: center; box-sizing: border-box; margin: 15px 0; outline: none; }
+        /* NOMINAL SECTION */
+        .label-sm { font-size: 12px; color: #94A3B8; margin-bottom: 8px; text-align: left; display: block; }
+        .nominal-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-nom { 
+            flex: 1; 
+            padding: 12px 5px; 
+            border-radius: 10px; 
+            border: 2px solid var(--border); 
+            background: transparent; 
+            color: white; 
+            font-weight: 800; 
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-nom.active { 
+            border-color: var(--accent); 
+            background: rgba(0, 184, 148, 0.1); 
+            color: var(--accent); 
+        }
         
-        .btn-save { width: 100%; padding: 18px; border-radius: 16px; border: none; background: var(--accent); color: white; font-weight: 800; font-size: 16px; box-shadow: 0 10px 20px rgba(0, 184, 148, 0.2); }
-        .btn-cancel { background: transparent; color: var(--danger); border: none; margin-top: 15px; font-weight: 600; cursor: pointer; }
+        #nominal-input { 
+            border-color: var(--accent); 
+            font-size: 22px; 
+            color: var(--accent);
+            background: #1e293b;
+        }
+
+        .btn-simpan { 
+            width: 100%; 
+            background: var(--accent); 
+            color: white; 
+            padding: 18px; 
+            border-radius: 12px; 
+            border: none; 
+            font-weight: 800; 
+            font-size: 18px; 
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        }
+        .btn-simpan:disabled { background: #475569; box-shadow: none; cursor: not-allowed; }
+        
+        .footer-link { display: block; margin-top: 20px; color: #94A3B8; text-decoration: none; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="header-nav">
-        <a href="dashboard.html" class="btn-back">← Dashboard</a>
-    </div>
+    <h3>SCAN JIMPITAN</h3>
+    
+    <div id="reader"></div>
 
-    <div id="scanner-container">
-        <div id="reader"></div>
-        <div class="guide-card" id="guide">
-            <div class="guide-dot"></div>
-            <span>Arahkan kamera ke QR Code </span>
+    <div class="box">
+        <label class="label-sm">Nama Warga:</label>
+        <input type="text" id="nama-warga" placeholder="Silahkan Scan Barcode..." readonly>
+        
+        <label class="label-sm">Pilih atau Ketik Nominal (Rp):</label>
+        <div class="nominal-group">
+            <button class="btn-nom active" onclick="setNominal(500, this)">500</button>
+            <button class="btn-nom" onclick="setNominal(1000, this)">1000</button>
+            <button class="btn-nom" onclick="setNominal(2000, this)">2000</button>
         </div>
-    </div>
 
-    <div id="form-input" style="display:none;">
-        <div class="input-box">
-            <h2 id="n-warga" style="color:var(--accent); margin-top:0;"></h2>
-            <div style="display:flex; gap:10px;">
-                <button class="qb" onclick="setNom(500)">Rp 500</button>
-                <button class="qb" onclick="setNom(1000)">Rp 1.000</button>
-            </div>
-            <input type="number" id="nom" placeholder="Nominal manual...">
-            <button class="btn-save" id="btn-save" onclick="simpan()">SIMPAN DATA JIMPITAN</button>
-            <button class="btn-cancel" onclick="location.reload()">BATAL / SCAN ULANG</button>
-        </div>
+        <input type="number" id="nominal-input" value="500" placeholder="0">
+
+        <button class="btn-simpan" id="btn-proses" onclick="simpanData()" disabled>SIMPAN DATA</button>
+        
+        <a href="dashboard.html" class="footer-link">← Kembali ke Dashboard</a>
     </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
-    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
-    if(!user) window.location.href = "index.html";
+    // 1. PASTIIN URL INI BENAR (URL WEB APP DARI DEPLOY GOOGLE SCRIPT)
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec'; 
+    
+    // Ambil data petugas dari login
+    const user = JSON.parse(localStorage.getItem("jimpitan_user")) || { kelompok: "Petugas" };
 
-    const scanner = new Html5Qrcode("reader");
-    let warga = "";
+    // Fungsi ganti nominal lewat tombol
+    function setNominal(val, btn) {
+        document.getElementById('nominal-input').value = val;
+        // Reset warna tombol
+        document.querySelectorAll('.btn-nom').forEach(b => b.classList.remove('active'));
+        // Aktifkan tombol yang diklik
+        btn.classList.add('active');
+    }
 
-    scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (txt) => {
-        warga = txt; scanner.stop();
-        document.getElementById('scanner-container').style.display = 'none';
-        document.getElementById('form-input').style.display = 'block';
-        document.getElementById('n-warga').innerText = txt;
-    }).catch(err => { alert("Kamera error: " + err); });
+    // Fungsi saat QR Code terdeteksi
+    function onScanSuccess(decodedText) {
+        document.getElementById('nama-warga').value = decodedText;
+        document.getElementById('btn-proses').disabled = false;
+        // Kasih getaran dikit biar berasa scan-nya (untuk HP tertentu)
+        if (navigator.vibrate) navigator.vibrate(100);
+    }
 
-    function setNom(a) { document.getElementById('nom').value = a; }
+    // Setup Scanner
+    let html5QrcodeScanner = new Html5QrcodeScanner("reader", { 
+        fps: 10, 
+        qrbox: {width: 250, height: 250} 
+    });
+    html5QrcodeScanner.render(onScanSuccess);
 
-    async function simpan() {
-        const n = document.getElementById('nom').value;
-        if(!n) return alert("Isi nominal!");
-        const btn = document.getElementById('btn-save');
-        btn.innerText = "Menyimpan..."; btn.disabled = true;
+    // Fungsi Kirim ke Google Sheets
+    function simpanData() {
+        const nama = document.getElementById('nama-warga').value;
+        const nominal = document.getElementById('nominal-input').value;
+        const btn = document.getElementById('btn-proses');
+
+        if(!nama || nominal <= 0) {
+            alert("Data belum lengkap, Bro!");
+            return;
+        }
         
+        btn.innerText = "⏳ MENYIMPAN...";
+        btn.disabled = true;
+
+        // Pakai metode JSONP supaya gak error CORS
         const cb = "cb_" + Math.round(Math.random() * 1000000);
         const s = document.createElement('script');
         window[cb] = (res) => {
-            alert(res.message); window.location.href = "dashboard.html";
+            if(res.status === "success") {
+                alert("Mantap! Data " + nama + " berhasil disimpan.");
+                location.reload(); // Refresh supaya bisa scan warga berikutnya
+            } else {
+                alert("Gagal: " + res.message);
+                btn.innerText = "SIMPAN DATA";
+                btn.disabled = false;
+            }
+            document.body.removeChild(s);
+            delete window[cb];
         };
-        s.src = `${scriptURL}?callback=${cb}&action=simpan&nama=${encodeURIComponent(warga)}&nominal=${n}&petugas=${encodeURIComponent(user.kelompok)}`;
+        
+        // Kirim action 'simpan' (Tanpa status agar otomatis Masuk ke Tunggakan di Dashboard)
+        const finalURL = `${scriptURL}?callback=${cb}&action=simpan&nama=${encodeURIComponent(nama)}&nominal=${nominal}&petugas=${encodeURIComponent(user.kelompok)}`;
+        
+        s.src = finalURL;
         document.body.appendChild(s);
     }
 </script>
