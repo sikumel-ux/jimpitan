@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Jimpitan Digital</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg: #0F172A; 
+            --card: #1E293B; 
+            --accent: #00B894; 
+            --text: #F8FAFC; 
+            --border: #334155;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            padding: 20px;
+        }
+        .card { 
+            background: var(--card); 
+            padding: 40px 30px; 
+            border-radius: 24px; 
+            border: 1px solid var(--border); 
+            width: 100%; 
+            max-width: 350px; 
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .logo-area {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--accent) 0%, #00897B 100%);
+            border-radius: 20px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            color: white;
+            box-shadow: 0 10px 20px rgba(0,184,148,0.3);
+        }
+        h2 { margin: 0; font-weight: 800; color: var(--text); }
+        p { color: #94A3B8; font-size: 14px; margin: 10px 0 30px; }
+        
+        .input-group { text-align: left; margin-bottom: 15px; position: relative; }
+        label { font-size: 12px; color: #94A3B8; margin-left: 5px; }
+        
+        input { 
+            width: 100%; 
+            padding: 16px; 
+            margin-top: 5px;
+            border-radius: 14px; 
+            border: 1px solid var(--border); 
+            background: #0F172A; 
+            color: white; 
+            font-size: 16px; 
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); outline: none; background: #162033; }
+        
+        /* Gaya khusus untuk input password agar ada ruang untuk icon mata */
+        input#pass { padding-right: 45px; }
+        
+        #togglePassword {
+            position: absolute;
+            right: 15px;
+            top: 42px; /* Disesuaikan dengan posisi input */
+            cursor: pointer;
+            color: #94A3B8;
+            transition: 0.3s;
+        }
+        #togglePassword:hover { color: var(--accent); }
+        
+        button { 
+            width: 100%; 
+            padding: 16px; 
+            margin-top: 15px; 
+            border-radius: 14px; 
+            border: none; 
+            background: var(--accent); 
+            color: white; 
+            font-weight: 800; 
+            font-size: 16px;
+            cursor: pointer; 
+            transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(0,184,148,0.2);
+        }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #475569; cursor: not-allowed; transform: none; }
+        
+        .footer-note { font-size: 11px; color: #475569; margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="logo-area">
+        <i class="fa-solid fa-building-columns"></i>
+    </div>
+    <h2>RT DIGITAL</h2>
+    <p>Masuk untuk mengelola jimpitan</p>
+    
+    <div class="input-group">
+        <label>Username Petugas</label>
+        <input type="text" id="user" placeholder="Contoh: senin01" autocomplete="off">
+    </div>
+    
+    <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="pass" placeholder="••••••••">
+        <i class="fa-solid fa-eye" id="togglePassword"></i>
+    </div>
+    
+    <button id="btn-login" onclick="login()">MASUK SEKARANG</button>
+    
+    <div class="footer-note">Aplikasi Jimpitan Digital v2.0</div>
+</div>
+
+<script>
+    // Link API Google Apps Script
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
+
+    // FITUR SHOW/HIDE PASSWORD
+    const togglePassword = document.querySelector('#togglePassword');
+    const passwordField = document.querySelector('#pass');
+
+    togglePassword.addEventListener('click', function () {
+        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordField.setAttribute('type', type);
+        // Toggle icon mata
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+    });
+
+    // FUNGSI LOGIN
+    function login() {
+        const uVal = document.getElementById('user').value.trim();
+        const pVal = document.getElementById('pass').value.trim();
+        const btn = document.getElementById('btn-login');
+
+        if(!uVal || !pVal) {
+            alert("Harap isi username dan password!");
+            return;
+        }
+
+        btn.innerText = "Mengecek Akses...";
+        btn.disabled = true;
+
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        
+        window[cb] = (res) => {
+            if (res.status === "success") {
+                localStorage.setItem("jimpitan_user", JSON.stringify(res));
+                window.location.href = "dashboard.html";
+            } else {
+                alert(res.message || "Gagal Masuk! Username atau Password salah.");
+                btn.innerText = "MASUK SEKARANG";
+                btn.disabled = false;
+            }
+            document.body.removeChild(s);
+            delete window[cb];
+        };
+
+        // Kirim request: action=login, u=username, p=password
+        s.src = `${scriptURL}?callback=${cb}&action=login&u=${encodeURIComponent(uVal)}&p=${encodeURIComponent(pVal)}`;
+        document.body.appendChild(s);
+    }
+
+    // Support Enter Key
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') login();
+    });
+</script>
+
+</body>
+</html>
