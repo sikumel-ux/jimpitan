@@ -1,78 +1,171 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Jimpitan Digital</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        :root { --accent: #00B894; --bg: #0F172A; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; color: white; }
-        .card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); padding: 40px 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 320px; text-align: center; }
-        input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px; border: 1px solid #334155; background: #1E293B; color: white; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 16px; margin-top: 20px; border-radius: 12px; border: none; background: var(--accent); color: white; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        button:disabled { background: #475569; cursor: not-allowed; }
+        :root { 
+            --bg: #0F172A; 
+            --card: #1E293B; 
+            --accent: #00B894; 
+            --text: #F8FAFC; 
+            --border: #334155;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            padding: 20px;
+        }
+        .card { 
+            background: var(--card); 
+            padding: 40px 30px; 
+            border-radius: 24px; 
+            border: 1px solid var(--border); 
+            width: 100%; 
+            max-width: 350px; 
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .logo-area {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--accent) 0%, #00897B 100%);
+            border-radius: 20px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            box-shadow: 0 10px 20px rgba(0,184,148,0.3);
+        }
+.logo-area i {
+    color: white; /* Warna ikon */
+    font-size: 32px; /* Ukuran ikon */
+}
+
+        h2 { margin: 0; font-weight: 800; color: var(--text); }
+        p { color: #94A3B8; font-size: 14px; margin: 10px 0 30px; }
+        
+        .input-group { text-align: left; margin-bottom: 15px; }
+        label { font-size: 12px; color: #94A3B8; margin-left: 5px; }
+        
+        input { 
+            width: 100%; 
+            padding: 16px; 
+            margin-top: 5px;
+            border-radius: 14px; 
+            border: 1px solid var(--border); 
+            background: #0F172A; 
+            color: white; 
+            font-size: 16px; 
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); outline: none; background: #162033; }
+        
+        button { 
+            width: 100%; 
+            padding: 16px; 
+            margin-top: 15px; 
+            border-radius: 14px; 
+            border: none; 
+            background: var(--accent); 
+            color: white; 
+            font-weight: 800; 
+            font-size: 16px;
+            cursor: pointer; 
+            transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(0,184,148,0.2);
+        }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #475569; cursor: not-allowed; transform: none; }
+        
+        .footer-note { font-size: 11px; color: #475569; margin-top: 30px; }
     </style>
 </head>
 <body>
+
 <div class="card">
-    <h2 style="color:var(--accent); margin:0;">RT DIGITAL</h2>
-    <p style="color:#94A3B8; font-size:14px;">Silakan login petugas ronda</p>
-    <input type="text" id="user" placeholder="Username">
-    <input type="password" id="pass" placeholder="Password">
-    <button id="btn-login" onclick="login()">Masuk Sekarang</button>
+    <div class="logo-area">
+    <i class="fa-solid fa-coins"></i>
+</div>
+
+    <h2>JIMPITAN  DIGITAL</h2>
+    <p>Masuk Untuk Mengelola Jimpitan</p>
+    
+    <div class="input-group">
+        <label>Username</label>
+        <input type="text" id="user" placeholder="kamis" autocomplete="off">
+    </div>
+    
+    <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="pass" placeholder="••••••••">
+    </div>
+    
+    <button id="btn-login" onclick="login()">MASUK SEKARANG</button>
+    <div class="footer-note">Aplikasi Jimpitan v2.0</div>
 </div>
 
 <script>
-    // PASTIKAN URL INI ADALAH URL "EXEC" TERBARU SETELAH DEPLOY
+    // URL API
     const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
 
     function login() {
-        const u = document.getElementById('user').value.trim();
-        const p = document.getElementById('pass').value.trim();
+        const uVal = document.getElementById('user').value.trim();
+        const pVal = document.getElementById('pass').value.trim();
         const btn = document.getElementById('btn-login');
 
-        if(!u || !p) return alert("Isi Username & Password, Bro!");
+        if(!uVal || !pVal) {
+            alert("Harap isi username dan password!");
+            return;
+        }
 
-        // Ubah tampilan tombol
-        btn.innerText = "Mengecek Data...";
+        btn.innerText = "Mengecek Akses...";
         btn.disabled = true;
 
-        // Buat nama callback unik
+        // Callback unik untuk JSONP
         const cb = "cb_" + Math.round(Math.random() * 1000000);
-        
-        // Buat elemen script untuk JSONP
         const s = document.createElement('script');
         
-        // Handler respon dari Google Script
         window[cb] = (res) => {
             if (res.status === "success") {
-                // Simpan data user ke memori HP
+                // Simpan data login ke localStorage
                 localStorage.setItem("jimpitan_user", JSON.stringify(res));
                 // Pindah ke halaman dashboard
                 window.location.href = "dashboard.html";
             } else {
-                alert("Login Gagal! Username atau Password salah.");
-                btn.innerText = "Masuk Sekarang";
+                alert(res.message || "Gagal Masuk! Username atau Password salah.");
+                btn.innerText = "MASUK SEKARANG";
                 btn.disabled = false;
             }
-            
-            // Bersihkan elemen script & window function
-            if (s.parentNode) s.parentNode.removeChild(s);
+            document.body.removeChild(s);
             delete window[cb];
         };
 
-        // Jika dalam 10 detik tidak ada respon, anggap error/timeout
-        setTimeout(() => {
-            if (btn.disabled && btn.innerText === "Mengecek Data...") {
-                alert("Koneksi lambat atau URL Script salah. Cek Deploy ulang!");
-                btn.innerText = "Masuk Sekarang";
-                btn.disabled = false;
-            }
-        }, 10000);
-
-        // Eksekusi pemanggilan ke Google Script
-        s.src = `${scriptURL}?callback=${cb}&action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`;
+        // SINKRONISASI TOTAL DENGAN login.gs:
+        // action=login (Baris 20 login.gs)
+        // u= (Baris 4 login.gs)
+        // p= (Baris 5 login.gs)
+        s.src = `${scriptURL}?callback=${cb}&action=login&u=${encodeURIComponent(uVal)}&p=${encodeURIComponent(pVal)}`;
         document.body.appendChild(s);
     }
+
+    // Support tombol Enter
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') login();
+    });
 </script>
+
 </body>
-</html>
+        </html>
+        
