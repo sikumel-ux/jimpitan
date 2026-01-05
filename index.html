@@ -104,20 +104,19 @@
     </div>
     
     <button id="btn-login" onclick="login()">MASUK SEKARANG</button>
-    
     <div class="footer-note">Aplikasi Jimpitan Digital v2.0</div>
 </div>
 
 <script>
-    // Link GAS yang kamu kasih tadi
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyXw9o8id8jxwXoAK9-oW01U6vOPSdqa-9XXCkYMrAWu0oCSf5ND_qPBPzqkp9nasgv/exec';
+    // URL API SESUAI YANG KAMU BERIKAN
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
 
     function login() {
-        const u = document.getElementById('user').value.trim();
-        const p = document.getElementById('pass').value.trim();
+        const uVal = document.getElementById('user').value.trim();
+        const pVal = document.getElementById('pass').value.trim();
         const btn = document.getElementById('btn-login');
 
-        if(!u || !p) {
+        if(!uVal || !pVal) {
             alert("Harap isi username dan password!");
             return;
         }
@@ -125,26 +124,18 @@
         btn.innerText = "Mengecek Akses...";
         btn.disabled = true;
 
+        // Callback unik untuk JSONP
         const cb = "cb_" + Math.round(Math.random() * 1000000);
         const s = document.createElement('script');
         
-        // Timeout 15 detik jika internet lemot
-        const timer = setTimeout(() => {
-            if(btn.disabled) {
-                alert("Koneksi lambat atau Server sibuk. Coba lagi!");
-                btn.innerText = "MASUK SEKARANG";
-                btn.disabled = false;
-            }
-        }, 15000);
-
         window[cb] = (res) => {
-            clearTimeout(timer);
             if (res.status === "success") {
-                // Simpan data login (role, kelompok, dll)
+                // Simpan data login ke localStorage
                 localStorage.setItem("jimpitan_user", JSON.stringify(res));
+                // Pindah ke halaman dashboard
                 window.location.href = "dashboard.html";
             } else {
-                alert("Gagal Masuk! Username atau Password salah.");
+                alert(res.message || "Gagal Masuk! Username atau Password salah.");
                 btn.innerText = "MASUK SEKARANG";
                 btn.disabled = false;
             }
@@ -152,16 +143,20 @@
             delete window[cb];
         };
 
-        // Kirim request ke GAS
-        s.src = `${scriptURL}?callback=${cb}&action=login&username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`;
+        // SINKRONISASI TOTAL DENGAN login.gs:
+        // action=login (Baris 20 login.gs)
+        // u= (Baris 4 login.gs)
+        // p= (Baris 5 login.gs)
+        s.src = `${scriptURL}?callback=${cb}&action=login&u=${encodeURIComponent(uVal)}&p=${encodeURIComponent(pVal)}`;
         document.body.appendChild(s);
     }
 
-    // Biar bisa login pakai tombol Enter di keyboard
+    // Support tombol Enter
     document.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') login();
     });
 </script>
 
 </body>
-</html>
+        </html>
+        
