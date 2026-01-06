@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Jimpitan Digital RT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --card: #1E293B;
+            --accent: #00B894;
+            --text: #F8FAFC;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 350px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .logo {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        h2 { margin-bottom: 5px; font-weight: 800; }
+        p { color: #94A3B8; font-size: 14px; margin-bottom: 25px; }
+        
+        input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            background: #0F172A;
+            color: white;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:disabled {
+            background: #334155;
+            cursor: not-allowed;
+        }
+        #msg {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #F87171;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="logo">🌙</div>
+        <h2>Jimpitan Digital</h2>
+        <p>Silakan login untuk melanjutkan</p>
+
+        <input type="text" id="user" placeholder="Username">
+        <input type="password" id="pass" placeholder="Password">
+        
+        <button id="btn-login" onclick="prosesLogin()">MASUK</button>
+        
+        <div id="msg"></div>
+    </div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+
+    function prosesLogin() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        const btn = document.getElementById('btn-login');
+        const msg = document.getElementById('msg');
+
+        if (!u || !p) {
+            msg.innerText = "Isi username dan password!";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Mengecek...";
+        msg.innerText = "";
+
+        // Menggunakan JSONP untuk menghindari CORS
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        
+        window[cb] = (res) => {
+            if (res.status === "success") {
+                // Simpan data login ke memori HP (localStorage)
+                localStorage.setItem("jimpitan_user", JSON.stringify(res));
+                
+                // REDIRECT BERDASARKAN ROLE
+                if (res.role === "admin") {
+                    window.location.href = "admin.html";
+                } else {
+                    window.location.href = "petugas.html";
+                }
+            } else {
+                msg.innerText = res.message || "Login Gagal!";
+                btn.disabled = false;
+                btn.innerText = "MASUK";
+            }
+            document.body.removeChild(s);
+            delete window[cb];
+        };
+
+        s.src = `${scriptURL}?callback=${cb}&action=login&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
+        document.body.appendChild(s);
+    }
+
+    // Biar bisa login pakai tombol Enter
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            prosesLogin();
+        }
+    });
+</script>
+
+</body>
+</html>
