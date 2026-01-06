@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login | Jimpitan Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root { 
@@ -11,230 +12,193 @@
             --card: #1E293B; 
             --accent: #00B894; 
             --text: #F8FAFC; 
-            --text-muted: #94A3B8;
-            --danger: #F87171; 
+            --border: #334155;
         }
 
-        /* Prevent Scroll */
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            display: flex;
+        /* No Scroll Setup */
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; /* Mencegah scroll */
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            justify-content: center; 
+            align-items: center; 
         }
 
-        .login-container {
-            width: 90%;
-            max-width: 400px;
-            perspective: 1000px;
-        }
-
-        .login-card {
-            background: var(--card);
-            padding: 40px 30px;
-            border-radius: 20px;
-            border: 1px solid #334155;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        .card { 
+            background: var(--card); 
+            padding: 40px 30px; 
+            border-radius: 24px; 
+            border: 1px solid var(--border); 
+            width: 85%; 
+            max-width: 350px; 
             text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            position: relative;
+            z-index: 2;
         }
 
-        .brand-logo {
-            width: 60px;
-            height: 60px;
-            background: var(--accent);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .logo-area {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--accent) 0%, #00897B 100%);
+            border-radius: 20px;
             margin: 0 auto 20px;
-            font-size: 30px;
-            color: white;
-            box-shadow: 0 0 20px rgba(0, 184, 148, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(0,184,148,0.3);
         }
 
-        h2 { margin: 0 0 10px; font-weight: 800; font-size: 24px; }
-        p { color: var(--text-muted); margin-bottom: 30px; font-size: 14px; }
+        .logo-area i { color: white; font-size: 32px; }
 
-        .input-group {
-            position: relative;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            margin-left: 5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .input-field {
-            width: 100%;
-            background: #0F172A;
-            border: 1px solid #334155;
-            padding: 12px 15px;
-            border-radius: 12px;
-            color: white;
-            font-size: 16px;
+        h2 { margin: 0; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+        p { color: #94A3B8; font-size: 14px; margin: 10px 0 30px; }
+        
+        .input-group { text-align: left; margin-bottom: 15px; position: relative; }
+        label { font-size: 12px; color: #94A3B8; margin-left: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        input { 
+            width: 100%; 
+            padding: 16px; 
+            margin-top: 5px;
+            border-radius: 14px; 
+            border: 1px solid var(--border); 
+            background: #0F172A; 
+            color: white; 
+            font-size: 16px; 
             box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.3s;
+            transition: 0.3s;
         }
+        input:focus { border-color: var(--accent); outline: none; background: #162033; }
 
-        .input-field:focus {
-            border-color: var(--accent);
-        }
-
-        /* Password Toggle */
-        .password-wrapper {
-            position: relative;
-        }
-
-        .toggle-password {
+        /* Hide/Show Password Toggle */
+        .pass-wrapper { position: relative; }
+        .toggle-btn {
             position: absolute;
             right: 15px;
-            top: 50%;
+            top: 55%;
             transform: translateY(-50%);
+            color: #475569;
             cursor: pointer;
-            color: var(--text-muted);
-            transition: color 0.3s;
+            z-index: 10;
         }
-
-        .toggle-password:hover {
-            color: var(--accent);
-        }
-
-        .btn-login {
-            width: 100%;
-            padding: 15px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 12px;
+        
+        button { 
+            width: 100%; 
+            padding: 16px; 
+            margin-top: 15px; 
+            border-radius: 14px; 
+            border: none; 
+            background: var(--accent); 
+            color: white; 
+            font-weight: 800; 
             font-size: 16px;
-            font-weight: 800;
-            cursor: pointer;
-            margin-top: 10px;
-            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
-            transition: transform 0.2s, opacity 0.2s;
+            cursor: pointer; 
+            transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(0,184,148,0.2);
         }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #475569; cursor: not-allowed; transform: none; }
+        
+        .footer-note { font-size: 11px; color: #475569; margin-top: 20px; }
 
-        .btn-login:active {
-            transform: scale(0.98);
-            opacity: 0.9;
-        }
-
+        /* Copyright Styling - Outside Card */
         .copyright {
-            margin-top: 30px;
+            margin-top: 25px;
             font-size: 12px;
             color: #475569;
             text-align: center;
-        }
-
-        #error-msg {
-            color: var(--danger);
-            font-size: 13px;
-            margin-top: 15px;
-            display: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="login-container">
-        <div class="login-card">
-            <div class="brand-logo">
-                <i class="fa-solid fa-shield-halved"></i>
-            </div>
-            
-            
+<div class="card">
+    <div class="logo-area">
+        <i class="fa-solid fa-shield-halved"></i>
+    </div>
 
-            <form id="loginForm">
-                <div class="input-group">
-                    <label>Username</label>
-                    <input type="text" id="username" class="input-field" placeholder="Username" required>
-                </div>
-
-                <div class="input-group">
-                    <label>Password</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="password" class="input-field" placeholder="••••••••" required>
-                        <i class="fa-solid fa-eye toggle-password" id="eyeIcon"></i>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-login">MASUK SEKARANG</button>
-                <div id="error-msg">Username atau Password salah!</div>
-            </form>
+    <h2>JIMPITAN DIGITAL</h2>
+    <p>Masuk Untuk Mengelola Jimpitan</p>
+    
+    <div class="input-group">
+        <label>Username</label>
+        <input type="text" id="user" placeholder="Masukkan Username" autocomplete="off">
+    </div>
+    
+    <div class="input-group">
+        <label>Password</label>
+        <div class="pass-wrapper">
+            <input type="password" id="pass" placeholder="••••••••">
+            <i class="fa-solid fa-eye toggle-btn" id="togglePass"></i>
         </div>
     </div>
-
-    <div class="copyright">
-        &copy; 2026 <b>Sekawan Brotherhood</b>. All Rights Reserved.
-    </div>
-
     
+    <button id="btn-login" onclick="login()">MASUK SEKARANG</button>
+    <div class="footer-note">Aplikasi Jimpitan v2.0</div>
+</div>
+
+<div class="copyright">
+    &copy; 2026 Sekawan Brotherhood. All Rights Reserved.
+</div>
 
 <script>
-    // URL API dari Google Apps Script kamu
-    const apiURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+    // URL API
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
 
     // Fitur Hide/Show Password
-    const togglePassword = document.querySelector('#eyeIcon');
-    const password = document.querySelector('#password');
+    const togglePass = document.getElementById('togglePass');
+    const passInput = document.getElementById('pass');
 
-    togglePassword.addEventListener('click', function () {
-        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-        password.setAttribute('type', type);
+    togglePass.addEventListener('click', function() {
+        const isPassword = passInput.type === 'password';
+        passInput.type = isPassword ? 'text' : 'password';
         this.classList.toggle('fa-eye');
         this.classList.toggle('fa-eye-slash');
     });
 
-    // Proses Login ke Google Sheets
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const userVal = document.getElementById('username').value;
-        const passVal = document.getElementById('password').value;
-        const btn = e.target.querySelector('button');
-        const error = document.getElementById('error-msg');
+    function login() {
+        const uVal = document.getElementById('user').value.trim();
+        const pVal = document.getElementById('pass').value.trim();
+        const btn = document.getElementById('btn-login');
 
-        btn.innerText = "MENGECEK...";
+        if(!uVal || !pVal) {
+            alert("Harap isi username dan password!");
+            return;
+        }
+
+        btn.innerText = "Mengecek Akses...";
         btn.disabled = true;
-        error.style.display = "none";
 
-        // Gunakan JSONP (Callback) agar tidak terkena CORS
-        const cb = "login_" + Math.round(Math.random() * 1000000);
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
         const s = document.createElement('script');
         
         window[cb] = (res) => {
-            if(res.status === "success") {
-                // Simpan data user asli dari Sheets (id, nama, kelompok, dll)
-                localStorage.setItem("jimpitan_user", JSON.stringify(res.data));
-                window.location.href = "petugas.html"; // Ganti ke file utama kamu
+            if (res.status === "success") {
+                localStorage.setItem("jimpitan_user", JSON.stringify(res));
+                // Berhasil Login -> Pindah ke petugas.html
+                window.location.href = "petugas.html";
             } else {
+                alert(res.message || "Gagal Masuk! Username atau Password salah.");
                 btn.innerText = "MASUK SEKARANG";
                 btn.disabled = false;
-                error.innerText = res.message || "Username atau Password salah!";
-                error.style.display = "block";
             }
-            document.body.removeChild(s); 
+            document.body.removeChild(s);
             delete window[cb];
         };
 
-        // Memanggil fungsi login di App Script
-        s.src = `${apiURL}?callback=${cb}&action=login&username=${encodeURIComponent(userVal)}&password=${encodeURIComponent(passVal)}`;
+        s.src = `${scriptURL}?callback=${cb}&action=login&u=${encodeURIComponent(uVal)}&p=${encodeURIComponent(pVal)}`;
         document.body.appendChild(s);
+    }
+
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') login();
     });
 </script>
 
