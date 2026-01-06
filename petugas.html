@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petugas | Jimpitan Digital</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; }
+        .header { margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        .card { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 80px; }
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #334155; }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; }
+        .belum { background: rgba(248, 113, 113, 0.2); color: #F87171; }
+        .sudah { background: rgba(0, 184, 148, 0.2); color: var(--accent); }
+        .btn-scan { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; background: var(--accent); color: white; padding: 18px; border-radius: 18px; text-align: center; font-weight: 800; text-decoration: none; box-shadow: 0 10px 25px rgba(0,184,148,0.4); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h3 style="margin:0;">Malam Ini: <span id="nama-kel">...</span></h3>
+        <small id="tgl-skrg"></small>
+    </div>
+
+    <div class="card" id="list-warga">Memuat data warga...</div>
+
+    <a href="jimpitan.html" class="btn-scan"><i class="fa-solid fa-qrcode"></i> MULAI SCAN JIMPITAN</a>
+
+    <script>
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+        const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+        
+        if(!user) window.location.href = "index.html";
+        document.getElementById('nama-kel').innerText = user.kelompok;
+        document.getElementById('tgl-skrg').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        function load() {
+            const cb = "cb_" + Math.round(Math.random() * 1000000);
+            const s = document.createElement('script');
+            window[cb] = (res) => {
+                let h = "";
+                res.data.forEach(w => {
+                    const cls = w.status === "BELUM" ? "belum" : "sudah";
+                    const icon = w.status === "BELUM" ? "fa-circle-xmark" : "fa-circle-check";
+                    h += `<div class="item">
+                            <span>${w.nama}</span>
+                            <span class="badge ${cls}"><i class="fa-solid ${icon}"></i> ${w.status}</span>
+                          </div>`;
+                });
+                document.getElementById('list-warga').innerHTML = h;
+                document.body.removeChild(s); delete window[cb];
+            };
+            s.src = `${scriptURL}?callback=${cb}&action=getPetugasData&kelompok=${user.kelompok}`;
+            document.body.appendChild(s);
+        }
+        load();
+    </script>
+</body>
+</html>
