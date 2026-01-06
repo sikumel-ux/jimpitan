@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login | Jimpitan Digital</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { 
+            --bg: #0F172A; 
+            --card: #1E293B; 
+            --accent: #00B894; 
+            --text: #F8FAFC; 
+            --text-muted: #94A3B8;
+            --danger: #F87171; 
+        }
+
+        /* Prevent Scroll */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            width: 90%;
+            max-width: 400px;
+            perspective: 1000px;
+        }
+
+        .login-card {
+            background: var(--card);
+            padding: 40px 30px;
+            border-radius: 20px;
+            border: 1px solid #334155;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .brand-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--accent);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 30px;
+            color: white;
+            box-shadow: 0 0 20px rgba(0, 184, 148, 0.3);
+        }
+
+        h2 { margin: 0 0 10px; font-weight: 800; font-size: 24px; }
+        p { color: var(--text-muted); margin-bottom: 30px; font-size: 14px; }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            margin-left: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-field {
+            width: 100%;
+            background: #0F172A;
+            border: 1px solid #334155;
+            padding: 12px 15px;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: var(--accent);
+        }
+
+        /* Password Toggle */
+        .password-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.3s;
+        }
+
+        .toggle-password:hover {
+            color: var(--accent);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .btn-login:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .copyright {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #475569;
+            text-align: center;
+        }
+
+        #error-msg {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="brand-logo">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h2>Petugas Ronda</h2>
+            <p>Silakan login untuk akses Jimpitan</p>
+
+            <form id="loginForm">
+                <div class="input-group">
+                    <label>Username / ID</label>
+                    <input type="text" id="username" class="input-field" placeholder="Masukkan ID Petugas" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" class="input-field" placeholder="••••••••" required>
+                        <i class="fa-solid fa-eye toggle-password" id="eyeIcon"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login">MASUK SEKARANG</button>
+                <div id="error-msg">Username atau Password salah!</div>
+            </form>
+        </div>
+    </div>
+
+    <div class="copyright">
+        &copy; 2024 - 2026 <b>Jimpitan Digital</b>. All Rights Reserved.
+    </div>
+
+    <script>
+        // Fitur Hide/Show Password
+        const togglePassword = document.querySelector('#eyeIcon');
+        const password = document.querySelector('#password');
+
+        togglePassword.addEventListener('click', function () {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+            
+            // Toggle Icon
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+
+        // Simulasi Form Submit
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userVal = document.getElementById('username').value;
+            const passVal = document.getElementById('password').value;
+            const btn = e.target.querySelector('button');
+            const error = document.getElementById('error-msg');
+
+            // Visual Feedback
+            btn.innerText = "MENGECEK...";
+            btn.style.opacity = "0.7";
+            error.style.display = "none";
+
+            // Contoh Logika Login Sederhana (Ganti dengan integrasi API kamu)
+            setTimeout(() => {
+                if(userVal === "admin" && passVal === "12345") {
+                    // Simpan data user ke localStorage
+                    const userData = {
+                        nama: "Admin Petugas",
+                        kelompok: "Mawar 01",
+                        role: "petugas"
+                    };
+                    localStorage.setItem("jimpitan_user", JSON.stringify(userData));
+                    window.location.href = "dashboard.html"; // Redirect ke halaman utama
+                } else {
+                    btn.innerText = "MASUK SEKARANG";
+                    btn.style.opacity = "1";
+                    error.style.display = "block";
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
