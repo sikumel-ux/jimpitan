@@ -3,82 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Admin - Terima Setoran</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --border: #334155; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .card-admin { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
-        .group-name { font-weight: 800; font-size: 18px; color: var(--accent); }
-        .amount { font-size: 24px; font-weight: 800; margin: 10px 0; }
-        .btn-terima { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; }
-        .btn-terima:disabled { background: #475569; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; overflow-x: hidden; }
+        
+        .header { margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .card-hari { 
+            background: var(--card); padding: 20px; border-radius: 15px; 
+            border: 1px solid var(--border); margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .info h4 { margin: 0; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+        .info span { font-size: 20px; font-weight: 800; }
+        
+        .btn-terima { 
+            background: var(--accent); color: white; border: none; 
+            padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer;
+        }
+        .btn-terima:disabled { background: #475569; opacity: 0.5; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h3>Dashboard Admin</h3>
-    <button onclick="logout()" style="background:none; border:none; color:#F87171;"><i class="fa-solid fa-power-off"></i></button>
+    <h2>Dashboard Admin</h2>
+    <small>Terima Setoran Uang Jimpitan</small>
 </div>
 
-<div id="list-setoran">
-    <p>Memuat data setoran...</p>
+<div id="container-setoran">
+    <p>Sedang memuat data kas harian...</p>
 </div>
 
 <script>
-    const apiURL = 'URL_APPS_SCRIPT_KAMU';
-    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    const scriptURL = 'URL_APPS_SCRIPT_KAMU';
 
-    if(!user || user.role !== 'admin') window.location.href = "index.html";
-
-    function loadSetoran() {
-        // Panggil API untuk ambil total per kelompok yang belum disetor
-        // Contoh data dummy untuk tampilan:
-        const dataSetoran = [
-            { kelompok: "Mawar 01", total: 150000 },
-            { kelompok: "Melati 02", total: 85000 }
-        ];
-        
+    // Contoh data yang ditarik dari Sheets (Total jimpitan yang belum disetor)
+    const listHari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
+    
+    function loadDataAdmin() {
+        // Simulasi data, nanti ini ditarik pake fetch/JSONP ke Apps Script
         let html = "";
-        dataSetoran.forEach(item => {
+        listHari.forEach(hari => {
             html += `
-                <div class="card-admin">
-                    <div class="group-name">${item.kelompok}</div>
-                    <div class="amount">Rp ${item.total.toLocaleString('id-ID')}</div>
-                    <button class="btn-terima" onclick="terima('${item.kelompok}', ${item.total})">
-                        <i class="fa-solid fa-check-circle"></i> TERIMA SETORAN
-                    </button>
-                </div>`;
+            <div class="card-hari">
+                <div class="info">
+                    <h4>Kelompok ${hari}</h4>
+                    <span id="total-${hari}">Rp 0</span>
+                </div>
+                <button class="btn-terima" onclick="prosesSetoran('${hari}')">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> TERIMA
+                </button>
+            </div>`;
         });
-        document.getElementById('list-setoran').innerHTML = html;
+        document.getElementById('container-setoran').innerHTML = html;
+        
+        // Di sini panggil fungsi untuk ambil angka aslinya dari Sheets
+        // fetchTotalUang(); 
     }
 
-    function terima(kel, nom) {
-        if(!confirm(`Terima setoran dari ${kel} sebesar Rp ${nom.toLocaleString('id-ID')}?`)) return;
+    function prosesSetoran(hari) {
+        if(!confirm(`Konfirmasi: Uang setoran hari ${hari} sudah diterima?`)) return;
         
         const btn = event.target;
-        btn.innerText = "Memproses...";
+        btn.innerText = "Processing...";
         btn.disabled = true;
 
-        const cb = "res_"+Date.now();
+        const cb = "admin_" + Date.now();
         const s = document.createElement('script');
-        window[cb] = (r) => {
-            if(r.status === "success") {
-                alert("Setoran Berhasil Diterima & Saldo Petugas Direset!");
-                loadSetoran();
+        
+        window[cb] = (res) => {
+            if(res.status === "success") {
+                alert(`Setoran ${hari} Berhasil! Saldo petugas otomatis reset.`);
+                loadDataAdmin(); // Refresh tampilan
             }
             document.body.removeChild(s);
             delete window[cb];
         };
-        s.src = `${apiURL}?callback=${cb}&action=terimaSetoran&kelompok=${kel}&nominal=${nom}&admin=${user.username}`;
+
+        s.src = `${scriptURL}?callback=${cb}&action=terimaSetoran&u=${hari}`;
         document.body.appendChild(s);
     }
 
-    function logout() { localStorage.clear(); window.location.href = "index.html"; }
-    
-    loadSetoran();
+    loadDataAdmin();
 </script>
 </body>
 </html>
