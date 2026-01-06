@@ -1,27 +1,128 @@
-// ... di dalam callGAS callback ...
-let hP = "";
-res.presensi.forEach(i => {
-    const isBolos = i.status === "TIDAK MENGISI";
-    const badgeClass = isBolos ? "belum" : "sudah";
-    const badgeText = isBolos ? i.daftarTanggalKosong.length + " KALI KOSONG" : "LENGKAP";
-    
-    let infoTanggal = "";
-    if (isBolos) {
-        infoTanggal = `<div style="color:#F87171; font-size:11px; margin-top:4px; line-height:1.4;">
-                        <b>Tanggal Kosong:</b><br>${i.daftarTanggalKosong.join(", ")}
-                      </div>`;
-    } else {
-        infoTanggal = `<div style="color:#00B894; font-size:11px; margin-top:4px;">Selalu mengisi jimpitan.</div>`;
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Jimpitan Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; --warn: #EAB308; --border: #334155; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px 20px 100px 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .main-card { background: linear-gradient(135deg, #00B894 0%, #00897B 100%); padding: 20px; border-radius: 20px; text-align: center; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(0,184,148,0.2); }
+        .box { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 15px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab { flex:1; padding: 12px; border-radius: 12px; border: none; background: #334155; color: white; font-weight: 800; font-size: 11px; cursor: pointer; }
+        .tab.active { background: var(--accent); }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; color: #94A3B8; font-size: 11px; padding-bottom: 10px; }
+        td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+        .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 9px; font-weight: 800; }
+        .sudah { background: rgba(0, 184, 148, 0.2); color: var(--accent); }
+        .belum { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
+        .btn-scan { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; background: var(--accent); color: white; padding: 18px; border-radius: 18px; text-align: center; font-weight: 800; text-decoration: none; box-shadow: 0 10px 25px rgba(0,184,148,0.4); }
+        select { width: 100%; padding: 12px; border-radius: 10px; background: #0F172A; color: white; border: 1px solid var(--border); margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div><h3 style="margin:0;">RT Digital</h3><small id="user-info" style="color:var(--accent);">Memuat...</small></div>
+        <button onclick="logout()" style="background:none; border:1px solid var(--danger); color:var(--danger); padding:6px 12px; border-radius:8px; font-size:11px; font-weight:800;">KELUAR</button>
+    </div>
+
+    <div class="main-card">
+        <small style="opacity: 0.8;">SALDO DI PETUGAS (BELUM SETOR)</small>
+        <h1 id="total-dana" style="margin:5px 0;">Rp 0</h1>
+    </div>
+
+    <div class="tabs">
+        <button id="t1" class="tab active" onclick="switchTab(1)">KEUANGAN</button>
+        <button id="t2" class="tab" onclick="switchTab(2)">CEK WARGA</button>
+    </div>
+
+    <div id="view-uang">
+        <div class="box">
+            <h4 style="margin:0 0 10px 0; color:var(--accent);">Rincian Uang di Tangan</h4>
+            <table>
+                <thead><tr><th>TGL</th><th>NAMA</th><th style="text-align:right;">RP</th></tr></thead>
+                <tbody id="body-uang"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="view-presensi" style="display:none;">
+        <div class="box">
+            <h4 style="margin:0; color:var(--warn);">Cek Warga Tidak Isi Jimpitan</h4>
+            <select id="select-kelompok" onchange="loadData()">
+                <option value="Senin">Senin</option><option value="Selasa">Selasa</option>
+                <option value="Rabu">Rabu</option><option value="Kamis">Kamis</option>
+                <option value="Jumat">Jumat</option><option value="Sabtu">Sabtu</option>
+                <option value="Minggu">Minggu</option>
+            </select>
+            <table>
+                <thead><tr><th>NAMA WARGA / TGL KOSONG</th><th style="text-align:right;">STATUS</th></tr></thead>
+                <tbody id="body-presensi"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <a href="jimpitan.html" class="btn-scan">SCAN BARCODE JIMPITAN</a>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+
+    if(!user) window.location.href = "index.html";
+    document.getElementById('user-info').innerText = "Kelompok: " + user.kelompok;
+    document.getElementById('select-kelompok').value = user.kelompok;
+
+    function callGAS(params, callback) {
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        window[cb] = (res) => { callback(res); document.body.removeChild(s); delete window[cb]; };
+        s.src = `${scriptURL}?callback=${cb}&${params}`;
+        document.body.appendChild(s);
     }
 
-    hP += `<tr>
-        <td style="padding: 15px 5px;">
-            <b style="font-size:14px; color:#F8FAFC;">${i.nama}</b>
-            ${infoTanggal}
-        </td>
-        <td style="text-align:right; vertical-align:top; padding-top:15px;">
-            <span class="status-badge ${badgeClass}">${badgeText}</span>
-        </td>
-    </tr>`;
-});
-document.getElementById('body-presensi').innerHTML = hP;
+    function loadData() {
+        const kmp = document.getElementById('select-kelompok').value;
+        callGAS(`action=getDataFull&kelompok=${kmp}`, (res) => {
+            // 1. Render Dana
+            document.getElementById('total-dana').innerText = "Rp " + (res.total || 0).toLocaleString('id-ID');
+
+            // 2. Render Uang
+            let hU = "";
+            if(res.uang.length) {
+                res.uang.forEach(i => hU += `<tr><td>${i.tgl}</td><td>${i.nama}</td><td style="text-align:right;">${i.nom.toLocaleString()}</td></tr>`);
+            } else { hU = "<tr><td colspan='3' style='text-align:center;'>Tidak ada uang di petugas</td></tr>"; }
+            document.getElementById('body-uang').innerHTML = hU;
+
+            // 3. Render Laporan Kosong Jimpitan
+            let hP = "";
+            res.presensi.forEach(i => {
+                const isKosong = i.status === "KOSONG";
+                const badge = isKosong ? `<span class="status-badge belum">${i.detailKosong.length} KALI KOSONG</span>` : `<span class="status-badge sudah">LENGKAP</span>`;
+                const tgls = isKosong ? `<div style="color:var(--danger); font-size:11px; margin-top:5px;"><b>Kosong tgl:</b> ${i.detailKosong.join(", ")}</div>` : `<div style="color:var(--accent); font-size:11px; margin-top:5px;">Rajin mengisi.</div>`;
+                
+                hP += `<tr>
+                    <td><b style="font-size:14px;">${i.nama}</b>${tgls}</td>
+                    <td style="text-align:right; vertical-align:top;">${badge}</td>
+                </tr>`;
+            });
+            document.getElementById('body-presensi').innerHTML = hP;
+        });
+    }
+
+    function switchTab(n) {
+        document.getElementById('view-uang').style.display = n==1 ? 'block' : 'none';
+        document.getElementById('view-presensi').style.display = n==2 ? 'block' : 'none';
+        document.getElementById('t1').className = n==1 ? 'tab active' : 'tab';
+        document.getElementById('t2').className = n==2 ? 'tab active' : 'tab';
+    }
+
+    function logout() { localStorage.clear(); window.location.href = "index.html"; }
+    loadData();
+</script>
+</body>
+</html>
