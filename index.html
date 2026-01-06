@@ -3,76 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Login | Jimpitan</title>
+    <title>Login Jimpitan</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --border: #334155; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-        .card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); width: 90%; max-width: 330px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
-        h2 { margin: 0; font-size: 22px; font-weight: 800; color: var(--accent); }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        
+        .card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); width: 90%; max-width: 320px; text-align: center; box-shadow: 0 15px 30px rgba(0,0,0,0.4); }
+        h2 { margin: 0; font-size: 20px; font-weight: 800; color: var(--accent); }
         p { color: #94A3B8; font-size: 13px; margin: 5px 0 25px; }
-        .input-group { text-align: left; margin-bottom: 15px; }
-        label { font-size: 11px; color: #94A3B8; margin-left: 5px; text-transform: uppercase; font-weight: bold; }
-        .pass-box { position: relative; display: flex; align-items: center; }
-        input { width: 100%; padding: 14px; margin-top: 5px; border-radius: 12px; border: 1px solid var(--border); background: #0F172A; color: white; font-size: 16px; outline: none; }
+        
+        .input-group { text-align: left; margin-bottom: 12px; position: relative; }
+        label { font-size: 11px; color: #94A3B8; margin-left: 5px; text-transform: uppercase; }
+        input { width: 100%; padding: 12px; margin-top: 5px; border-radius: 10px; border: 1px solid var(--border); background: #0F172A; color: white; font-size: 15px; outline: none; }
         input:focus { border-color: var(--accent); }
-        .toggle { position: absolute; right: 15px; top: 55%; transform: translateY(-50%); color: #475569; cursor: pointer; }
-        button { width: 100%; padding: 15px; margin-top: 15px; border-radius: 12px; border: none; background: var(--accent); color: white; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 5px 15px rgba(0,184,148,0.3); }
+
+        .pass-wrapper { position: relative; }
+        .toggle-btn { position: absolute; right: 12px; top: 62%; transform: translateY(-50%); color: #475569; cursor: pointer; font-size: 14px; }
+        
+        button { width: 100%; padding: 14px; margin-top: 10px; border-radius: 10px; border: none; background: var(--accent); color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
         button:active { transform: scale(0.97); }
-        .copy { margin-top: 25px; font-size: 11px; color: #475569; }
+        button:disabled { background: #475569; }
+        
+        .copyright { margin-top: 20px; font-size: 11px; color: #475569; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h2>JIMPITAN DIGITAL</h2>
-    <p>Silakan Login Petugas/Admin</p>
+    <p>Kelola data ronda lebih mudah</p>
     
     <div class="input-group">
         <label>Username (Hari)</label>
-        <input type="text" id="u" placeholder="Contoh: senin" autocomplete="off">
+        <input type="text" id="u" placeholder="senin / selasa" autocomplete="off">
     </div>
     
     <div class="input-group">
         <label>Password</label>
-        <div class="pass-box">
+        <div class="pass-wrapper">
             <input type="password" id="p" placeholder="••••••••">
-            <i class="fa-solid fa-eye toggle" onclick="showPass()"></i>
+            <i class="fa-solid fa-eye toggle-btn" id="eyeIcon"></i>
         </div>
     </div>
     
-    <button id="btn" onclick="gasLogin()">MASUK SEKARANG</button>
+    <button id="btn" onclick="login()">MASUK SEKARANG</button>
 </div>
 
-<div class="copy">&copy; 2026 Jimpitan Digital Team</div>
+<div class="copyright">&copy; 2026 Jimpitan Digital</div>
 
 <script>
-    const api = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
+    // GANTI DENGAN URL DEPLOY TERBARU KAMU
+    const apiURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
 
-    function showPass() {
-        const p = document.getElementById('p'), i = event.target;
+    // Toggle Password
+    document.getElementById('eyeIcon').onclick = function() {
+        const p = document.getElementById('p');
         p.type = p.type === 'password' ? 'text' : 'password';
-        i.classList.toggle('fa-eye'); i.classList.toggle('fa-eye-slash');
-    }
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+    };
 
-    function gasLogin() {
-        const u = document.getElementById('u').value, p = document.getElementById('p').value, b = document.getElementById('btn');
+    function login() {
+        const u = document.getElementById('u').value.trim();
+        const p = document.getElementById('p').value.trim();
+        const b = document.getElementById('btn');
+
         if(!u || !p) return alert("Isi Bro!");
-        
+
         b.innerText = "Mengecek..."; b.disabled = true;
-        const cb = "login_"+Date.now(), s = document.createElement('script');
+        
+        const cb = "cb_" + Date.now();
+        const s = document.createElement('script');
+        
         window[cb] = (res) => {
-            if(res.status === "success") {
+            if (res.status === "success") {
                 localStorage.setItem("jimpitan_user", JSON.stringify(res.data));
-                window.location.href = (res.data.role === 'admin') ? "admin.html" : "petugas.html";
+                // Arahkan sesuai role
+                if(res.data.role.toLowerCase() === 'admin') {
+                    window.location.href = "admin.html";
+                } else {
+                    window.location.href = "petugas.html";
+                }
             } else {
-                alert(res.message); b.innerText = "MASUK SEKARANG"; b.disabled = false;
+                alert(res.message);
+                b.innerText = "MASUK SEKARANG"; b.disabled = false;
             }
             document.body.removeChild(s); delete window[cb];
         };
-        s.src = `${api}?callback=${cb}&action=login&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
+
+        s.src = `${apiURL}?callback=${cb}&action=login&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
         document.body.appendChild(s);
     }
+
+    document.addEventListener('keypress', e => { if(e.key==='Enter') login() });
 </script>
+
 </body>
 </html>
