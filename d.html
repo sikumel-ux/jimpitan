@@ -1,0 +1,27 @@
+// ... di dalam callGAS callback ...
+let hP = "";
+res.presensi.forEach(i => {
+    const isBolos = i.status === "TIDAK MENGISI";
+    const badgeClass = isBolos ? "belum" : "sudah";
+    const badgeText = isBolos ? i.daftarTanggalKosong.length + " KALI KOSONG" : "LENGKAP";
+    
+    let infoTanggal = "";
+    if (isBolos) {
+        infoTanggal = `<div style="color:#F87171; font-size:11px; margin-top:4px; line-height:1.4;">
+                        <b>Tanggal Kosong:</b><br>${i.daftarTanggalKosong.join(", ")}
+                      </div>`;
+    } else {
+        infoTanggal = `<div style="color:#00B894; font-size:11px; margin-top:4px;">Selalu mengisi jimpitan.</div>`;
+    }
+
+    hP += `<tr>
+        <td style="padding: 15px 5px;">
+            <b style="font-size:14px; color:#F8FAFC;">${i.nama}</b>
+            ${infoTanggal}
+        </td>
+        <td style="text-align:right; vertical-align:top; padding-top:15px;">
+            <span class="status-badge ${badgeClass}">${badgeText}</span>
+        </td>
+    </tr>`;
+});
+document.getElementById('body-presensi').innerHTML = hP;
