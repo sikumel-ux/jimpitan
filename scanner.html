@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Jimpitan</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .btn-nav { background: #334155; color: white; border: none; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: bold; }
+        
+        /* Scanner Style */
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; border: 2px solid var(--accent) !important; background: black; margin-bottom: 15px; }
+        
+        .control-panel { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid #334155; }
+        
+        .warga-display { background: #0F172A; padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 15px; border: 1px dashed var(--accent); }
+        .warga-display small { color: #94a3b8; font-size: 11px; }
+        .warga-display h2 { margin: 0; color: var(--accent); font-size: 20px; }
+
+        .nominal-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .btn-nominal { background: #334155; color: white; border: 1px solid var(--accent); padding: 12px 5px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; }
+        .btn-nominal:active { background: var(--accent); transform: scale(0.95); }
+
+        .input-manual { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0F172A; color: white; font-size: 16px; text-align: center; box-sizing: border-box; margin-bottom: 15px; outline: none; }
+        .input-manual:focus { border-color: var(--accent); }
+        
+        .btn-save { width: 100%; background: var(--accent); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 800; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; flex-direction: column; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-header">
+        <a href="petugas.html" class="btn-nav"><i class="fa-solid fa-chevron-left"></i> KEMBALI</a>
+        <button onclick="logout()" class="btn-nav" style="color:var(--danger);">LOGOUT <i class="fa-solid fa-sign-out-alt"></i></button>
+    </div>
+
+    <div id="reader"></div>
+
+    <div class="control-panel">
+        <div class="warga-display">
+            <small>WARGA TERDETEKSI:</small>
+            <h2 id="nama-warga">MENUNGGU SCAN...</h2>
+        </div>
+
+        <div class="nominal-grid">
+            <button class="btn-nominal" onclick="isi(500)">500</button>
+            <button class="btn-nominal" onclick="isi(1000)">1.000</button>
+            <button class="btn-nominal" onclick="isi(2000)">2.000</button>
+        </div>
+
+        <input type="number" id="nominal-manual" class="input-manual" placeholder="Nominal Lain (Manual)...">
+
+        <button class="btn-save" onclick="kirim()">
+            <i class="fa-solid fa-cloud-upload"></i> SIMPAN DATA
+        </button>
+    </div>
+
+    <div id="loading" class="loading-overlay">
+        <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color:var(--accent);"></i>
+        <p>Mengirim data...</p>
+    </div>
+
+<script>
+    const api = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+    let scanner;
+
+    function mulaiScanner() {
+        scanner = new Html5Qrcode("reader");
+        scanner.start(
+            { facingMode: "environment" }, 
+            { fps: 15, qrbox: { width: 220, height: 220 } },
+            (text) => {
+                // Bunyi bip atau getar (opsional)
+                if (navigator.vibrate) navigator.vibrate(100);
+                
+                // Update nama warga di kolom bawah scanner
+                document.getElementById('nama-warga').innerText = text;
+                
+                // Scanner tidak dimatikan agar bisa scan warga berikutnya jika salah
+            }
+        ).catch(err => console.error(err));
+    }
+
+    function isi(n) {
+        document.getElementById('nominal-manual').value = n;
+    }
+
+    function kirim() {
+        const nm = document.getElementById('nama-warga').innerText;
+        const nom = document.getElementById('nominal-manual').value;
+
+        if(nm === "MENUNGGU SCAN...") return alert("Scan QR Code warga dulu, Bro!");
+        if(!nom) return alert("Pilih atau isi nominalnya!");
+
+        document.getElementById('loading').style.display = 'flex';
+
+        fetch(`${api}?action=addJimpitan&nama=${encodeURIComponent(nm)}&nominal=${nom}`)
+        .then(r => r.json())
+        .then(res => {
+            document.getElementById('loading').style.display = 'none';
+            if(res.status === "success") {
+                alert("Data " + nm + " Berhasil Disimpan!");
+                // Reset form untuk warga berikutnya
+                document.getElementById('nama-warga').innerText = "MENUNGGU SCAN...";
+                document.getElementById('nominal-manual').value = "";
+            }
+        })
+        .catch(e => {
+            document.getElementById('loading').style.display = 'none';
+            alert("Error: " + e);
+        });
+    }
+
+    function logout() { localStorage.clear(); window.location.href="index.html"; }
+
+    window.onload = mulaiScanner;
+</script>
+</body>
+</html>
