@@ -3,41 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Login Jimpitan</title>
+    <title>Login | Jimpitan Digital</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --border: #334155; }
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
         
-        .card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); width: 90%; max-width: 320px; text-align: center; box-shadow: 0 15px 30px rgba(0,0,0,0.4); }
-        h2 { margin: 0; font-size: 20px; font-weight: 800; color: var(--accent); }
+        body { 
+            background: var(--bg); color: var(--text); 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            height: 100vh; margin: 0; overflow: hidden; /* No Scroll */
+        }
+        
+        .card { 
+            background: var(--card); padding: 30px; border-radius: 24px; 
+            border: 1px solid var(--border); width: 90%; max-width: 330px; 
+            text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); 
+        }
+        
+        h2 { margin: 0; font-size: 22px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
         p { color: #94A3B8; font-size: 13px; margin: 5px 0 25px; }
         
-        .input-group { text-align: left; margin-bottom: 12px; position: relative; }
-        label { font-size: 11px; color: #94A3B8; margin-left: 5px; text-transform: uppercase; }
-        input { width: 100%; padding: 12px; margin-top: 5px; border-radius: 10px; border: 1px solid var(--border); background: #0F172A; color: white; font-size: 15px; outline: none; }
-        input:focus { border-color: var(--accent); }
+        .input-group { text-align: left; margin-bottom: 15px; position: relative; }
+        label { font-size: 11px; color: #94A3B8; margin-left: 5px; text-transform: uppercase; font-weight: 700; }
+        
+        input { 
+            width: 100%; padding: 14px; margin-top: 5px; border-radius: 12px; 
+            border: 1px solid var(--border); background: #0F172A; color: white; 
+            font-size: 16px; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); background: #162033; }
 
         .pass-wrapper { position: relative; }
-        .toggle-btn { position: absolute; right: 12px; top: 62%; transform: translateY(-50%); color: #475569; cursor: pointer; font-size: 14px; }
+        .toggle-btn { 
+            position: absolute; right: 15px; top: 60%; transform: translateY(-50%); 
+            color: #475569; cursor: pointer; font-size: 16px; z-index: 10;
+        }
         
-        button { width: 100%; padding: 14px; margin-top: 10px; border-radius: 10px; border: none; background: var(--accent); color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.97); }
-        button:disabled { background: #475569; }
+        button { 
+            width: 100%; padding: 16px; margin-top: 10px; border-radius: 12px; 
+            border: none; background: var(--accent); color: white; 
+            font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.2s; 
+        }
+        button:active { transform: scale(0.96); }
+        button:disabled { background: #475569; cursor: not-allowed; }
         
-        .copyright { margin-top: 20px; font-size: 11px; color: #475569; }
+        .copyright { margin-top: 25px; font-size: 11px; color: #475569; letter-spacing: 0.5px; }
     </style>
 </head>
 <body>
 
 <div class="card">
+    <div style="font-size: 40px; color: var(--accent); margin-bottom: 10px;">
+        <i class="fa-solid fa-house-chimney-user"></i>
+    </div>
     <h2>JIMPITAN DIGITAL</h2>
-    <p>Kelola data ronda lebih mudah</p>
+    <p>Silakan masuk ke akun Anda</p>
     
     <div class="input-group">
-        <label>Username (Hari)</label>
-        <input type="text" id="u" placeholder="senin / selasa" autocomplete="off">
+        <label>Username</label>
+        <input type="text" id="u" placeholder="Contoh: senin" autocomplete="off">
     </div>
     
     <div class="input-group">
@@ -51,53 +76,78 @@
     <button id="btn" onclick="login()">MASUK SEKARANG</button>
 </div>
 
-<div class="copyright">&copy; 2026 Jimpitan Digital</div>
+<div class="copyright">
+    &copy; 2026 Jimpitan Digital Team. All Rights Reserved.
+</div>
 
 <script>
-    // GANTI DENGAN URL DEPLOY TERBARU KAMU
-    const apiURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
+    // URL API dari Google Apps Script kamu
+    const apiURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
 
-    // Toggle Password
-    document.getElementById('eyeIcon').onclick = function() {
-        const p = document.getElementById('p');
-        p.type = p.type === 'password' ? 'text' : 'password';
-        this.classList.toggle('fa-eye');
-        this.classList.toggle('fa-eye-slash');
+    // Fitur Hide/Show Password
+    const eyeIcon = document.getElementById('eyeIcon');
+    const passInput = document.getElementById('p');
+
+    eyeIcon.onclick = () => {
+        const isPass = passInput.type === 'password';
+        passInput.type = isPass ? 'text' : 'password';
+        eyeIcon.classList.toggle('fa-eye');
+        eyeIcon.classList.toggle('fa-eye-slash');
     };
 
     function login() {
-        const u = document.getElementById('u').value.trim();
-        const p = document.getElementById('p').value.trim();
-        const b = document.getElementById('btn');
+        const uVal = document.getElementById('u').value.trim();
+        const pVal = document.getElementById('p').value.trim();
+        const btn = document.getElementById('btn');
 
-        if(!u || !p) return alert("Isi Bro!");
+        if(!uVal || !pVal) {
+            alert("Username dan password tidak boleh kosong!");
+            return;
+        }
 
-        b.innerText = "Mengecek..."; b.disabled = true;
-        
-        const cb = "cb_" + Date.now();
+        btn.innerText = "Mengecek...";
+        btn.disabled = true;
+
+        const cb = "login_" + Date.now();
         const s = document.createElement('script');
         
         window[cb] = (res) => {
             if (res.status === "success") {
+                // Simpan data user ke localStorage (DIBUTUHKAN petugas.html & admin.html)
                 localStorage.setItem("jimpitan_user", JSON.stringify(res.data));
-                // Arahkan sesuai role
+                
+                // Redirect berdasarkan role
                 if(res.data.role.toLowerCase() === 'admin') {
                     window.location.href = "admin.html";
                 } else {
                     window.location.href = "petugas.html";
                 }
             } else {
-                alert(res.message);
-                b.innerText = "MASUK SEKARANG"; b.disabled = false;
+                alert(res.message || "Gagal masuk! Periksa username/password.");
+                btn.innerText = "MASUK SEKARANG";
+                btn.disabled = false;
             }
-            document.body.removeChild(s); delete window[cb];
+            document.body.removeChild(s);
+            delete window[cb];
         };
 
-        s.src = `${apiURL}?callback=${cb}&action=login&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
+        // Kirim action=login agar Apps Script tahu ini proses masuk
+        s.src = `${apiURL}?callback=${cb}&action=login&u=${encodeURIComponent(uVal)}&p=${encodeURIComponent(pVal)}`;
+        
+        // Handle jika server tidak merespon
+        s.onerror = () => {
+            alert("Koneksi gagal! Pastikan URL API benar dan sudah di-Deploy sebagai 'Anyone'.");
+            btn.innerText = "MASUK SEKARANG";
+            btn.disabled = false;
+        };
+
         document.body.appendChild(s);
     }
 
-    document.addEventListener('keypress', e => { if(e.key==='Enter') login() });
+    // Support Enter
+    document.addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') login();
+    });
 </script>
 
 </body>
