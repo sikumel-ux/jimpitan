@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Jimpitan</title>
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-box { background: var(--card); padding: 30px; border-radius: 20px; width: 100%; max-width: 320px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #334155; background: #0F172A; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        #msg { color: #F87171; font-size: 13px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <h2>Login RT</h2>
+    <p style="color:#94A3B8; font-size:14px;">Masukkan akun petugas/admin</p>
+    <input type="text" id="user" placeholder="Username">
+    <input type="password" id="pass" placeholder="Password">
+    <button id="btn-login" onclick="login()">MASUK</button>
+    <div id="msg"></div>
+</div>
+
+<script>
+    const apiURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+
+    function login() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        const msg = document.getElementById('msg');
+        const btn = document.getElementById('btn-login');
+
+        if(!u || !p) return msg.innerText = "Isi semua field!";
+        
+        btn.innerText = "Checking...";
+        btn.disabled = true;
+
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        
+        window[cb] = (res) => {
+            if(res.status === "success") {
+                // Simpan data kelompok & role ke storage HP
+                localStorage.setItem("jimpitan_user", JSON.stringify(res));
+                
+                // ARAHKAN SESUAI ROLE (KOLOM D)
+                if(res.role.toLowerCase() === "admin") {
+                    window.location.href = "admin.html";
+                } else {
+                    window.location.href = "petugas.html";
+                }
+            } else {
+                msg.innerText = "Username atau Password salah!";
+                btn.innerText = "MASUK";
+                btn.disabled = false;
+            }
+            document.body.removeChild(s); delete window[cb];
+        };
+
+        s.src = `${apiURL}?callback=${cb}&action=login&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
+        document.body.appendChild(s);
+    }
+</script>
+</body>
+</html>
