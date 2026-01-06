@@ -3,42 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Petugas | Rekap Jimpitan</title>
+    <title>Petugas | Rekap Matriks</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
         
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .stat-box { background: linear-gradient(135deg, #00B894, #059669); padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,184,148,0.3); }
+        .stat-box { background: linear-gradient(135deg, #00B894, #059669); padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,184,148,0.3); }
         
-        .scroll-container { overflow-x: auto; background: var(--card); border-radius: 12px; border: 1px solid #334155; }
+        .scroll-container { overflow-x: auto; background: var(--card); border-radius: 12px; border: 1px solid #334155; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th, td { padding: 10px 8px; border: 1px solid #334155; text-align: center; }
-        th { background: #1e293b; color: #94a3b8; }
-        .nama-col { text-align: left; position: sticky; left: 0; background: #1e293b; z-index: 10; min-width: 90px; font-weight: bold; }
-        .kosong { color: #475569; }
+        th, td { padding: 12px 8px; border: 1px solid #334155; text-align: center; }
+        th { background: #1e293b; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1e293b; z-index: 10; min-width: 100px; font-weight: bold; border-right: 2px solid #334155; }
+        
+        .kosong { color: #475569; font-weight: normal; }
         .isi { color: var(--accent); font-weight: bold; }
+        .footer-total { background: #1e293b; font-weight: bold; color: var(--accent); }
         
-        .footer-total { background: #0f172a; font-weight: bold; }
-        .btn-scan { position: fixed; bottom: 15px; right: 15px; left: 15px; background: var(--accent); color: white; padding: 15px; border-radius: 12px; text-align: center; font-weight: 800; text-decoration: none; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
-        
-        select { background: #1e293b; color: white; border: 1px solid #334155; padding: 8px; border-radius: 8px; width: 100%; margin-bottom: 10px; }
+        select { background: #1e293b; color: white; border: 1px solid #334155; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; font-size: 14px; outline: none; }
+        .btn-scan { position: fixed; bottom: 15px; right: 15px; left: 15px; background: var(--accent); color: white; padding: 18px; border-radius: 15px; text-align: center; font-weight: 800; text-decoration: none; box-shadow: 0 8px 20px rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; gap: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div>
-            <h4 style="margin:0;">Kelompok <span id="label-kel">...</span></h4>
-            <small style="color:#94a3b8;">Rekap Bulanan</small>
+            <h3 style="margin:0;">Kelompok <span id="label-kel" style="color:var(--accent);">...</span></h3>
+            <small id="info-tgl" style="color:#94a3b8;"></small>
         </div>
-        <button onclick="logout()" style="background:none; border:1px solid var(--danger); color:var(--danger); padding:5px 10px; border-radius:5px;">Keluar</button>
+        <button onclick="logout()" style="background:none; border:1px solid var(--danger); color:var(--danger); padding:6px 12px; border-radius:8px; cursor:pointer; font-weight:bold;">LOGOUT</button>
     </div>
 
     <div class="stat-box">
-        <small>TOTAL HASIL KELOMPOK INI</small>
-        <h2 id="total-kelompok" style="margin:5px 0;">Rp 0</h2>
+        <small style="text-transform: uppercase; letter-spacing: 1px; opacity: 0.9;">Total Pendapatan Bulan Ini</small>
+        <h2 id="total-kelompok" style="margin:5px 0; font-size: 28px;">Rp 0</h2>
     </div>
 
     <select id="pilih-bulan" onchange="loadPetugas()">
@@ -57,7 +57,9 @@
                     <th class="nama-col">Nama Warga</th>
                 </tr>
             </thead>
-            <tbody id="body-rekap"></tbody>
+            <tbody id="body-rekap">
+                <tr><td colspan="2" style="padding:20px;">Memuat data...</td></tr>
+            </tbody>
             <tfoot>
                 <tr id="foot-total" class="footer-total">
                     <td class="nama-col">TOTAL</td>
@@ -66,15 +68,23 @@
         </table>
     </div>
 
-    <div style="height: 80px;"></div> <a href="jimpitan.html" class="btn-scan"><i class="fa-solid fa-qrcode"></i> SCAN BARCODE MALAM INI</a>
+    <div style="height: 100px;"></div>
+    <a href="jimpitan.html" class="btn-scan">
+        <i class="fa-solid fa-qrcode fa-lg"></i> SCAN JIMPITAN MALAM INI
+    </a>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+    const apiURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
     const user = JSON.parse(localStorage.getItem("jimpitan_user"));
 
-    if(!user) window.location.href = "index.html";
-    document.getElementById('label-kel').innerText = user.kelompok;
-    document.getElementById('pilih-bulan').value = new Date().getMonth();
+    // Cek Sesi Login
+    if(!user) {
+        window.location.href = "index.html";
+    } else {
+        document.getElementById('label-kel').innerText = user.kelompok;
+        document.getElementById('pilih-bulan').value = new Date().getMonth();
+        document.getElementById('info-tgl').innerText = "Rekapitulasi " + user.kelompok;
+    }
 
     function loadPetugas() {
         const bln = document.getElementById('pilih-bulan').value;
@@ -82,42 +92,58 @@
         const s = document.createElement('script');
         
         window[cb] = (res) => {
-            document.getElementById('total-kelompok').innerText = "Rp " + res.totalKelompok.toLocaleString('id-ID');
+            if(res.status === "success") {
+                // Update Total Header
+                document.getElementById('total-kelompok').innerText = "Rp " + res.totalKelompok.toLocaleString('id-ID');
 
-            // 1. Render Header Tanggal
-            let hHead = `<th class="nama-col">Nama</th>`;
-            res.tglHeader.forEach(t => hHead += `<th>${t}</th>`);
-            document.getElementById('head-tgl').innerHTML = hHead;
-
-            // 2. Render Body (Data Warga)
-            let hBody = "";
-            res.laporan.forEach(w => {
-                hBody += `<tr><td class="nama-col">${w.nama}</td>`;
-                w.dataTgl.forEach(d => {
-                    hBody += `<td class="${d.nilai > 0 ? 'isi' : 'kosong'}">${d.nilai > 0 ? d.nilai/1000 + 'k' : '-'}</td>`;
+                // 1. Render Header Tanggal (Misal: 05/01, 12/01, dst)
+                let hHead = `<th class="nama-col">Nama Warga</th>`;
+                res.tglHeader.forEach(t => {
+                    hHead += `<th>${t}</th>`;
                 });
-                hBody += `</tr>`;
-            });
-            document.getElementById('body-rekap').innerHTML = hBody;
+                document.getElementById('head-tgl').innerHTML = hHead;
 
-            // 3. Render Footer (Total per Tanggal)
-            let hFoot = `<td class="nama-col">TOTAL</td>`;
-            res.tglHeader.forEach(t => {
-                let total = res.totalPerTgl[t] || 0;
-                hFoot += `<td>${total > 0 ? total/1000 + 'k' : '0'}</td>`;
-            });
-            document.getElementById('foot-total').innerHTML = hFoot;
+                // 2. Render Baris Data Warga
+                let hBody = "";
+                res.laporan.forEach(w => {
+                    hBody += `<tr><td class="nama-col">${w.nama}</td>`;
+                    w.dataTgl.forEach(d => {
+                        // Tampilkan nominal dalam format 'k' agar ringkas di HP (500 -> 0.5k)
+                        let displayVal = d.nilai > 0 ? (d.nilai/1000).toFixed(1).replace('.0','') + 'k' : '-';
+                        let classVal = d.nilai > 0 ? 'isi' : 'kosong';
+                        hBody += `<td class="${classVal}">${displayVal}</td>`;
+                    });
+                    hBody += `</tr>`;
+                });
+                document.getElementById('body-rekap').innerHTML = hBody;
 
-            document.body.removeChild(s); delete window[cb];
+                // 3. Render Footer Total per Tanggal
+                let hFoot = `<td class="nama-col">TOTAL</td>`;
+                res.tglHeader.forEach(t => {
+                    let total = res.totalPerTgl[t] || 0;
+                    hFoot += `<td>${total > 0 ? (total/1000).toFixed(1).replace('.0','') + 'k' : '0'}</td>`;
+                });
+                document.getElementById('foot-total').innerHTML = hFoot;
+            } else {
+                alert("Gagal memuat data: " + res.message);
+            }
+            document.body.removeChild(s);
+            delete window[cb];
         };
 
-        // Kirim request sesuai kelompok user yang sedang login
-        s.src = `${scriptURL}?callback=${cb}&action=getAdminData&kelompok=${user.kelompok}&bulan=${bln}`;
+        // Memanggil fungsi getAdminData tapi menggunakan kelompok dari user login
+        s.src = `${apiURL}?callback=${cb}&action=getAdminData&kelompok=${encodeURIComponent(user.kelompok)}&bulan=${bln}`;
         document.body.appendChild(s);
     }
 
-    function logout() { localStorage.clear(); window.location.href="index.html"; }
+    function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+    }
+
+    // Jalankan saat pertama buka
     loadPetugas();
 </script>
 </body>
-</html>
+    </html>
+    
