@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petugas Ronda | Jimpitan Digital</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        
+        /* Navigasi Atas */
+        .top-nav { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-main { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: white; }
+        .btn-scan { background: var(--accent); box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3); }
+        .btn-logout { background: #334155; width: 60px; flex: none; color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
+
+        .stat-box { background: linear-gradient(135deg, #1E293B, #0F172A); padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
+        .stat-box h2 { margin: 5px 0; color: var(--accent); font-size: 28px; }
+
+        /* Tabel Matriks */
+        .scroll-container { overflow-x: auto; background: var(--card); border-radius: 12px; border: 1px solid #334155; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { padding: 12px 8px; border: 1px solid #334155; text-align: center; }
+        th { background: #1e293b; color: #94a3b8; text-transform: uppercase; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1e293b; z-index: 10; min-width: 90px; font-weight: bold; border-right: 2px solid #334155; }
+        
+        .isi { color: var(--accent); font-weight: bold; background: rgba(0, 184, 148, 0.05); }
+        .kosong { color: #475569; }
+        
+        select { background: #1e293b; color: white; border: 1px solid #334155; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; font-size: 14px; outline: none; }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <a href="jimpitan.html" class="btn-main btn-scan">
+            <i class="fa-solid fa-qrcode fa-lg"></i> AMBIL JIMPITAN
+        </a>
+        <button onclick="logout()" class="btn-main btn-logout">
+            <i class="fa-solid fa-right-from-bracket fa-lg"></i>
+        </button>
+    </div>
+
+    <div class="stat-box">
+        <small style="color: #94a3b8; letter-spacing: 1px;">TOTAL HASIL KELOMPOK <span id="label-kel">...</span></small>
+        <h2 id="total-kelompok">Rp 0</h2>
+    </div>
+
+    <select id="pilih-bulan" onchange="loadData()">
+        <option value="0">Januari</option>
+        <option value="1">Februari</option>
+        <option value="2">Maret</option>
+        </select>
+
+    <div class="scroll-container">
+        <table>
+            <thead>
+                <tr id="head-tgl">
+                    <th class="nama-col">Nama Warga</th>
+                </tr>
+            </thead>
+            <tbody id="body-rekap">
+                <tr><td colspan="2" style="padding:20px;">Memuat rekapan...</td></tr>
+            </tbody>
+            <tfoot>
+                <tr id="foot-total" style="font-weight:bold; background:#1e293b;">
+                    <td class="nama-col">TOTAL</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+<script>
+    const apiURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+
+    if(!user) {
+        window.location.href = "index.html";
+    } else {
+        document.getElementById('label-kel').innerText = user.kelompok.toUpperCase();
+        document.getElementById('pilih-bulan').value = new Date().getMonth();
+    }
+
+    function loadData() {
+        const bln = document.getElementById('pilih-bulan').value;
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        
+        window[cb] = (res) => {
+            if(res.status === "success") {
+                document.getElementById('total-kelompok').innerText = "Rp " + res.totalKelompok.toLocaleString('id-ID');
+
+                // Header Tanggal
+                let hH = `<th class="nama-col">Nama Warga</th>`;
+                res.tglHeader.forEach(t => hH += `<th>${t}</th>`);
+                document.getElementById('head-tgl').innerHTML = hH;
+
+                // Isi Data Matriks
+                let hB = "";
+                res.laporan.forEach(w => {
+                    hB += `<tr><td class="nama-col">${w.nama}</td>`;
+                    w.dataTgl.forEach(d => {
+                        let val = d.nilai > 0 ? (d.nilai/1000).toFixed(1).replace('.0','') + 'k' : '-';
+                        hB += `<td class="${d.nilai > 0 ? 'isi' : 'kosong'}">${val}</td>`;
+                    });
+                    hB += `</tr>`;
+                });
+                document.getElementById('body-rekap').innerHTML = hB;
+
+                // Footer Total per Tanggal
+                let hF = `<td class="nama-col">TOTAL</td>`;
+                res.tglHeader.forEach(t => {
+                    let total = res.totalPerTgl[t] || 0;
+                    hF += `<td>${total > 0 ? (total/1000).toFixed(1).replace('.0','') + 'k' : '0'}</td>`;
+                });
+                document.getElementById('foot-total').innerHTML = hF;
+            }
+            document.body.removeChild(s); delete window[cb];
+        };
+
+        s.src = `${apiURL}?callback=${cb}&action=getAdminData&kelompok=${encodeURIComponent(user.kelompok)}&bulan=${bln}`;
+        document.body.appendChild(s);
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+    }
+
+    loadData();
+</script>
+</body>
+</html>
