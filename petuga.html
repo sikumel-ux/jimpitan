@@ -101,7 +101,8 @@
                 res.laporan.forEach(w => {
                     hB += `<tr><td class="nama-col">${w.nama}</td>`;
                     w.dataTgl.forEach(d => {
-                        let val = d.nilai > 0 ? (d.nilai/1000).toFixed(1).replace('.0','') + 'k' : '-';
+                        let val = d.nilai > 0 ? d.nilai.toLocaleString('id-ID') : '-';
+
                         hB += `<td class="${d.nilai > 0 ? 'isi' : 'kosong'}">${val}</td>`;
                     });
                     hB += `</tr>`;
