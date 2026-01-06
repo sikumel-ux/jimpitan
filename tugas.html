@@ -9,7 +9,6 @@
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
         
-        /* Navigasi Atas */
         .top-nav { display: flex; gap: 10px; margin-bottom: 20px; }
         .btn-main { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: white; }
         .btn-scan { background: var(--accent); box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3); }
@@ -18,7 +17,6 @@
         .stat-box { background: linear-gradient(135deg, #1E293B, #0F172A); padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
         .stat-box h2 { margin: 5px 0; color: var(--accent); font-size: 28px; }
 
-        /* Tabel Matriks */
         .scroll-container { overflow-x: auto; background: var(--card); border-radius: 12px; border: 1px solid #334155; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
         th, td { padding: 12px 8px; border: 1px solid #334155; text-align: center; white-space: nowrap; }
@@ -81,13 +79,16 @@
     </div>
 
 <script>
+    // GANTI LINK DI BAWAH INI DENGAN WEB APP URL TERBARU DARI GOOGLE APPS SCRIPT
     const apiURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+    
     const user = JSON.parse(localStorage.getItem("jimpitan_user"));
 
     if(!user) {
         window.location.href = "index.html";
     } else {
         document.getElementById('label-kel').innerText = user.kelompok.toUpperCase();
+        // Set dropdown ke bulan sekarang
         document.getElementById('pilih-bulan').value = new Date().getMonth();
     }
 
@@ -96,17 +97,20 @@
         const cb = "cb_" + Math.round(Math.random() * 1000000);
         const s = document.createElement('script');
         
+        // Reset tampilan saat memuat ulang
+        document.getElementById('body-rekap').innerHTML = '<tr><td colspan="2" style="padding:20px;">Memuat rekapan...</td></tr>';
+
         window[cb] = (res) => {
             if(res.status === "success") {
-                // Total Header Atas
+                // 1. Update Total Atas
                 document.getElementById('total-kelompok').innerText = "Rp " + res.totalKelompok.toLocaleString('id-ID');
 
-                // Render Header Tanggal
+                // 2. Render Header (Tanggal)
                 let hH = `<th class="nama-col">Nama Warga</th>`;
                 res.tglHeader.forEach(t => hH += `<th>${t}</th>`);
                 document.getElementById('head-tgl').innerHTML = hH;
 
-                // Render Isi Data (Angka Murni)
+                // 3. Render Body (Data per Warga)
                 let hB = "";
                 res.laporan.forEach(w => {
                     hB += `<tr><td class="nama-col">${w.nama}</td>`;
@@ -118,17 +122,22 @@
                 });
                 document.getElementById('body-rekap').innerHTML = hB;
 
-                // Render Footer Total (Angka Murni)
+                // 4. Render Footer (Total per Tanggal) - FIXED VARIABLE
                 let hF = `<td class="nama-col">TOTAL</td>`;
                 res.tglHeader.forEach(t => {
                     let total = res.totalPerTgl[t] || 0;
                     hF += `<td>${total > 0 ? total.toLocaleString('id-ID') : '0'}</td>`;
                 });
                 document.getElementById('foot-total').innerHTML = hF;
+
+            } else {
+                document.getElementById('body-rekap').innerHTML = '<tr><td colspan="2" style="color:red; padding:20px;">Gagal memuat: ' + res.message + '</td></tr>';
             }
-            document.body.removeChild(s); delete window[cb];
+            document.body.removeChild(s); 
+            delete window[cb];
         };
 
+        // Panggil API
         s.src = `${apiURL}?callback=${cb}&action=getAdminData&kelompok=${encodeURIComponent(user.kelompok)}&bulan=${bln}`;
         document.body.appendChild(s);
     }
@@ -138,6 +147,7 @@
         window.location.href = "index.html";
     }
 
+    // Jalankan saat halaman dibuka
     loadData();
 </script>
 </body>
