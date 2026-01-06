@@ -180,7 +180,7 @@
     </div>
 
     <div class="copyright">
-        &copy; 2024 - 2026 <b>Jimpitan Digital</b>. All Rights Reserved.
+        &copy; 2026 <b>Jimpitan Digital</b>. All Rights Reserved.
     </div>
 
     // ... (Bagian CSS dan HTML tetap sama, fokus ke bagian Script) ...
@@ -221,7 +221,7 @@
             if(res.status === "success") {
                 // Simpan data user asli dari Sheets (id, nama, kelompok, dll)
                 localStorage.setItem("jimpitan_user", JSON.stringify(res.data));
-                window.location.href = "main.html"; // Ganti ke file utama kamu
+                window.location.href = "petugas.html"; // Ganti ke file utama kamu
             } else {
                 btn.innerText = "MASUK SEKARANG";
                 btn.disabled = false;
