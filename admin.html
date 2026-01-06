@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Jimpitan Digital</title>
+    <style>
+        :root { --bg: #F1F5F9; --accent: #00B894; --text: #1E293B; --danger: #DC2626; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin:0; }
+        .stat-card { background: var(--accent); color: white; padding: 25px; border-radius: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,184,148,0.2); margin-bottom: 20px; }
+        .box { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #CBD5E1; background: white; font-size: 16px; margin: 15px 0; }
+        .row-warga { padding: 15px 0; border-bottom: 1px solid #F1F5F9; }
+        .tgl-kosong { color: var(--danger); font-size: 12px; display: block; margin-top: 5px; line-height: 1.4; }
+        .btn-logout { background: none; border: 1px solid #CBD5E1; padding: 8px 15px; border-radius: 8px; float: right; }
+    </style>
+</head>
+<body>
+    <button class="btn-logout" onclick="logout()">LOGOUT</button>
+    <h3 style="margin-top:0;">Halo, Admin</h3>
+
+    <div class="stat-card">
+        <small style="opacity:0.9;">TOTAL UANG DI PETUGAS</small>
+        <h1 id="total-uang" style="margin:5px 0; font-size: 36px;">Rp 0</h1>
+    </div>
+
+    <div class="box">
+        <h4 style="margin:0;">Laporan Rumah Warga Kosong</h4>
+        <select id="pilih-kel" onchange="loadAdmin()">
+            <option value="Senin">Kelompok Senin</option>
+            <option value="Selasa">Kelompok Selasa</option>
+            <option value="Rabu">Kelompok Rabu</option>
+            <option value="Kamis">Kelompok Kamis</option>
+            <option value="Jumat">Kelompok Jumat</option>
+            <option value="Sabtu">Kelompok Sabtu</option>
+            <option value="Minggu">Kelompok Minggu</option>
+        </select>
+        <div id="data-laporan">Memuat data...</div>
+    </div>
+
+    <script>
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+        
+        function loadAdmin() {
+            const kmp = document.getElementById('pilih-kel').value;
+            const cb = "cb_" + Math.round(Math.random() * 1000000);
+            const s = document.createElement('script');
+            window[cb] = (res) => {
+                document.getElementById('total-uang').innerText = "Rp " + res.total.toLocaleString('id-ID');
+                let h = "";
+                res.laporan.forEach(w => {
+                    const isi = w.kosong.length > 0 
+                        ? `<span class="tgl-kosong"><b>Tidak Mengisi:</b><br>${w.kosong.join(", ")}</span>` 
+                        : `<span style="color:var(--accent); font-size:12px;">Selalu Mengisi (Lengkap)</span>`;
+                    h += `<div class="row-warga"><b>${w.nama}</b>${isi}</div>`;
+                });
+                document.getElementById('data-laporan').innerHTML = h;
+                document.body.removeChild(s); delete window[cb];
+            };
+            s.src = `${scriptURL}?callback=${cb}&action=getAdminData&kelompok=${kmp}`;
+            document.body.appendChild(s);
+        }
+
+        function logout() { localStorage.clear(); window.location.href="index.html"; }
+        loadAdmin();
+    </script>
+</body>
+</html>
