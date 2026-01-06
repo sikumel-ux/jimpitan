@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Jimpitan</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .btn-back { background: #334155; color: white; border: none; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-size: 14px; }
+        
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; border: 2px solid var(--accent) !important; background: black; }
+        
+        .form-container { background: var(--card); padding: 20px; border-radius: 15px; margin-top: 15px; border: 1px solid #334155; display: none; }
+        .warga-info { text-align: center; margin-bottom: 20px; }
+        .warga-info h2 { color: var(--accent); margin: 5px 0; }
+
+        .nominal-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .btn-nominal { background: #334155; color: white; border: 1px solid var(--accent); padding: 15px 5px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .btn-nominal:active { background: var(--accent); }
+
+        input[type="number"] { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #334155; background: #0F172A; color: white; font-size: 18px; text-align: center; box-sizing: border-box; }
+        
+        .btn-submit { width: 100%; background: var(--accent); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 800; font-size: 16px; margin-top: 20px; cursor: pointer; }
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; flex-direction: column; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-header">
+        <a href="petugas.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
+        <button onclick="logout()" style="background:none; border:none; color:var(--danger); font-weight:bold;">LOGOUT</button>
+    </div>
+
+    <div id="reader"></div>
+
+    <div id="form-input" class="form-container">
+        <div class="warga-info">
+            <small>Warga Terdeteksi:</small>
+            <h2 id="nama-warga">-</h2>
+        </div>
+
+        <label style="display:block; margin-bottom:10px; font-size:14px; color:#94a3b8;">Pilih Nominal Cepat:</label>
+        <div class="nominal-group">
+            <button class="btn-nominal" onclick="setNominal(500)">500</button>
+            <button class="btn-nominal" onclick="setNominal(1000)">1.000</button>
+            <button class="btn-nominal" onclick="setNominal(2000)">2.000</button>
+        </div>
+
+        <label style="display:block; margin-bottom:10px; font-size:14px; color:#94a3b8;">Atau Isi Manual:</label>
+        <input type="number" id="nominal-manual" placeholder="Masukkan angka...">
+
+        <button class="btn-submit" onclick="simpanData()">SIMPAN DATA JIMPITAN</button>
+    </div>
+
+    <div id="loading" class="loading-overlay">
+        <i class="fa-solid fa-spinner fa-spin fa-3x" style="color:var(--accent);"></i>
+        <p>Menyimpan ke Cloud...</p>
+    </div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+    let html5QrCode;
+
+    // Start Scanner
+    function startScan() {
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (decodedText) => {
+                // Berhenti scan jika sudah dapat data
+                html5QrCode.stop();
+                document.getElementById('reader').style.display = 'none';
+                document.getElementById('form-input').style.display = 'block';
+                document.getElementById('nama-warga').innerText = decodedText;
+            }
+        ).catch(err => alert("Gagal buka kamera: " + err));
+    }
+
+    function setNominal(val) {
+        document.getElementById('nominal-manual').value = val;
+    }
+
+    function simpanData() {
+        const nama = document.getElementById('nama-warga').innerText;
+        const nominal = document.getElementById('nominal-manual').value;
+
+        if(!nominal || nominal <= 0) return alert("Masukkan nominal dulu, Bro!");
+
+        document.getElementById('loading').style.display = 'flex';
+
+        // Kirim data ke Google Sheets
+        fetch(`${scriptURL}?action=addJimpitan&nama=${encodeURIComponent(nama)}&nominal=${nominal}`)
+        .then(res => res.json())
+        .then(res => {
+            document.getElementById('loading').style.display = 'none';
+            if(res.status === "success") {
+                alert("Mantap! Data " + nama + " tersimpan.");
+                window.location.href = "petugas.html"; // Balik ke rekap
+            } else {
+                alert("Waduh, gagal simpan: " + res.message);
+                location.reload();
+            }
+        });
+    }
+
+    function logout() { localStorage.clear(); window.location.href="index.html"; }
+
+    window.onload = startScan;
+</script>
+</body>
+</html>
