@@ -183,52 +183,60 @@
         &copy; 2024 - 2026 <b>Jimpitan Digital</b>. All Rights Reserved.
     </div>
 
-    <script>
-        // Fitur Hide/Show Password
-        const togglePassword = document.querySelector('#eyeIcon');
-        const password = document.querySelector('#password');
+    // ... (Bagian CSS dan HTML tetap sama, fokus ke bagian Script) ...
 
-        togglePassword.addEventListener('click', function () {
-            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-            password.setAttribute('type', type);
-            
-            // Toggle Icon
-            this.classList.toggle('fa-eye');
-            this.classList.toggle('fa-eye-slash');
-        });
+<script>
+    // URL API dari Google Apps Script kamu
+    const apiURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
 
-        // Simulasi Form Submit
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const userVal = document.getElementById('username').value;
-            const passVal = document.getElementById('password').value;
-            const btn = e.target.querySelector('button');
-            const error = document.getElementById('error-msg');
+    // Fitur Hide/Show Password
+    const togglePassword = document.querySelector('#eyeIcon');
+    const password = document.querySelector('#password');
 
-            // Visual Feedback
-            btn.innerText = "MENGECEK...";
-            btn.style.opacity = "0.7";
-            error.style.display = "none";
+    togglePassword.addEventListener('click', function () {
+        const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+        password.setAttribute('type', type);
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+    });
 
-            // Contoh Logika Login Sederhana (Ganti dengan integrasi API kamu)
-            setTimeout(() => {
-                if(userVal === "admin" && passVal === "12345") {
-                    // Simpan data user ke localStorage
-                    const userData = {
-                        nama: "Admin Petugas",
-                        kelompok: "Mawar 01",
-                        role: "petugas"
-                    };
-                    localStorage.setItem("jimpitan_user", JSON.stringify(userData));
-                    window.location.href = "dashboard.html"; // Redirect ke halaman utama
-                } else {
-                    btn.innerText = "MASUK SEKARANG";
-                    btn.style.opacity = "1";
-                    error.style.display = "block";
-                }
-            }, 1000);
-        });
-    </script>
+    // Proses Login ke Google Sheets
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const userVal = document.getElementById('username').value;
+        const passVal = document.getElementById('password').value;
+        const btn = e.target.querySelector('button');
+        const error = document.getElementById('error-msg');
+
+        btn.innerText = "MENGECEK...";
+        btn.disabled = true;
+        error.style.display = "none";
+
+        // Gunakan JSONP (Callback) agar tidak terkena CORS
+        const cb = "login_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        
+        window[cb] = (res) => {
+            if(res.status === "success") {
+                // Simpan data user asli dari Sheets (id, nama, kelompok, dll)
+                localStorage.setItem("jimpitan_user", JSON.stringify(res.data));
+                window.location.href = "main.html"; // Ganti ke file utama kamu
+            } else {
+                btn.innerText = "MASUK SEKARANG";
+                btn.disabled = false;
+                error.innerText = res.message || "Username atau Password salah!";
+                error.style.display = "block";
+            }
+            document.body.removeChild(s); 
+            delete window[cb];
+        };
+
+        // Memanggil fungsi login di App Script
+        s.src = `${apiURL}?callback=${cb}&action=login&username=${encodeURIComponent(userVal)}&password=${encodeURIComponent(passVal)}`;
+        document.body.appendChild(s);
+    });
+</script>
+
 </body>
 </html>
