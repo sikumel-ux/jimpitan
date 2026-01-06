@@ -3,59 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Petugas Ronda | Jimpitan</title>
+    <title>Petugas | Rekap Jimpitan</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-logout { background: none; border: 1px solid var(--danger); color: var(--danger); padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .card { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 80px; border: 1px solid #334155; }
-        .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #334155; }
-        .badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; }
-        .belum { background: rgba(248, 113, 113, 0.2); color: var(--danger); }
-        .sudah { background: rgba(0, 184, 148, 0.2); color: var(--accent); }
-        .btn-scan { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 85%; background: var(--accent); color: white; padding: 18px; border-radius: 18px; text-align: center; font-weight: 800; text-decoration: none; box-shadow: 0 10px 25px rgba(0,184,148,0.4); }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .stat-box { background: linear-gradient(135deg, #00B894, #059669); padding: 15px; border-radius: 15px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,184,148,0.3); }
+        
+        .scroll-container { overflow-x: auto; background: var(--card); border-radius: 12px; border: 1px solid #334155; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { padding: 10px 8px; border: 1px solid #334155; text-align: center; }
+        th { background: #1e293b; color: #94a3b8; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1e293b; z-index: 10; min-width: 90px; font-weight: bold; }
+        .kosong { color: #475569; }
+        .isi { color: var(--accent); font-weight: bold; }
+        
+        .footer-total { background: #0f172a; font-weight: bold; }
+        .btn-scan { position: fixed; bottom: 15px; right: 15px; left: 15px; background: var(--accent); color: white; padding: 15px; border-radius: 12px; text-align: center; font-weight: 800; text-decoration: none; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+        
+        select { background: #1e293b; color: white; border: 1px solid #334155; padding: 8px; border-radius: 8px; width: 100%; margin-bottom: 10px; }
     </style>
 </head>
 <body>
+
     <div class="header">
         <div>
-            <h3 style="margin:0;">Sif <span id="nama-kel">...</span></h3>
-            <small id="tgl-skrg" style="color:#94A3B8;"></small>
+            <h4 style="margin:0;">Kelompok <span id="label-kel">...</span></h4>
+            <small style="color:#94a3b8;">Rekap Bulanan</small>
         </div>
-        <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+        <button onclick="logout()" style="background:none; border:1px solid var(--danger); color:var(--danger); padding:5px 10px; border-radius:5px;">Keluar</button>
     </div>
 
-    <div class="card" id="list-warga">Memuat data...</div>
+    <div class="stat-box">
+        <small>TOTAL HASIL KELOMPOK INI</small>
+        <h2 id="total-kelompok" style="margin:5px 0;">Rp 0</h2>
+    </div>
 
-    <a href="jimpitan.html" class="btn-scan"><i class="fa-solid fa-qrcode"></i> MULAI SCAN JIMPITAN</a>
+    <select id="pilih-bulan" onchange="loadPetugas()">
+        <option value="0">Januari</option><option value="1">Februari</option>
+        <option value="2">Maret</option><option value="3">April</option>
+        <option value="4">Mei</option><option value="5">Juni</option>
+        <option value="6">Juli</option><option value="7">Agustus</option>
+        <option value="8">September</option><option value="9">Oktober</option>
+        <option value="10">November</option><option value="11">Desember</option>
+    </select>
 
-    <script>
-        const api = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
-        const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    <div class="scroll-container">
+        <table>
+            <thead>
+                <tr id="head-tgl">
+                    <th class="nama-col">Nama Warga</th>
+                </tr>
+            </thead>
+            <tbody id="body-rekap"></tbody>
+            <tfoot>
+                <tr id="foot-total" class="footer-total">
+                    <td class="nama-col">TOTAL</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div style="height: 80px;"></div> <a href="jimpitan.html" class="btn-scan"><i class="fa-solid fa-qrcode"></i> SCAN BARCODE MALAM INI</a>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+
+    if(!user) window.location.href = "index.html";
+    document.getElementById('label-kel').innerText = user.kelompok;
+    document.getElementById('pilih-bulan').value = new Date().getMonth();
+
+    function loadPetugas() {
+        const bln = document.getElementById('pilih-bulan').value;
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
         
-        if(!user) window.location.href = "index.html";
-        document.getElementById('nama-kel').innerText = user.kelompok;
-        document.getElementById('tgl-skrg').innerText = new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long' });
+        window[cb] = (res) => {
+            document.getElementById('total-kelompok').innerText = "Rp " + res.totalKelompok.toLocaleString('id-ID');
 
-        function load() {
-            const cb = "cb_" + Math.round(Math.random() * 1000000);
-            const s = document.createElement('script');
-            window[cb] = (res) => {
-                let h = "";
-                res.data.forEach(w => {
-                    const cls = w.status === "BELUM" ? "belum" : "sudah";
-                    h += `<div class="item"><span>${w.nama}</span><span class="badge ${cls}">${w.status}</span></div>`;
+            // 1. Render Header Tanggal
+            let hHead = `<th class="nama-col">Nama</th>`;
+            res.tglHeader.forEach(t => hHead += `<th>${t}</th>`);
+            document.getElementById('head-tgl').innerHTML = hHead;
+
+            // 2. Render Body (Data Warga)
+            let hBody = "";
+            res.laporan.forEach(w => {
+                hBody += `<tr><td class="nama-col">${w.nama}</td>`;
+                w.dataTgl.forEach(d => {
+                    hBody += `<td class="${d.nilai > 0 ? 'isi' : 'kosong'}">${d.nilai > 0 ? d.nilai/1000 + 'k' : '-'}</td>`;
                 });
-                document.getElementById('list-warga').innerHTML = h;
-                document.body.removeChild(s); delete window[cb];
-            };
-            s.src = `${api}?callback=${cb}&action=getPetugasData&kelompok=${user.kelompok}`;
-            document.body.appendChild(s);
-        }
-        function logout() { localStorage.clear(); window.location.href="index.html"; }
-        load();
-    </script>
+                hBody += `</tr>`;
+            });
+            document.getElementById('body-rekap').innerHTML = hBody;
+
+            // 3. Render Footer (Total per Tanggal)
+            let hFoot = `<td class="nama-col">TOTAL</td>`;
+            res.tglHeader.forEach(t => {
+                let total = res.totalPerTgl[t] || 0;
+                hFoot += `<td>${total > 0 ? total/1000 + 'k' : '0'}</td>`;
+            });
+            document.getElementById('foot-total').innerHTML = hFoot;
+
+            document.body.removeChild(s); delete window[cb];
+        };
+
+        // Kirim request sesuai kelompok user yang sedang login
+        s.src = `${scriptURL}?callback=${cb}&action=getAdminData&kelompok=${user.kelompok}&bulan=${bln}`;
+        document.body.appendChild(s);
+    }
+
+    function logout() { localStorage.clear(); window.location.href="index.html"; }
+    loadPetugas();
+</script>
 </body>
 </html>
