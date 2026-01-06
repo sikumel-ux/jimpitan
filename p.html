@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard Petugas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --border: #334155; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        
+        /* Header Info */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .user-tag { background: rgba(0, 184, 148, 0.1); color: var(--accent); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid var(--accent); }
+
+        /* Card Saldo Utama */
+        .saldo-card { 
+            background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); 
+            padding: 30px; border-radius: 24px; text-align: center; margin-bottom: 25px;
+            border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .saldo-card small { color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; font-size: 11px; }
+        .saldo-card h1 { margin: 10px 0; font-size: 36px; color: var(--accent); }
+
+        /* Tombol Scan Besar */
+        .btn-scan { 
+            background: var(--accent); color: white; width: 100%; padding: 20px; 
+            border-radius: 18px; border: none; font-size: 18px; font-weight: 800; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px;
+            box-shadow: 0 8px 20px rgba(0, 184, 148, 0.3); transition: 0.2s;
+        }
+        .btn-scan:active { transform: scale(0.96); }
+
+        /* List History Singkat */
+        .history-section { margin-top: 30px; }
+        .history-item { 
+            background: var(--card); padding: 15px; border-radius: 12px; 
+            display: flex; justify-content: space-between; margin-bottom: 10px; border: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h3 style="margin:0">Dashboard Ronda</h3>
+        <span id="label-hari" style="color:#94A3B8; font-size:13px">Kelompok ...</span>
+    </div>
+    <div class="user-tag" id="user-name">Petugas</div>
+</div>
+
+<div class="saldo-card">
+    <small>Total Jimpitan Malam Ini</small>
+    <h1 id="txt-saldo">Rp 0</h1>
+    <div style="color:#94A3B8; font-size:12px"><i class="fa-solid fa-clock"></i> Belum Setor ke Admin</div>
+</div>
+
+<button class="btn-scan" onclick="window.location.href='scanner.html'">
+    <i class="fa-solid fa-qrcode fa-xl"></i> AMBIL JIMPITAN
+</button>
+
+<div class="history-section">
+    <h4 style="margin-bottom:15px">Aktivitas Terakhir</h4>
+    <div id="log-list">
+        <p style="text-align:center; color:#475569">Belum ada data masuk.</p>
+    </div>
+</div>
+
+<script>
+    // Logika: Ambil data dari localStorage dan hitung saldo dari API
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    if(!user) window.location.href = "index.html";
+    
+    document.getElementById('label-hari').innerText = "Kelompok " + user.kelompok;
+    document.getElementById('user-name').innerText = user.username;
+</script>
+</body>
+</html>
