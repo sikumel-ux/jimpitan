@@ -3,203 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Login | Jimpitan Digital</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        :root { 
-            --bg: #0F172A; 
-            --card: #1E293B; 
-            --accent: #00B894; 
-            --text: #F8FAFC; 
-            --border: #334155;
-        }
-
-        /* No Scroll Setup */
-        html, body { 
-            height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; /* Mencegah scroll */
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            display: flex; 
-            flex-direction: column;
-            justify-content: center; 
-            align-items: center; 
-        }
-
-        .card { 
-            background: var(--card); 
-            padding: 40px 30px; 
-            border-radius: 24px; 
-            border: 1px solid var(--border); 
-            width: 85%; 
-            max-width: 350px; 
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            position: relative;
-            z-index: 2;
-        }
-
-        .logo-area {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, var(--accent) 0%, #00897B 100%);
-            border-radius: 20px;
-            margin: 0 auto 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 10px 20px rgba(0,184,148,0.3);
-        }
-
-        .logo-area i { color: white; font-size: 32px; }
-
-        h2 { margin: 0; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
-        p { color: #94A3B8; font-size: 14px; margin: 10px 0 30px; }
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --border: #334155; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
         
-        .input-group { text-align: left; margin-bottom: 15px; position: relative; }
-        label { font-size: 12px; color: #94A3B8; margin-left: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); width: 90%; max-width: 320px; text-align: center; box-shadow: 0 15px 30px rgba(0,0,0,0.4); }
+        h2 { margin: 0 0 5px; font-size: 20px; font-weight: 800; }
+        p { color: #94A3B8; font-size: 13px; margin: 0 0 25px; }
         
-        input { 
-            width: 100%; 
-            padding: 16px; 
-            margin-top: 5px;
-            border-radius: 14px; 
-            border: 1px solid var(--border); 
-            background: #0F172A; 
-            color: white; 
-            font-size: 16px; 
-            box-sizing: border-box;
-            transition: 0.3s;
-        }
-        input:focus { border-color: var(--accent); outline: none; background: #162033; }
+        .input-group { text-align: left; margin-bottom: 12px; position: relative; }
+        label { font-size: 11px; color: #94A3B8; margin-left: 5px; text-transform: uppercase; }
+        input { width: 100%; padding: 12px; margin-top: 5px; border-radius: 10px; border: 1px solid var(--border); background: #0F172A; color: white; font-size: 15px; outline: none; }
+        input:focus { border-color: var(--accent); }
 
-        /* Hide/Show Password Toggle */
         .pass-wrapper { position: relative; }
-        .toggle-btn {
-            position: absolute;
-            right: 15px;
-            top: 55%;
-            transform: translateY(-50%);
-            color: #475569;
-            cursor: pointer;
-            z-index: 10;
-        }
+        .toggle-btn { position: absolute; right: 12px; top: 58%; transform: translateY(-50%); color: #475569; cursor: pointer; font-size: 14px; }
         
-        button { 
-            width: 100%; 
-            padding: 16px; 
-            margin-top: 15px; 
-            border-radius: 14px; 
-            border: none; 
-            background: var(--accent); 
-            color: white; 
-            font-weight: 800; 
-            font-size: 16px;
-            cursor: pointer; 
-            transition: 0.3s;
-            box-shadow: 0 10px 20px rgba(0,184,148,0.2);
-        }
-        button:active { transform: scale(0.98); }
-        button:disabled { background: #475569; cursor: not-allowed; transform: none; }
+        button { width: 100%; padding: 14px; margin-top: 10px; border-radius: 10px; border: none; background: var(--accent); color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.97); }
+        button:disabled { background: #475569; }
         
-        .footer-note { font-size: 11px; color: #475569; margin-top: 20px; }
-
-        /* Copyright Styling - Outside Card */
-        .copyright {
-            margin-top: 25px;
-            font-size: 12px;
-            color: #475569;
-            text-align: center;
-        }
+        .copyright { margin-top: 20px; font-size: 11px; color: #475569; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="logo-area">
-        <i class="fa-solid fa-shield-halved"></i>
-    </div>
-
     <h2>JIMPITAN DIGITAL</h2>
-    <p>Masuk Untuk Mengelola Jimpitan</p>
+    <p>Kelola data ronda lebih mudah</p>
     
     <div class="input-group">
         <label>Username</label>
-        <input type="text" id="user" placeholder="Masukkan Username" autocomplete="off">
+        <input type="text" id="user" placeholder="Username" autocomplete="off">
     </div>
     
     <div class="input-group">
         <label>Password</label>
         <div class="pass-wrapper">
             <input type="password" id="pass" placeholder="••••••••">
-            <i class="fa-solid fa-eye toggle-btn" id="togglePass"></i>
+            <i class="fa-solid fa-eye toggle-btn" onclick="toggle()"></i>
         </div>
     </div>
     
-    <button id="btn-login" onclick="login()">MASUK SEKARANG</button>
-    <div class="footer-note">Aplikasi Jimpitan v2.0</div>
+    <button id="btn" onclick="login()">MASUK SEKARANG</button>
 </div>
 
-<div class="copyright">
-    &copy; 2026 Sekawan Brotherhood. All Rights Reserved.
-</div>
+<div class="copyright">&copy; 2026 Sekawan Technologies</div>
 
 <script>
-    // URL API
     const scriptURL = 'https://script.google.com/macros/s/AKfycbw6BUZEXc_WxNilOD7tdg5hJ2pmErMltdtDkgmu0vQeL3ATR9lu4XbK2cEPm1DU-nvB/exec';
 
-    // Fitur Hide/Show Password
-    const togglePass = document.getElementById('togglePass');
-    const passInput = document.getElementById('pass');
-
-    togglePass.addEventListener('click', function() {
-        const isPassword = passInput.type === 'password';
-        passInput.type = isPassword ? 'text' : 'password';
-        this.classList.toggle('fa-eye');
-        this.classList.toggle('fa-eye-slash');
-    });
-
-    function login() {
-        const uVal = document.getElementById('user').value.trim();
-        const pVal = document.getElementById('pass').value.trim();
-        const btn = document.getElementById('btn-login');
-
-        if(!uVal || !pVal) {
-            alert("Harap isi username dan password!");
-            return;
-        }
-
-        btn.innerText = "Mengecek Akses...";
-        btn.disabled = true;
-
-        const cb = "cb_" + Math.round(Math.random() * 1000000);
-        const s = document.createElement('script');
-        
-        window[cb] = (res) => {
-            if (res.status === "success") {
-                localStorage.setItem("jimpitan_user", JSON.stringify(res));
-                // Berhasil Login -> Pindah ke petugas.html
-                window.location.href = "petugas.html";
-            } else {
-                alert(res.message || "Gagal Masuk! Username atau Password salah.");
-                btn.innerText = "MASUK SEKARANG";
-                btn.disabled = false;
-            }
-            document.body.removeChild(s);
-            delete window[cb];
-        };
-
-        s.src = `${scriptURL}?callback=${cb}&action=login&u=${encodeURIComponent(uVal)}&p=${encodeURIComponent(pVal)}`;
-        document.body.appendChild(s);
+    function toggle() {
+        const p = document.getElementById('pass'), i = event.target;
+        p.type = p.type === 'password' ? 'text' : 'password';
+        i.classList.toggle('fa-eye'); i.classList.toggle('fa-eye-slash');
     }
 
-    document.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') login();
-    });
+    function login() {
+        const u = document.getElementById('user').value.trim(), p = document.getElementById('pass').value.trim(), b = document.getElementById('btn');
+        if(!u || !p) return alert("Isi semua bidang!");
+
+        b.innerText = "Mengecek..."; b.disabled = true;
+        const cb = "c"+Date.now(), s = document.createElement('script');
+        
+        window[cb] = (r) => {
+            if (r.status === "success") {
+                localStorage.setItem("jimpitan_user", JSON.stringify(r));
+                window.location.href = "petugas.html";
+            } else {
+                alert(r.message || "Gagal!");
+                b.innerText = "MASUK SEKARANG"; b.disabled = false;
+            }
+            document.body.removeChild(s); delete window[cb];
+        };
+        s.src = `${scriptURL}?callback=${cb}&action=login&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
+        document.body.appendChild(s);
+    }
+    document.addEventListener('keypress', e => { if(e.key==='Enter') login() });
 </script>
 
 </body>
