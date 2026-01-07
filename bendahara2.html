@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bendahara | Jimpitan Digital</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #3B82F6; --text: #F8FAFC; --success: #00B894; --danger: #F87171; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 12px; }
+        .summary-card { background: var(--card); padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; border-left: 5px solid var(--success); }
+        .summary-card h2 { margin: 5px 0 0; color: var(--success); }
+        .btn-box { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn { flex: 1; padding: 12px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        select { width: 100%; background: var(--card); color: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #334155; }
+        .table-container { background: var(--card); border-radius: 12px; overflow-x: auto; border: 1px solid #334155; padding: 5px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { padding: 10px; border: 1px solid #334155; text-align: center; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1e293b; min-width: 100px; font-weight: bold; }
+        .loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h3>Panel Bendahara</h3>
+        <button onclick="logout()" style="background:none; border:none; color:var(--danger); font-weight:bold;">OUT</button>
+    </div>
+
+    <div class="summary-card">
+        <small>Total Belum Setor</small>
+        <h2 id="total-uang">Rp 0</h2>
+    </div>
+
+    <select id="pilih-kelompok" onchange="loadAdminData()">
+        <option value="Senin">Kelompok Senin</option>
+        <option value="Selasa">Kelompok Selasa</option>
+        <option value="Rabu">Kelompok Rabu</option>
+        <option value="Kamis">Kelompok Kamis</option>
+        <option value="Jumat">Kelompok Jumat</option>
+        <option value="Sabtu">Kelompok Sabtu</option>
+        <option value="Minggu">Kelompok Minggu</option>
+    </select>
+    <select id="pilih-bulan" onchange="loadAdminData()">
+        <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
+        <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
+        <option value="6">Juli</option><option value="7">Agustus</option><option value="8">September</option>
+        <option value="9">Oktober</option><option value="10">November</option><option value="11">Desember</option>
+    </select>
+
+    <div class="btn-box">
+        <button class="btn" onclick="downloadPDF()" style="background: var(--accent);"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+        <button class="btn" onclick="resetData()" style="background: var(--success);"><i class="fa-solid fa-check-circle"></i> TERIMA SETORAN</button>
+    </div>
+
+    <div class="table-container" id="area-tabel">
+        <table>
+            <thead><tr id="head-tgl"><th class="nama-col">Nama</th></tr></thead>
+            <tbody id="body-rekap"></tbody>
+        </table>
+    </div>
+
+    <div id="loader" class="loading"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
+
+<script>
+    // GANTI URL INI DENGAN URL SCRIPT ADMIN BARU
+    const apiURL = 'thttps://script.google.com/macros/s/AKfycbxjzN435rgqsYpieliQWYGrgHePZi13rfAgNNX8DMA5FbPOLJMt17fXClUdmmP4APnOnA/exec';
+
+    function loadAdminData() {
+        const kel = document.getElementById('pilih-kelompok').value;
+        const bln = document.getElementById('pilih-bulan').value;
+        document.getElementById('loader').style.display = 'flex';
+
+        const cb = "cb_admin_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        window[cb] = (res) => {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('total-uang').innerText = "Rp " + res.totalKelompok.toLocaleString('id-ID');
+            let hH = `<th class="nama-col">Nama</th>`;
+            res.tglHeader.forEach(t => hH += `<th>${t}</th>`);
+            document.getElementById('head-tgl').innerHTML = hH;
+            let hB = "";
+            res.laporan.forEach(w => {
+                hB += `<tr><td class="nama-col">${w.nama}</td>`;
+                w.dataTgl.forEach(d => hB += `<td>${d.nilai > 0 ? d.nilai : '-'}</td>`);
+                hB += `</tr>`;
+            });
+            document.getElementById('body-rekap').innerHTML = hB;
+            document.body.removeChild(s); delete window[cb];
+        };
+        s.src = `${apiURL}?callback=${cb}&action=getAdminData&kelompok=${kel}&bulan=${bln}`;
+        document.body.appendChild(s);
+    }
+
+    function resetData() {
+        const kel = document.getElementById('pilih-kelompok').value;
+        if(!confirm("Uang Kelompok " + kel + " sudah diterima? Data akan di-reset.")) return;
+        document.getElementById('loader').style.display = 'flex';
+        const cb = "cb_reset_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        window[cb] = (res) => {
+            document.getElementById('loader').style.display = 'none';
+            alert(res.message); loadAdminData();
+            document.body.removeChild(s); delete window[cb];
+        };
+        s.src = `${apiURL}?callback=${cb}&action=resetData&kelompok=${kel}`;
+        document.body.appendChild(s);
+    }
+
+    function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'pt', 'a4');
+        const element = document.getElementById('area-tabel');
+        html2canvas(element).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            doc.text("Laporan Jimpitan - Kelompok " + document.getElementById('pilih-kelompok').value, 20, 30);
+            doc.addImage(imgData, 'PNG', 20, 50, 550, 0);
+            doc.save("Laporan.pdf");
+        });
+    }
+
+    function logout() { localStorage.clear(); window.location.href="index.html"; }
+    window.onload = () => { document.getElementById('pilih-bulan').value = new Date().getMonth(); loadAdminData(); };
+</script>
+</body>
+</html>
