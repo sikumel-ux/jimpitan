@@ -109,13 +109,14 @@
                 });
                 document.getElementById('body-rekap').innerHTML = hB;
 
-                // Footer Total per Tanggal
-                let hF = `<td class="nama-col">TOTAL</td>`;
-                res.tglHeader.forEach(t => {
-                    let total = res.totalPerTgl[t] || 0;
-                    hF += `<td>${total > 0 ? (total/1000).toFixed(1).replace('.0','') + 'k' : '0'}</td>`;
-                });
-                document.getElementById('foot-total').innerHTML = hF;
+                // 4. Render Footer (Total per Tanggal)
+let hF = `<td class="nama-col">TOTAL</td>`;
+res.tglHeader.forEach(t => {
+    let total = res.totalPerTgl[t] || 0;
+    // Munculkan angka total apa adanya
+    hF += `<td>${total > 0 ? total : '0'}</td>`;
+});
+document.getElementById('foot-total').innerHTML = hF;
             }
             document.body.removeChild(s); delete window[cb];
         };
