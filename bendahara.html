@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin | Jimpitan Digital</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #3B82F6; --text: #F8FAFC; --success: #00B894; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #334155; }
+        .header h1 { font-size: 18px; margin: 0; color: var(--accent); }
+
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .summary-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #334155; text-align: center; }
+        .summary-card small { color: #94a3b8; font-size: 11px; text-transform: uppercase; }
+        .summary-card h2 { margin: 5px 0 0; font-size: 20px; color: var(--success); }
+
+        .filter-section { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; display: flex; gap: 10px; }
+        select { flex: 1; background: #0F172A; color: white; border: 1px solid #334155; padding: 10px; border-radius: 8px; outline: none; }
+
+        .table-container { background: var(--card); border-radius: 12px; overflow-x: auto; border: 1px solid #334155; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { padding: 12px 10px; border: 1px solid #334155; text-align: center; }
+        th { background: #1E293B; color: #94a3b8; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1e293b; z-index: 5; font-weight: bold; min-width: 120px; }
+        
+        .status-isi { color: var(--success); font-weight: bold; }
+        .status-kosong { color: #475569; }
+
+        .btn-logout { background: #EF4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fa-solid fa-user-shield"></i> PANEL BENDAHARA</h1>
+        <button onclick="logout()" class="btn-logout">LOGOUT</button>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <small>Total Kas Kelompok</small>
+            <h2 id="total-uang">Rp 0</h2>
+        </div>
+        <div class="summary-card">
+            <small>Kelompok</small>
+            <h2 id="label-kelompok">-</h2>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <select id="pilih-kelompok" onchange="loadAdminData()">
+            <option value="Senin">Senin</option>
+            <option value="Selasa">Selasa</option>
+            <option value="Rabu">Rabu</option>
+            <option value="Kamis">Kamis</option>
+            <option value="Jumat">Jumat</option>
+            <option value="Sabtu">Sabtu</option>
+            <option value="Minggu">Minggu</option>
+        </select>
+        <select id="pilih-bulan" onchange="loadAdminData()">
+            <option value="0">Januari</option>
+            <option value="1">Februari</option>
+            <option value="2">Maret</option>
+            <option value="3">April</option>
+            <option value="4">Mei</option>
+            <option value="5">Juni</option>
+            <option value="6">Juli</option>
+            <option value="7">Agustus</option>
+            <option value="8">September</option>
+            <option value="9">Oktober</option>
+            <option value="10">November</option>
+            <option value="11">Desember</option>
+        </select>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr id="head-tgl">
+                    <th class="nama-col">Nama Warga</th>
+                    </tr>
+            </thead>
+            <tbody id="body-rekap">
+                <tr><td colspan="5" style="padding:40px;">Pilih kelompok untuk memuat data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+<script>
+    const apiURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+
+    // Cek Login & Role
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    if(!user || user.role !== "admin") {
+        alert("Akses Ditolak! Khusus Bendahara.");
+        window.location.href = "index.html";
+    }
+
+    // Set Default Bulan
+    document.getElementById('pilih-bulan').value = new Date().getMonth();
+
+    function loadAdminData() {
+        const kel = document.getElementById('pilih-kelompok').value;
+        const bln = document.getElementById('pilih-bulan').value;
+        
+        document.getElementById('label-kelompok').innerText = kel;
+        document.getElementById('body-rekap').innerHTML = '<tr><td colspan="10" style="padding:40px;">Memuat Data...</td></tr>';
+
+        const cb = "cb_admin_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        
+        window[cb] = (res) => {
+            if(res.status === "success") {
+                document.getElementById('total-uang').innerText = "Rp " + res.totalKelompok.toLocaleString('id-ID');
+
+                // Render Header
+                let hH = `<th class="nama-col">Nama Warga</th>`;
+                res.tglHeader.forEach(t => hH += `<th>${t}</th>`);
+                document.getElementById('head-tgl').innerHTML = hH;
+
+                // Render Body
+                let hB = "";
+                res.laporan.forEach(w => {
+                    hB += `<tr><td class="nama-col">${w.nama}</td>`;
+                    w.dataTgl.forEach(d => {
+                        let nominal = d.nilai > 0 ? d.nilai : '-';
+                        hB += `<td class="${d.nilai > 0 ? 'status-isi' : 'status-kosong'}">${nominal}</td>`;
+                    });
+                    hB += `</tr>`;
+                });
+                document.getElementById('body-rekap').innerHTML = hB;
+            }
+            document.body.removeChild(s);
+            delete window[cb];
+        };
+
+        s.src = `${apiURL}?callback=${cb}&action=getAdminData&kelompok=${kel}&bulan=${bln}`;
+        document.body.appendChild(s);
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+    }
+
+    // Load awal
+    loadAdminData();
+</script>
+</body>
+  </html>
+  
