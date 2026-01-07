@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Petugas | Jimpitan Digital</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --border: #334155; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .user-info b { color: var(--accent); display: block; font-size: 18px; }
+        .user-info span { color: #94A3B8; font-size: 12px; }
+
+        .btn-logout { background: #334155; color: #F87171; border: none; padding: 10px; border-radius: 10px; cursor: pointer; }
+
+        .stat-card { 
+            background: linear-gradient(135deg, #1E293B, #0F172A); 
+            padding: 25px; border-radius: 20px; border: 1px solid var(--border); 
+            text-align: center; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .stat-card small { color: #94A3B8; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; }
+        .stat-card h1 { margin: 10px 0; font-size: 32px; color: var(--accent); }
+
+        .btn-scan { 
+            background: var(--accent); color: white; width: 100%; padding: 18px; 
+            border-radius: 15px; border: none; font-size: 18px; font-weight: 800; 
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 8px 20px rgba(0, 184, 148, 0.3); text-decoration: none;
+        }
+
+        .list-section { margin-top: 30px; }
+        .list-section h4 { margin-bottom: 15px; color: #94A3B8; font-size: 14px; }
+        .item-trx { 
+            background: var(--card); padding: 15px; border-radius: 12px; 
+            border: 1px solid var(--border); margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .item-trx span { font-weight: bold; }
+        .item-trx small { color: #94A3B8; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="user-info">
+            <span id="label-kelompok">KELOMPOK ...</span>
+            <b id="user-name">Memuat...</b>
+        </div>
+        <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-power-off"></i></button>
+    </div>
+
+    <div class="stat-card">
+        <small>Total Jimpitan Malam Ini</small>
+        <h1 id="total-malam-ini">Rp 0</h1>
+        <div style="font-size: 11px; color: #475569;"><i class="fa-solid fa-info-circle"></i> Status: Belum Setor</div>
+    </div>
+
+    <a href="scanner.html" class="btn-scan">
+        <i class="fa-solid fa-qrcode"></i> AMBIL JIMPITAN
+    </a>
+
+    <div class="list-section">
+        <h4>Aktivitas Terakhir</h4>
+        <div id="log-trx">
+            <p style="text-align:center; color:#475569; font-size: 13px;">Belum ada tarikan jimpitan.</p>
+        </div>
+    </div>
+
+<script>
+    const apiURL = 'LINK_APPS_SCRIPT_KAMU'; // GANTI INI
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+
+    if(!user) {
+        window.location.href = "index.html";
+    } else {
+        document.getElementById('user-name').innerText = user.username.toUpperCase();
+        document.getElementById('label-kelompok').innerText = "KELOMPOK " + user.kelompok.toUpperCase();
+        loadDataPetugas();
+    }
+
+    function loadDataPetugas() {
+        const cb = "ptgs_" + Date.now();
+        const s = document.createElement('script');
+        s.src = `${apiURL}?callback=${cb}&action=getAdminData`; // Gunakan aksi yang sama untuk ambil saldo harian
+        document.body.appendChild(s);
+
+        window[cb] = (res) => {
+            if(res.status === "success") {
+                const saldo = res.rekap[user.kelompok] || 0;
+                document.getElementById('total-malam-ini').innerText = "Rp " + saldo.toLocaleString('id-ID');
+            }
+            document.body.removeChild(s);
+            delete window[cb];
+        };
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+    }
+</script>
+</body>
+</html>
