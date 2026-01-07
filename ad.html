@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Rekap</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .box { background: rgba(0, 184, 148, 0.1); padding: 20px; border-radius: 15px; border-left: 5px solid var(--accent); margin-bottom: 25px; }
+        .card-hari { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .btn { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h3>Rekap Kas Admin</h3>
+    <div class="box">
+        <small>TOTAL KAS BELUM SETOR</small>
+        <h1 id="total-pusat">Rp 0</h1>
+    </div>
+    <div id="list-rekap">Memuat data...</div>
+
+<script>
+    const apiURL = 'https://script.google.com/macros/s/AKfycbz3D1lnQiOFqZtrFMS3YCvKyzxuVEaOHq37IR3xm2t3MWhmygrtEGL_i8rKLb8pGxVI1Q/exec';
+    
+    function loadAdmin() {
+        const cb = "adm_" + Date.now();
+        const s = document.createElement('script');
+        s.src = `${apiURL}?callback=${cb}&action=getAdminData`; // Tanpa parameter kelompok biar ambil semua
+        document.body.appendChild(s);
+        window[cb] = (res) => {
+            if(res.status === "success") {
+                document.getElementById('total-pusat').innerText = "Rp " + res.total.toLocaleString('id-ID');
+                let h = "";
+                ["senin","selasa","rabu","kamis","jumat","sabtu","minggu"].forEach(day => {
+                    let nom = res.rekap[day] || 0;
+                    h += `<div class="card-hari">
+                            <div><b>${day.toUpperCase()}</b><br>Rp ${nom.toLocaleString('id-ID')}</div>
+                            <button class="btn" onclick="terima('${day}')" ${nom==0?'disabled':''}>TERIMA</button>
+                          </div>`;
+                });
+                document.getElementById('list-rekap').innerHTML = h;
+            }
+            document.body.removeChild(s); delete window[cb];
+        };
+    }
+
+    function terima(hari) {
+        if(!confirm("Terima setoran dari " + hari + "?")) return;
+        const cb = "set_" + Date.now();
+        const s = document.createElement('script');
+        s.src = `${apiURL}?callback=${cb}&action=terimaSetoran&u=${hari}`;
+        document.body.appendChild(s);
+        window[cb] = () => { alert("Berhasil!"); loadAdmin(); };
+    }
+    loadAdmin();
+</script>
+</body>
+</html>
