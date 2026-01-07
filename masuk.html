@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Jimpitan Digital</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #3B82F6; --text: #F8FAFC; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0;
+            background: radial-gradient(circle at top right, #1E293B, #0F172A);
+        }
+
+        .login-card {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 350px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+            border: 1px solid #334155;
+            text-align: center;
+        }
+
+        .login-card i.logo-icon {
+            font-size: 50px;
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+
+        h2 { margin-bottom: 10px; font-size: 24px; }
+        p { color: #94a3b8; font-size: 14px; margin-bottom: 25px; }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 5px;
+            margin-left: 5px;
+        }
+
+        .input-field {
+            width: 100%;
+            background: #0F172A;
+            border: 1px solid #334155;
+            padding: 12px 15px;
+            border-radius: 10px;
+            color: white;
+            outline: none;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        .input-field:focus { border-color: var(--accent); }
+
+        /* Icon Password */
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 32px;
+            cursor: pointer;
+            color: #475569;
+            font-size: 18px;
+        }
+
+        .btn-login {
+            width: 100%;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover { background: #2563EB; transform: translateY(-2px); }
+        .btn-login:active { transform: translateY(0); }
+
+        #loader { display: none; margin-top: 15px; color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <i class="fa-solid fa-hand-holding-dollar logo-icon"></i>
+        <h2>Jimpitan RT</h2>
+        <p>Silakan login untuk melanjutkan</p>
+
+        <div class="input-group">
+            <label>Username</label>
+            <input type="text" id="user" class="input-field" placeholder="Masukkan username" autocomplete="off">
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="pass" class="input-field" placeholder="Masukkan password">
+            <i class="fa-solid fa-eye-slash toggle-password" id="eyeIcon" onclick="togglePass()"></i>
+        </div>
+
+        <button class="btn-login" onclick="prosesLogin()">MASUK</button>
+        
+        <div id="loader">
+            <i class="fa-solid fa-spinner fa-spin"></i> Mengecek data...
+        </div>
+    </div>
+
+<script>
+    // URL GAS PETUGAS (Sama dengan yang di scanner/rekap petugas)
+    const apiURL = 'https://script.google.com/macros/s/AKfycbzLWYky7pIL8pqCFHpVEEivcQSxR1EuoG2tMPZ5x1RG2aXnbchZEwvO2QI7FD1VQpwHMA/exec';
+
+    function togglePass() {
+        const passInput = document.getElementById('pass');
+        const eyeIcon = document.getElementById('eyeIcon');
+        if (passInput.type === "password") {
+            passInput.type = "text";
+            eyeIcon.classList.replace('fa-eye-slash', 'fa-eye');
+        } else {
+            passInput.type = "password";
+            eyeIcon.classList.replace('fa-eye', 'fa-eye-slash');
+        }
+    }
+
+    function prosesLogin() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        const loader = document.getElementById('loader');
+
+        if(!u || !p) return alert("Isi username dan password!");
+
+        loader.style.display = "block";
+
+        const cb = "cb_login_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+
+        window[cb] = (res) => {
+            loader.style.display = "none";
+            if(res.status === "success") {
+                // Simpan data ke localStorage
+                localStorage.setItem("jimpitan_user", JSON.stringify({
+                    username: u,
+                    role: res.role,
+                    kelompok: res.kelompok
+                }));
+
+                // Redirect Sesuai Role
+                if(res.role === "admin") {
+                    window.location.href = "bendahara.html";
+                } else {
+                    window.location.href = "petugas.html";
+                }
+            } else {
+                alert("Login Gagal! Username atau password salah.");
+            }
+            document.body.removeChild(s);
+            delete window[cb];
+        };
+
+        s.src = `${apiURL}?callback=${cb}&action=login&u=${u}&p=${p}`;
+        document.body.appendChild(s);
+    }
+</script>
+</body>
+</html>
