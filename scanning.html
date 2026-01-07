@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner Jimpitan | Petugas Ronda</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        
+        /* Header Navigasi */
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .btn-nav { background: #334155; color: white; border: none; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        
+        /* Scanner Frame */
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; border: 2px solid var(--accent) !important; background: black; margin-bottom: 15px; }
+        
+        /* Panel Kontrol */
+        .control-panel { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid #334155; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        
+        .warga-display { background: #0F172A; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; border: 1px dashed var(--accent); }
+        .warga-display small { color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        .warga-display h2 { margin: 5px 0 0 0; color: var(--accent); font-size: 22px; font-weight: 800; }
+
+        /* Grid Nominal */
+        .nominal-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .btn-nominal { background: #334155; color: white; border: 1px solid rgba(0, 184, 148, 0.3); padding: 15px 5px; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        .btn-nominal:active { background: var(--accent); transform: scale(0.95); }
+
+        /* Input Manual */
+        .input-manual { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #334155; background: #0F172A; color: white; font-size: 18px; text-align: center; box-sizing: border-box; margin-bottom: 15px; outline: none; transition: 0.3s; }
+        .input-manual:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0, 184, 148, 0.2); }
+        
+        /* Tombol Simpan */
+        .btn-save { width: 100%; background: var(--accent); color: white; border: none; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3); }
+        .btn-save:active { transform: scale(0.98); }
+        
+        /* Overlay Loading */
+        .loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); z-index: 100; justify-content: center; align-items: center; flex-direction: column; }
+        .loading-overlay p { margin-top: 15px; font-weight: bold; color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="nav-header">
+        <a href="petugas.html" class="btn-nav"><i class="fa-solid fa-chevron-left"></i> KEMBALI</a>
+        <button onclick="logout()" class="btn-nav" style="color:var(--danger); background: rgba(248, 113, 113, 0.1);">
+            LOGOUT <i class="fa-solid fa-power-off"></i>
+        </button>
+    </div>
+
+    <div id="reader"></div>
+
+    <div class="control-panel">
+        <div class="warga-display">
+            <small>Warga Terdeteksi</small>
+            <h2 id="nama-warga">MENUNGGU SCAN...</h2>
+        </div>
+
+        <div class="nominal-grid">
+            <button class="btn-nominal" onclick="isi(500)">500</button>
+            <button class="btn-nominal" onclick="isi(1000)">1.000</button>
+            <button class="btn-nominal" onclick="isi(2000)">2.000</button>
+        </div>
+
+        <input type="number" id="nominal-manual" class="input-manual" placeholder="Nominal Lain (Manual)..." inputmode="numeric">
+
+        <button class="btn-save" onclick="kirim()">
+            <i class="fa-solid fa-cloud-upload"></i> SIMPAN DATA JIMPITAN
+        </button>
+    </div>
+
+    <div id="loading" class="loading-overlay">
+        <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color:var(--accent);"></i>
+        <p>Menyimpan ke Google Sheets...</p>
+    </div>
+
+<script>
+    // Link API Web App Google Apps Script
+    const apiURL = 'https://script.google.com/macros/s/AKfycbybTOzXzvQ_EnLF7PZySxsFhYWe28mPJbxGXBbouvEoI1Met0mZ4ZLXusrGTrttMbnv/exec';
+    
+    // Proteksi Halaman (Cek Login)
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    if(!user) {
+        window.location.href = "index.html";
+    }
+
+    let scanner;
+
+    // Inisialisasi Scanner saat halaman dimuat
+    function mulaiScanner() {
+        scanner = new Html5Qrcode("reader");
+        const config = { 
+            fps: 20, 
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0 
+        };
+
+        scanner.start(
+            { facingMode: "environment" }, 
+            config,
+            (decodedText) => {
+                // Berhasil Scan
+                if (navigator.vibrate) navigator.vibrate(100); // Getar HP
+                document.getElementById('nama-warga').innerText = decodedText.trim().toUpperCase();
+                
+                // Sound Effect (Opsional: Kamu bisa tambah file audio bip)
+            }
+        ).catch(err => {
+            console.error("Gagal Kamera:", err);
+            alert("Aktifkan Izin Kamera, Bro!");
+        });
+    }
+
+    // Fungsi Klik Nominal Cepat
+    function isi(n) {
+        document.getElementById('nominal-manual').value = n;
+    }
+
+    // Fungsi Kirim Data (JSONP Mode)
+    function kirim() {
+        const nm = document.getElementById('nama-warga').innerText;
+        const nom = document.getElementById('nominal-manual').value;
+
+        if(nm === "MENUNGGU SCAN...") return alert("Arahkan kamera ke QR Code warga!");
+        if(!nom || nom <= 0) return alert("Isi nominal jimpitannya dulu!");
+
+        // Tampilkan Loading
+        document.getElementById('loading').style.display = 'flex';
+
+        // Setup JSONP Callback
+        const cb = "cb_" + Math.round(Math.random() * 1000000);
+        const script = document.createElement('script');
+        
+        window[cb] = (res) => {
+            document.getElementById('loading').style.display = 'none';
+            if(res.status === "success") {
+                alert("SUKSES! Jimpitan " + nm + " Berhasil dicatat.");
+                // Reset Form
+                document.getElementById('nama-warga').innerText = "MENUNGGU SCAN...";
+                document.getElementById('nominal-manual').value = "";
+            } else {
+                alert("GAGAL: " + (res.message || "Terjadi kesalahan server"));
+            }
+            document.body.removeChild(script);
+            delete window[cb];
+        };
+
+        // Buat URL dengan semua parameter (Action, Nama, Nominal, Kelompok)
+        const finalUrl = `${apiURL}?callback=${cb}&action=addJimpitan&nama=${encodeURIComponent(nm)}&nominal=${nom}&kelompok=${encodeURIComponent(user.kelompok)}`;
+        
+        script.src = finalUrl;
+        document.body.appendChild(script);
+    }
+
+    function logout() {
+        if(confirm("Yakin ingin keluar?")) {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+    }
+
+    // Jalankan Kamera Otomatis
+    window.onload = mulaiScanner;
+</script>
+</body>
+</html>
