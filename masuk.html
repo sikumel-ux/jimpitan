@@ -32,14 +32,33 @@
         }
 
         .login-card {
+                .login-card {
             background: var(--card);
-            padding: 35px 30px;
+            padding: 35px 25px; /* Padding kanan kiri dikit dikecilkan */
             border-radius: 24px;
-            width: 85%;
-            max-width: 350px;
+            
+            /* --- INI YANG DIUBAH --- */
+            width: 80%;          /* Lebar card 80% dari layar HP */
+            max-width: 310px;    /* Batas maksimal lebar biar makin ramping */
+            /* ----------------------- */
+            
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             border: 1px solid #334155;
             text-align: center;
+        }
+
+        /* Kecilin dikit padding input biar pas dengan card yang ramping */
+        .input-field {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            padding: 12px 12px; /* Dikecilkan dari 14px */
+            border-radius: 12px;
+            color: white;
+            outline: none;
+            box-sizing: border-box;
+            font-size: 15px; /* Font size turunin dikit biar gak sesak */
+            transition: all 0.3s ease;
         }
 
         .login-card i.logo-icon {
