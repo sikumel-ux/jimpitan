@@ -2,12 +2,25 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login | Jimpitan Digital</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        :root { --bg: #0F172A; --card: #1E293B; --accent: #3B82F6; --text: #F8FAFC; }
+        :root { 
+            --bg: #0F172A; 
+            --card: #1E293B; 
+            --accent: #2DD4BF; /* Warna Toska */
+            --text: #F8FAFC; 
+        }
         
+        /* Mencegah Scroll */
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            overflow: hidden; 
+            touch-action: none; 
+        }
+
         body { 
             font-family: 'Inter', sans-serif; 
             background: var(--bg); 
@@ -15,30 +28,29 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            height: 100vh; 
-            margin: 0;
             background: radial-gradient(circle at top right, #1E293B, #0F172A);
         }
 
         .login-card {
             background: var(--card);
-            padding: 30px;
-            border-radius: 20px;
-            width: 100%;
+            padding: 35px 30px;
+            border-radius: 24px;
+            width: 85%;
             max-width: 350px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             border: 1px solid #334155;
             text-align: center;
         }
 
         .login-card i.logo-icon {
-            font-size: 50px;
+            font-size: 60px;
             color: var(--accent);
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 10px rgba(45, 212, 191, 0.3));
         }
 
-        h2 { margin-bottom: 10px; font-size: 24px; }
-        p { color: #94a3b8; font-size: 14px; margin-bottom: 25px; }
+        h2 { margin: 0 0 8px; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+        p { color: #94a3b8; font-size: 14px; margin-bottom: 30px; }
 
         .input-group {
             position: relative;
@@ -48,84 +60,97 @@
 
         .input-group label {
             display: block;
-            font-size: 12px;
-            color: #94a3b8;
-            margin-bottom: 5px;
-            margin-left: 5px;
+            font-size: 11px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 700;
         }
 
         .input-field {
             width: 100%;
-            background: #0F172A;
+            background: rgba(15, 23, 42, 0.6);
             border: 1px solid #334155;
-            padding: 12px 15px;
-            border-radius: 10px;
+            padding: 14px 15px;
+            border-radius: 12px;
             color: white;
             outline: none;
             box-sizing: border-box;
             font-size: 16px;
-            transition: 0.3s;
+            transition: all 0.3s ease;
         }
 
-        .input-field:focus { border-color: var(--accent); }
+        .input-field:focus { 
+            border-color: var(--accent); 
+            background: rgba(15, 23, 42, 1);
+            box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.1);
+        }
 
         /* Icon Password */
         .toggle-password {
             position: absolute;
             right: 15px;
-            top: 32px;
+            top: 36px;
             cursor: pointer;
-            color: #475569;
+            color: #64748b;
             font-size: 18px;
         }
 
         .btn-login {
             width: 100%;
             background: var(--accent);
-            color: white;
+            color: #0F172A; /* Teks gelap di atas toska agar kontras */
             border: none;
-            padding: 15px;
-            border-radius: 10px;
-            font-weight: bold;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 800;
             font-size: 16px;
             cursor: pointer;
-            transition: 0.3s;
-            margin-top: 10px;
+            transition: all 0.3s;
+            margin-top: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .btn-login:hover { background: #2563EB; transform: translateY(-2px); }
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(45, 212, 191, 0.4); }
         .btn-login:active { transform: translateY(0); }
 
-        #loader { display: none; margin-top: 15px; color: var(--accent); }
+        #loader { 
+            display: none; 
+            margin-top: 20px; 
+            color: var(--accent); 
+            font-size: 13px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
 
     <div class="login-card">
-        <i class="fa-solid fa-hand-holding-dollar logo-icon"></i>
-        <h2>Jimpitan RT</h2>
-        <p>Silakan login untuk melanjutkan</p>
+        <i class="fa-solid fa-shield-halved logo-icon"></i>
+        <h2>JIMPITAN RT</h2>
+        <p>Akses Sistem Digital</p>
 
         <div class="input-group">
             <label>Username</label>
-            <input type="text" id="user" class="input-field" placeholder="Masukkan username" autocomplete="off">
+            <input type="text" id="user" class="input-field" placeholder="ID Petugas" autocomplete="off">
         </div>
 
         <div class="input-group">
             <label>Password</label>
-            <input type="password" id="pass" class="input-field" placeholder="Masukkan password">
+            <input type="password" id="pass" class="input-field" placeholder="••••••••">
             <i class="fa-solid fa-eye-slash toggle-password" id="eyeIcon" onclick="togglePass()"></i>
         </div>
 
-        <button class="btn-login" onclick="prosesLogin()">MASUK</button>
+        <button class="btn-login" onclick="prosesLogin()">LOGIN SEKARANG</button>
         
         <div id="loader">
-            <i class="fa-solid fa-spinner fa-spin"></i> Mengecek data...
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Memverifikasi...
         </div>
     </div>
 
 <script>
-    // URL GAS PETUGAS (Sama dengan yang di scanner/rekap petugas)
     const apiURL = 'https://script.google.com/macros/s/AKfycbzLWYky7pIL8pqCFHpVEEivcQSxR1EuoG2tMPZ5x1RG2aXnbchZEwvO2QI7FD1VQpwHMA/exec';
 
     function togglePass() {
@@ -134,9 +159,11 @@
         if (passInput.type === "password") {
             passInput.type = "text";
             eyeIcon.classList.replace('fa-eye-slash', 'fa-eye');
+            eyeIcon.style.color = "var(--accent)";
         } else {
             passInput.type = "password";
             eyeIcon.classList.replace('fa-eye', 'fa-eye-slash');
+            eyeIcon.style.color = "#64748b";
         }
     }
 
@@ -145,7 +172,7 @@
         const p = document.getElementById('pass').value;
         const loader = document.getElementById('loader');
 
-        if(!u || !p) return alert("Isi username dan password!");
+        if(!u || !p) return alert("Silakan isi semua bidang!");
 
         loader.style.display = "block";
 
@@ -155,21 +182,19 @@
         window[cb] = (res) => {
             loader.style.display = "none";
             if(res.status === "success") {
-                // Simpan data ke localStorage
                 localStorage.setItem("jimpitan_user", JSON.stringify({
                     username: u,
                     role: res.role,
                     kelompok: res.kelompok
                 }));
 
-                // Redirect Sesuai Role
                 if(res.role === "admin") {
                     window.location.href = "bendahara.html";
                 } else {
                     window.location.href = "petugas.html";
                 }
             } else {
-                alert("Login Gagal! Username atau password salah.");
+                alert("ID atau Password Salah!");
             }
             document.body.removeChild(s);
             delete window[cb];
