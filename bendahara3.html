@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Bendahara | Jimpitan Digital</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #3B82F6; --text: #F8FAFC; --success: #00B894; --danger: #F87171; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #334155; }
+        .header h3 { margin: 0; color: var(--accent); font-size: 18px; }
+
+        .summary-card { background: var(--card); padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; border-left: 6px solid var(--success); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .summary-card small { color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; font-size: 11px; }
+        .summary-card h2 { margin: 10px 0 0; color: var(--success); font-size: 32px; }
+
+        .controls { display: grid; gap: 10px; margin-bottom: 20px; }
+        select { width: 100%; background: var(--card); color: white; padding: 12px; border-radius: 8px; border: 1px solid #334155; font-size: 14px; outline: none; cursor: pointer; }
+        
+        .btn-group { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 15px; border-radius: 10px; border: none; color: white; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; transition: 0.2s; }
+        .btn-pdf { background: var(--accent); }
+        .btn-reset { background: var(--success); }
+        .btn:active { transform: scale(0.95); }
+
+        .table-container { background: white; border-radius: 12px; overflow-x: auto; margin-top: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        table { width: 100%; border-collapse: collapse; color: #334155; font-size: 12px; }
+        th, td { padding: 12px 10px; border: 1px solid #e2e8f0; text-align: center; }
+        th { background: #f8fafc; font-weight: 800; color: #64748b; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #f8fafc; z-index: 5; font-weight: bold; min-width: 120px; border-right: 2px solid #e2e8f0; }
+        
+        /* Loader Overlay */
+        .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); display: none; justify-content: center; align-items: center; z-index: 1000; flex-direction: column; }
+        .loader-overlay p { margin-top: 15px; color: var(--accent); font-weight: bold; }
+        
+        @media print { .header, .controls, .btn-group, .summary-card { display: none; } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h3><i class="fa-solid fa-vault"></i> BENDAHARA RT</h3>
+        <button onclick="logout()" style="background:none; border:none; color:var(--danger); font-weight:bold; cursor:pointer;">
+            LOGOUT <i class="fa-solid fa-power-off"></i>
+        </button>
+    </div>
+
+    <div class="summary-card">
+        <small>Total Uang di Petugas</small>
+        <h2 id="total-uang">Rp 0</h2>
+    </div>
+
+    <div class="controls">
+        <select id="pilih-kelompok" onchange="loadAdminData()">
+            <option value="Senin">Kelompok Senin</option>
+            <option value="Selasa">Kelompok Selasa</option>
+            <option value="Rabu">Kelompok Rabu</option>
+            <option value="Kamis">Kelompok Kamis</option>
+            <option value="Jumat">Kelompok Jumat</option>
+            <option value="Sabtu">Kelompok Sabtu</option>
+            <option value="Minggu">Kelompok Minggu</option>
+        </select>
+        
+        <select id="pilih-bulan" onchange="loadAdminData()">
+            <option value="0">Januari</option>
+            <option value="1">Februari</option>
+            <option value="2">Maret</option>
+            <option value="3">April</option>
+            <option value="4">Mei</option>
+            <option value="5">Juni</option>
+            <option value="6">Juli</option>
+            <option value="7">Agustus</option>
+            <option value="8">September</option>
+            <option value="9">Oktober</option>
+            <option value="10">November</option>
+            <option value="11">Desember</option>
+        </select>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn btn-pdf" onclick="downloadPDF()">
+            <i class="fa-solid fa-file-pdf"></i> CETAK LAPORAN
+        </button>
+        <button class="btn btn-reset" onclick="terimaSetoran()">
+            <i class="fa-solid fa-hand-holding-dollar"></i> TERIMA SETORAN
+        </button>
+    </div>
+
+    <div class="table-container" id="printable-area">
+        <table id="table-rekap">
+            <thead>
+                <tr id="head-tgl">
+                    <th class="nama-col">Nama Warga</th>
+                    </tr>
+            </thead>
+            <tbody id="body-rekap">
+                </tbody>
+        </table>
+    </div>
+
+    <div id="loader" class="loader-overlay">
+        <i class="fa-solid fa-circle-notch fa-spin fa-3x" style="color:var(--accent)"></i>
+        <p>Sedang memproses data...</p>
+    </div>
+
+<script>
+    // URL GAS ADMIN YANG BARU
+    const apiURL = 'https://script.google.com/macros/s/AKfycbzLWYky7pIL8pqCFHpVEEivcQSxR1EuoG2tMPZ5x1RG2aXnbchZEwvO2QI7FD1VQpwHMA/exec';
+
+    // Proteksi Admin
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    if(!user || user.role !== "admin") {
+        window.location.href = "index.html";
+    }
+
+    // Load Awal
+    window.onload = () => {
+        document.getElementById('pilih-bulan').value = new Date().getMonth();
+        loadAdminData();
+    };
+
+    function loadAdminData() {
+        const kel = document.getElementById('pilih-kelompok').value;
+        const bln = document.getElementById('pilih-bulan').value;
+        showLoader(true);
+
+        const cb = "cb_admin_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        
+        window[cb] = (res) => {
+            showLoader(false);
+            if(res.status === "error") return alert("Error: " + res.message);
+            
+            // Update Total Uang
+            document.getElementById('total-uang').innerText = "Rp " + res.totalKelompok.toLocaleString('id-ID');
+
+            // Render Header Tanggal
+            let hH = `<th class="nama-col">Nama Warga</th>`;
+            res.tglHeader.forEach(t => hH += `<th>${t}</th>`);
+            document.getElementById('head-tgl').innerHTML = hH;
+
+            // Render Baris Warga
+            let hB = "";
+            res.laporan.forEach(w => {
+                hB += `<tr><td class="nama-col">${w.nama}</td>`;
+                w.dataTgl.forEach(d => {
+                    const nilai = d.nilai > 0 ? d.nilai.toLocaleString('id-ID') : '-';
+                    const warna = d.nilai > 0 ? 'font-weight:bold; color:var(--success);' : 'color:#cbd5e1;';
+                    hB += `<td style="${warna}">${nilai}</td>`;
+                });
+                hB += `</tr>`;
+            });
+            document.getElementById('body-rekap').innerHTML = hB || '<tr><td colspan="10">Tidak ada data warga.</td></tr>';
+            
+            document.body.removeChild(s);
+            delete window[cb];
+        };
+
+        s.src = `${apiURL}?callback=${cb}&action=getAdminData&kelompok=${kel}&bulan=${bln}`;
+        document.body.appendChild(s);
+    }
+
+    function terimaSetoran() {
+        const kel = document.getElementById('pilih-kelompok').value;
+        const confirmMsg = `Konfirmasi:\nApakah uang jimpitan Kelompok ${kel} sudah Anda terima secara tunai?\n\nJika YA, status akan berubah jadi SUDAH SETOR dan dashboard petugas akan kembali NOL.`;
+        
+        if(!confirm(confirmMsg)) return;
+
+        showLoader(true);
+        const cb = "cb_reset_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+
+        window[cb] = (res) => {
+            showLoader(false);
+            alert(res.message);
+            loadAdminData(); // Refresh tampilan
+            document.body.removeChild(s);
+            delete window[cb];
+        };
+
+        s.src = `${apiURL}?callback=${cb}&action=resetData&kelompok=${kel}`;
+        document.body.appendChild(s);
+    }
+
+    function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'pt', 'a4'); // 'l' untuk Landscape
+        const element = document.getElementById('printable-area');
+        const kel = document.getElementById('pilih-kelompok').value;
+        const bln = document.getElementById('pilih-bulan').options[document.getElementById('pilih-bulan').selectedIndex].text;
+
+        showLoader(true);
+        html2canvas(element, { scale: 2 }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            doc.setFontSize(16);
+            doc.text(`LAPORAN JIMPITAN KELOMPOK ${kel.toUpperCase()} - BULAN ${bln.toUpperCase()}`, 40, 40);
+            doc.addImage(imgData, 'PNG', 40, 60, 760, 0); // Atur lebar PDF
+            doc.save(`Laporan_Jimpitan_${kel}_${bln}.pdf`);
+            showLoader(false);
+        });
+    }
+
+    function showLoader(v) {
+        document.getElementById('loader').style.display = v ? 'flex' : 'none';
+    }
+
+    function logout() {
+        if(confirm("Keluar dari panel admin?")) {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+    }
+</script>
+</body>
+</html>
