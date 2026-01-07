@@ -3,109 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin | Rekap Data</title>
+    <title>Admin | Jimpitan</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --border: #334155; }
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-
-        .header { margin-bottom: 25px; }
-        .header h2 { margin: 0; color: var(--accent); }
-        .header p { margin: 5px 0 0; color: #94A3B8; font-size: 14px; }
-
-        .summary-box { 
-            background: rgba(0, 184, 148, 0.1); padding: 20px; border-radius: 15px; 
-            border-left: 5px solid var(--accent); margin-bottom: 25px;
-        }
-        .summary-box small { color: var(--accent); font-weight: bold; font-size: 11px; }
-        .summary-box h1 { margin: 5px 0 0; font-size: 28px; }
-
-        .grid-hari { display: grid; gap: 12px; }
-        .card-hari { 
-            background: var(--card); padding: 18px; border-radius: 15px; 
-            border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
-        }
-        .info h4 { margin: 0; font-size: 12px; color: #94A3B8; text-transform: uppercase; }
-        .info span { font-size: 18px; font-weight: 800; display: block; margin-top: 3px; }
-
-        .btn-terima { 
-            background: var(--accent); color: white; border: none; padding: 10px 15px; 
-            border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s;
-        }
-        .btn-terima:disabled { background: #475569; opacity: 0.5; }
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .box { background: rgba(0, 184, 148, 0.1); padding: 15px; border-radius: 12px; border-left: 4px solid var(--accent); margin-bottom: 20px; }
+        .row { background: var(--card); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border: 1px solid #334155; }
+        .btn { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <div class="header">
-        <h2>Dashboard Admin</h2>
-        <p>Pantau & Terima Setoran Jimpitan</p>
+    <h3>Kontrol Admin</h3>
+    <div class="box">
+        <small>TOTAL KAS BELUM MASUK</small>
+        <h2 id="total-pusat">Rp 0</h2>
     </div>
-
-    <div class="summary-box">
-        <small>TOTAL BELUM TERSETOR (Pusat)</small>
-        <h1 id="total-pusat">Rp 0</h1>
-    </div>
-
-    <div class="grid-hari" id="list-rekap">
-        <p style="text-align:center; color:#475569">Memuat data...</p>
-    </div>
+    <div id="list">Memuat data...</div>
 
 <script>
-    const apiURL = 'https://script.google.com/macros/s/AKfycbz3D1lnQiOFqZtrFMS3YCvKyzxuVEaOHq37IR3xm2t3MWhmygrtEGL_i8rKLb8pGxVI1Q/exec'; // APPS
-    const listHari = ["senin", "selasa", "rabu", "kamis", "jumat", "sabtu", "minggu"];
+    const apiURL = 'MASUKKAN_URL_API_GAS_KAMU';
+    const hariArr = ["senin","selasa","rabu","kamis","jumat","sabtu","minggu"];
 
-    function loadDataAdmin() {
+    function load() {
         const cb = "adm_" + Date.now();
         const s = document.createElement('script');
-        s.src = `${apiURL}?callback=${cb}&action=getAdminData`;
+        s.src = `${apiURL}?callback=${cb}&action=getData`;
         document.body.appendChild(s);
-
         window[cb] = (res) => {
             if(res.status === "success") {
-                document.getElementById('total-pusat').innerText = "Rp " + res.total.toLocaleString('id-ID');
-                
-                let html = "";
-                listHari.forEach(hari => {
-                    const nominal = res.rekap[hari] || 0;
-                    html += `
-                    <div class="card-hari">
-                        <div class="info">
-                            <h4>Kelompok ${hari}</h4>
-                            <span>Rp ${nominal.toLocaleString('id-ID')}</span>
-                        </div>
-                        <button class="btn-terima" ${nominal === 0 ? 'disabled' : ''} onclick="prosesSetoran('${hari}')">
-                            TERIMA
-                        </button>
-                    </div>`;
+                document.getElementById('total-pusat').innerText = "Rp " + res.total.toLocaleString();
+                let h = "";
+                hariArr.forEach(day => {
+                    let n = res.rekap[day] || 0;
+                    h += `<div class="row"><div><b>${day.toUpperCase()}</b><br>Rp ${n.toLocaleString()}</div>
+                          <button class="btn" onclick="terima('${day}')" ${n==0?'disabled':''}>TERIMA</button></div>`;
                 });
-                document.getElementById('list-rekap').innerHTML = html;
+                document.getElementById('list').innerHTML = h;
             }
-            document.body.removeChild(s);
-            delete window[cb];
+            document.body.removeChild(s); delete window[cb];
         };
     }
 
-    function prosesSetoran(hari) {
-        if(!confirm(`Konfirmasi terima uang fisik dari kelompok ${hari}?`)) return;
-
-        const cb = "setor_" + Date.now();
+    function terima(h) {
+        if(!confirm("Terima setoran " + h + "?")) return;
+        const cb = "set_" + Date.now();
         const s = document.createElement('script');
-        s.src = `${apiURL}?callback=${cb}&action=terimaSetoran&u=${hari}`;
+        s.src = `${apiURL}?callback=${cb}&action=terimaSetoran&u=${h}`;
         document.body.appendChild(s);
-
-        window[cb] = (res) => {
-            if(res.status === "success") {
-                alert("Setoran " + hari + " berhasil diterima!");
-                loadDataAdmin(); // Refresh data
-            }
-            document.body.removeChild(s);
-            delete window[cb];
-        };
+        window[cb] = () => { alert("Sukses!"); load(); };
     }
-
-    loadDataAdmin();
+    load();
 </script>
 </body>
 </html>
