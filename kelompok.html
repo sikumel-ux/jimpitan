@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Petugas | Jimpitan Digital</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #2DD4BF; --text: #F8FAFC; --success: #2DD4BF; --danger: #F87171; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #334155; }
+        .header h1 { font-size: 16px; margin: 0; color: var(--accent); font-weight: 800; }
+
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .summary-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #334155; text-align: center; }
+        .summary-card small { color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .summary-card h2 { margin: 5px 0 0; font-size: 18px; color: var(--success); }
+
+        .filter-section { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; display: flex; gap: 10px; }
+        select { flex: 1; background: #0F172A; color: white; border: 1px solid #334155; padding: 10px; border-radius: 8px; outline: none; font-size: 13px; }
+
+        .table-container { background: var(--card); border-radius: 12px; overflow-x: auto; border: 1px solid #334155; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { padding: 12px 10px; border: 1px solid #334155; text-align: center; }
+        th { background: #1E293B; color: #94a3b8; font-weight: 600; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1E293B; z-index: 5; font-weight: bold; min-width: 110px; border-right: 2px solid #334155; }
+        
+        .status-isi { color: var(--success); font-weight: bold; }
+        .status-kosong { color: #475569; }
+
+        tfoot tr { background: #0F172A; }
+        tfoot td { color: var(--accent); font-weight: 800; border-top: 2px solid var(--accent); }
+
+        .btn-logout { background: #334155; color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.2); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; }
+
+        .copyright { text-align: center; margin-top: auto; padding: 20px 0; font-size: 10px; color: #475569; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+        .copyright span { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fa-solid fa-users"></i> REKAP PETUGAS</h1>
+        <button onclick="logout()" class="btn-logout">LOGOUT</button>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <small>Total Kas Kelompok</small>
+            <h2 id="total-uang">Rp 0</h2>
+        </div>
+        <div class="summary-card">
+            <small>Kelompok</small>
+            <h2 id="label-kelompok">-</h2>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <select id="pilih-kelompok" onchange="loadAdminData()" disabled>
+            <option value="Senin">Senin</option>
+            <option value="Selasa">Selasa</option>
+            <option value="Rabu">Rabu</option>
+            <option value="Kamis">Kamis</option>
+            <option value="Jumat">Jumat</option>
+            <option value="Sabtu">Sabtu</option>
+            <option value="Minggu">Minggu</option>
+        </select>
+        <select id="pilih-bulan" onchange="loadAdminData()">
+            <option value="0">Januari</option>
+            <option value="1">Februari</option>
+            <option value="2">Maret</option>
+            <option value="3">April</option>
+            <option value="4">Mei</option>
+            <option value="5">Juni</option>
+            <option value="6">Juli</option>
+            <option value="7">Agustus</option>
+            <option value="8">September</option>
+            <option value="9">Oktober</option>
+            <option value="10">November</option>
+            <option value="11">Desember</option>
+        </select>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr id="head-tgl">
+                    <th class="nama-col">Nama Warga</th>
+                </tr>
+            </thead>
+            <tbody id="body-rekap">
+                <tr><td colspan="5" style="padding:40px;">Memuat Data...</td></tr>
+            </tbody>
+            <tfoot>
+                <tr id="foot-total">
+                    <td class="nama-col">TOTAL</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="copyright">
+        © 2026 <span>Sekawan Technologies</span>
+    </div>
+
+<script>
+    const apiURL = 'https://script.google.com/macros/s/AKfycbzLWYky7pIL8pqCFHpVEEivcQSxR1EuoG2tMPZ5x1RG2aXnbchZEwvO2QI7FD1VQpwHMA/exec';
+
+    // --- PERBAIKAN LOGIC LOGIN ---
+    const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+    
+    // Jika tidak ada data login, baru dilempar ke login
+    if(!user) {
+        window.location.href = "index.html";
+    }
+
+    document.getElementById('pilih-bulan').value = new Date().getMonth();
+    
+    // Petugas otomatis terkunci ke kelompoknya sendiri
+    if(user.kelompok) {
+        document.getElementById('pilih-kelompok').value = user.kelompok;
+    }
+
+    function loadAdminData() {
+        const kel = document.getElementById('pilih-kelompok').value;
+        const bln = document.getElementById('pilih-bulan').value;
+        
+        document.getElementById('label-kelompok').innerText = kel.toUpperCase();
+        document.getElementById('body-rekap').innerHTML = '<tr><td colspan="10" style="padding:40px;">Memuat Data...</td></tr>';
+
+        const cb = "cb_admin_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+        
+        window[cb] = (res) => {
+            if(res.status === "success") {
+                document.getElementById('total-uang').innerText = "Rp " + res.totalKelompok.toLocaleString('id-ID');
+                let hH = `<th class="nama-col">Nama Warga</th>`;
+                res.tglHeader.forEach(t => hH += `<th>${t}</th>`);
+                document.getElementById('head-tgl').innerHTML = hH;
+
+                let hB = "";
+                res.laporan.forEach(w => {
+                    hB += `<tr><td class="nama-col">${w.nama}</td>`;
+                    w.dataTgl.forEach(d => {
+                        let nominal = d.nilai > 0 ? d.nilai.toLocaleString('id-ID') : '-';
+                        hB += `<td class="${d.nilai > 0 ? 'status-isi' : 'status-kosong'}">${nominal}</td>`;
+                    });
+                    hB += `</tr>`;
+                });
+                document.getElementById('body-rekap').innerHTML = hB || '<tr><td colspan="5">Tidak ada data</td></tr>';
+
+                let hF = `<td class="nama-col">TOTAL</td>`;
+                res.tglHeader.forEach(t => {
+                    let tglTotal = res.totalPerTgl[t] || 0;
+                    hF += `<td>${tglTotal > 0 ? tglTotal.toLocaleString('id-ID') : '0'}</td>`;
+                });
+                document.getElementById('foot-total').innerHTML = hF;
+            }
+            document.body.removeChild(s);
+            delete window[cb];
+        };
+
+        s.src = `${apiURL}?callback=${cb}&action=getAdminData&kelompok=${encodeURIComponent(kel)}&bulan=${bln}`;
+        document.body.appendChild(s);
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+    }
+
+    loadAdminData();
+</script>
+</body>
+</html>
