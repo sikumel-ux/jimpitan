@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login | Jimpitan Digital</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { 
+            --bg: #0F172A; 
+            --card: #1E293B; 
+            --accent: #2DD4BF; 
+            --text: #F8FAFC; 
+        }
+        
+        /* Full Screen No Scroll */
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            overflow: hidden; 
+            touch-action: none; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at top right, #1E293B, #0F172A);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .login-card {
+            background: var(--card);
+            padding: 35px 25px;
+            border-radius: 24px;
+            width: 75%;
+            max-width: 300px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            border: 1px solid #334155;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .login-card i.logo-icon {
+            font-size: 50px;
+            color: var(--accent);
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 8px rgba(45, 212, 191, 0.4));
+        }
+
+        h2 { margin: 0 0 5px; font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+        p { color: #94a3b8; font-size: 13px; margin-bottom: 25px; }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 10px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 6px;
+            font-weight: 700;
+            padding-left: 5px;
+        }
+
+        .input-field {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            padding: 12px 14px;
+            border-radius: 12px;
+            color: white;
+            outline: none;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus { 
+            border-color: var(--accent); 
+            background: rgba(15, 23, 42, 1);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 34px;
+            cursor: pointer;
+            color: #475569;
+            font-size: 16px;
+        }
+
+        .btn-login {
+            width: 100%;
+            background: var(--accent);
+            color: #0F172A; 
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(45, 212, 191, 0.3); }
+
+        /* Footer Copyright */
+        .copyright {
+            margin-top: 25px;
+            font-size: 11px;
+            color: #475569;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .copyright span { color: var(--accent); }
+
+        #loader { display: none; margin-top: 15px; color: var(--accent); font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <i class="fa-solid fa-fingerprint logo-icon"></i>
+        <h2>JIMPITAN</h2>
+        <p>Dashboard Keamanan RT</p>
+
+        <div class="input-group">
+            <label>Username</label>
+            <input type="text" id="user" class="input-field" placeholder="ID Petugas" autocomplete="off">
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="pass" class="input-field" placeholder="••••••••">
+            <i class="fa-solid fa-eye-slash toggle-password" id="eyeIcon" onclick="togglePass()"></i>
+        </div>
+
+        <button class="btn-login" onclick="prosesLogin()">LOGIN MASUK</button>
+        
+        <div id="loader">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Autentikasi...
+        </div>
+    </div>
+
+    <div class="copyright">
+        © 2026 <span>Sekawan Technologies</span>
+    </div>
+
+<script>
+    const apiURL = 'https://script.google.com/macros/s/AKfycbzLWYky7pIL8pqCFHpVEEivcQSxR1EuoG2tMPZ5x1RG2aXnbchZEwvO2QI7FD1VQpwHMA/exec';
+
+    function togglePass() {
+        const passInput = document.getElementById('pass');
+        const eyeIcon = document.getElementById('eyeIcon');
+        if (passInput.type === "password") {
+            passInput.type = "text";
+            eyeIcon.classList.replace('fa-eye-slash', 'fa-eye');
+            eyeIcon.style.color = "var(--accent)";
+        } else {
+            passInput.type = "password";
+            eyeIcon.classList.replace('fa-eye', 'fa-eye-slash');
+            eyeIcon.style.color = "#475569";
+        }
+    }
+
+    function prosesLogin() {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        const loader = document.getElementById('loader');
+
+        if(!u || !p) return alert("Lengkapi data login!");
+
+        loader.style.display = "block";
+
+        const cb = "cb_login_" + Math.round(Math.random() * 1000000);
+        const s = document.createElement('script');
+
+        window[cb] = (res) => {
+            loader.style.display = "none";
+            if(res.status === "success") {
+                localStorage.setItem("jimpitan_user", JSON.stringify({
+                    username: u, role: res.role, kelompok: res.kelompok
+                }));
+                window.location.href = res.role === "admin" ? "bendahara.html" : "petugas.html";
+            } else {
+                alert("Username atau Password Salah!");
+            }
+            document.body.removeChild(s);
+            delete window[cb];
+        };
+
+        s.src = `${apiURL}?callback=${cb}&action=login&u=${encodeURIComponent(u)}&p=${encodeURIComponent(p)}`;
+        document.body.appendChild(s);
+    }
+</script>
+</body>
+</html>
