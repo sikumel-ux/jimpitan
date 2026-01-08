@@ -122,7 +122,16 @@
 
         .btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(45, 212, 191, 0.3); }
         .btn-login:active { transform: translateY(0); }
-
+/* Footer Copyright */
+        .copyright {
+            margin-top: 25px;
+            font-size: 11px;
+            color: #475569;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .copyright span { color: var(--accent); }
         #loader { 
             display: none; 
             margin-top: 15px; 
@@ -156,7 +165,9 @@
             <i class="fa-solid fa-circle-notch fa-spin"></i> Autentikasi...
         </div>
     </div>
-
+<div class="copyright">
+         <span>© 2026 Sekawan Technologies</span>
+</div>
 <script>
     // URL GAS PETUGAS/LOGIN
     const apiURL = 'https://script.google.com/macros/s/AKfycbzLWYky7pIL8pqCFHpVEEivcQSxR1EuoG2tMPZ5x1RG2aXnbchZEwvO2QI7FD1VQpwHMA/exec';
