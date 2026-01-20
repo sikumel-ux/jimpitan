@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Petugas Ronda | Jimpitan Digital</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00B894">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048953.png">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
@@ -84,7 +90,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Konfigurasi Firebase Anda
+        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAxFU7HD_9uVHWGXEO0ZtJja6rdqKHurTk",
             authDomain: "jimpitan-sekawan.firebaseapp.com",
@@ -95,102 +101,85 @@
             databaseURL: "https://jimpitan-sekawan-default-rtdb.firebaseio.com"
         };
 
-        // Init Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Ambil data user dari localStorage
+        // Register Service Worker (PWA)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('PWA Service Worker Aktif!'))
+                    .catch(err => console.log('SW Gagal:', err));
+            });
+        }
+
         const user = JSON.parse(localStorage.getItem("jimpitan_user"));
 
-        // Validasi Login
         if(!user) {
             window.location.href = "index.html";
         } else {
             document.getElementById('label-kel').innerText = user.kelompok.toUpperCase();
             document.getElementById('pilih-bulan').value = new Date().getMonth();
             
-            // Jalankan fungsi load data pertama kali
-            window.loadData();
+            // Tunggu sebentar agar fungsi terpasang ke window
+            setTimeout(() => window.loadData(), 100);
         }
 
-        /**
-         * Fungsi untuk menarik data dari Firebase Realtime Database
-         */
         window.loadData = function() {
             const bln = document.getElementById('pilih-bulan').value;
             const thn = new Date().getFullYear();
             const kelompok = user.kelompok;
 
-            // Path: data_jimpitan/KELOMPOK_A/2026/0 (Januari)
             const dataRef = ref(db, `data_jimpitan/${kelompok}/${thn}/${bln}`);
             
-            // onValue adalah listener real-time. Jika data di DB berubah, tabel update otomatis.
             onValue(dataRef, (snapshot) => {
                 const data = snapshot.val() || {};
                 renderTable(data, bln, thn);
             }, (error) => {
-                console.error("Gagal ambil data:", error);
-                document.getElementById('body-rekap').innerHTML = `<tr><td colspan="5">Error: Permisi Ditolak</td></tr>`;
+                console.error(error);
+                document.getElementById('body-rekap').innerHTML = `<tr><td colspan="5">Gagal memuat data.</td></tr>`;
             });
         };
 
-        /**
-         * Fungsi merender data JSON Firebase ke Tabel HTML
-         */
         function renderTable(data, bln, thn) {
             const listWarga = Object.keys(data);
-            // Menghitung jumlah hari dalam bulan terpilih
             const daysInMonth = new Date(thn, parseInt(bln) + 1, 0).getDate();
             
-            // 1. Render Header Tanggal
             let hH = `<th class="nama-col">Nama Warga</th>`;
-            for (let i = 1; i <= daysInMonth; i++) {
-                hH += `<th>${i}</th>`;
-            }
+            for (let i = 1; i <= daysInMonth; i++) hH += `<th>${i}</th>`;
             document.getElementById('head-tgl').innerHTML = hH;
 
-            // 2. Render Isi Data & Hitung Total
             let hB = "";
             let totalSeluruhKelompok = 0;
             let totalPerTgl = Array(daysInMonth + 1).fill(0);
 
             if (listWarga.length === 0) {
-                hB = `<tr><td colspan="${daysInMonth + 1}" style="padding:40px; color:#94a3b8;">Belum ada data jimpitan untuk bulan ini.</td></tr>`;
+                hB = `<tr><td colspan="${daysInMonth + 1}" style="padding:40px; color:#94a3b8;">Kosong.</td></tr>`;
             } else {
                 listWarga.forEach(nama => {
                     hB += `<tr><td class="nama-col">${nama}</td>`;
                     const dataHarian = data[nama] || {};
-
                     for (let i = 1; i <= daysInMonth; i++) {
-                        let nilai = dataHarian[i] || 0; // i adalah tanggal
+                        let nilai = dataHarian[i] || 0;
                         totalPerTgl[i] += nilai;
                         totalSeluruhKelompok += nilai;
-                        
-                        let displayVal = nilai > 0 ? nilai.toLocaleString('id-ID') : '-';
-                        hB += `<td class="${nilai > 0 ? 'isi' : 'kosong'}">${displayVal}</td>`;
+                        hB += `<td class="${nilai > 0 ? 'isi' : 'kosong'}">${nilai > 0 ? nilai.toLocaleString('id-ID') : '-'}</td>`;
                     }
                     hB += `</tr>`;
                 });
             }
             document.getElementById('body-rekap').innerHTML = hB;
 
-            // 3. Render Footer (Total per Tanggal)
             let hF = `<td class="nama-col">TOTAL</td>`;
             for (let i = 1; i <= daysInMonth; i++) {
-                let tglTotal = totalPerTgl[i];
-                hF += `<td>${tglTotal > 0 ? tglTotal.toLocaleString('id-ID') : '0'}</td>`;
+                hF += `<td>${totalPerTgl[i] > 0 ? totalPerTgl[i].toLocaleString('id-ID') : '0'}</td>`;
             }
             document.getElementById('foot-total').innerHTML = hF;
-
-            // 4. Update Stat Box Atas
             document.getElementById('total-kelompok').innerText = "Rp " + totalSeluruhKelompok.toLocaleString('id-ID');
         }
 
-        /**
-         * Fungsi Logout
-         */
         window.logout = function() {
-            if(confirm("Yakin ingin keluar?")) {
+            if(confirm("Keluar?")) {
                 localStorage.clear();
                 window.location.href = "index.html";
             }
