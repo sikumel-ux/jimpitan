@@ -1,0 +1,17 @@
+{
+  "name": "Jimpitan Sekawan",
+  "short_name": "Jimpitan",
+  "description": "Aplikasi Jimpitan Digital RT",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#00B894",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1048/1048953.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
