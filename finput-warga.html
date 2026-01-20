@@ -24,7 +24,7 @@
         input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #0F172A; color: white; margin-bottom: 10px; box-sizing: border-box; outline: none; }
         input:focus { border-color: var(--accent); }
 
-        .btn-add { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-add { width: 100%; background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
         .list-container { background: var(--card); border-radius: 15px; border: 1px solid #334155; overflow: hidden; }
         .warga-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #334155; }
@@ -55,6 +55,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // Konfigurasi dengan URL Database Singapura
         const firebaseConfig = {
             apiKey: "AIzaSyAxFU7HD_9uVHWGXEO0ZtJja6rdqKHurTk",
             authDomain: "jimpitan-sekawan.firebaseapp.com",
@@ -62,38 +63,41 @@
             storageBucket: "jimpitan-sekawan.firebasestorage.app",
             messagingSenderId: "634934433280",
             appId: "1:634934433280:web:abde3734bd277d3e9b2ae5",
-            databaseURL: "https://jimpitan-sekawan-default-rtdb.firebaseio.com"
+            databaseURL: "https://jimpitan-sekawan-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Proteksi
+        // Ambil data user
         const user = JSON.parse(localStorage.getItem("jimpitan_user"));
         if(!user) window.location.href = "index.html";
 
         const pathWarga = `daftar_warga/${user.kelompok}`;
 
-        // Register PWA
+        // Register Service Worker untuk PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js');
             });
         }
 
-        // Tampilkan List Warga
+        // Fungsi Tampilkan List Warga
         window.loadWarga = function() {
             onValue(ref(db, pathWarga), (snapshot) => {
-                const data = snapshot.val() || [];
+                const data = snapshot.val();
                 const container = document.getElementById('list-warga');
                 
-                if(data.length === 0) {
+                if(!data) {
                     container.innerHTML = '<div style="padding:20px; text-align:center; color:#94a3b8;">Belum ada warga terdaftar.</div>';
                     return;
                 }
 
+                // Ubah data ke array jika formatnya objek
+                let listArr = Array.isArray(data) ? data : Object.values(data);
+                
                 let html = "";
-                data.sort().forEach((nama, index) => {
+                listArr.sort().forEach((nama, index) => {
                     html += `
                         <div class="warga-item">
                             <span>${nama}</span>
@@ -107,35 +111,46 @@
             });
         };
 
-        // Tambah Warga
+        // Fungsi Tambah Warga
         window.tambahWarga = async function() {
             const input = document.getElementById('input-nama');
             const nama = input.value.trim().toUpperCase();
 
             if(!nama) return alert("Isi namanya dulu!");
 
-            const snapshot = await get(ref(db, pathWarga));
-            let list = snapshot.val() || [];
+            try {
+                const snapshot = await get(ref(db, pathWarga));
+                let list = snapshot.val() || [];
+                if(!Array.isArray(list)) list = Object.values(list);
 
-            if(list.includes(nama)) return alert("Nama ini sudah ada!");
+                if(list.includes(nama)) return alert("Nama ini sudah ada!");
 
-            list.push(nama);
-            await set(ref(db, pathWarga), list);
-            
-            input.value = "";
+                list.push(nama);
+                await set(ref(db, pathWarga), list);
+                
+                input.value = "";
+            } catch (e) {
+                alert("Gagal simpan: " + e.message);
+            }
         };
 
-        // Hapus Warga
+        // Fungsi Hapus Warga
         window.hapusWarga = async function(index) {
             if(!confirm("Hapus warga ini dari daftar?")) return;
 
-            const snapshot = await get(ref(db, pathWarga));
-            let list = snapshot.val() || [];
-            
-            list.splice(index, 1);
-            await set(ref(db, pathWarga), list);
+            try {
+                const snapshot = await get(ref(db, pathWarga));
+                let list = snapshot.val() || [];
+                if(!Array.isArray(list)) list = Object.values(list);
+                
+                list.splice(index, 1);
+                await set(ref(db, pathWarga), list);
+            } catch (e) {
+                alert("Gagal hapus: " + e.message);
+            }
         };
 
+        // Jalankan load pertama kali
         window.loadWarga();
     </script>
 </body>
