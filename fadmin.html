@@ -55,8 +55,8 @@
 
     <div class="table-container">
         <table>
-            <thead><tr id="head-tgl"><th class="nama-col">Nama Warga (Semua)</th></tr></thead>
-            <tbody id="body-rekap"><tr><td colspan="2" style="padding:40px;">Pilih kelompok ronda untuk melihat tanggal tarikan.</td></tr></tbody>
+            <thead><tr id="head-tgl"><th class="nama-col">Nama Warga</th></tr></thead>
+            <tbody id="body-rekap"><tr><td colspan="2" style="padding:40px;">Pilih kelompok ronda.</td></tr></tbody>
             <tfoot><tr id="foot-total"><td class="nama-col">TOTAL</td></tr></tfoot>
         </table>
     </div>
@@ -84,16 +84,15 @@
             const thn = new Date().getFullYear();
             if(!kel) return;
 
-            // 1. Ambil SEMUA WARGA (bukan per kelompok)
-            // Asumsi: Kamu punya node 'daftar_warga/ALL' atau ambil dari salah satu node yang lengkap
+            // AMBIL SEMUA WARGA DARI FOLDER 'ALL'
             const snapWarga = await get(ref(db, `daftar_warga/ALL`)); 
             const listWarga = snapWarga.val() ? (Array.isArray(snapWarga.val()) ? snapWarga.val() : Object.values(snapWarga.val())) : [];
 
-            // 2. Ambil DATA JIMPITAN kelompok tersebut
+            // AMBIL DATA JIMPITAN KELOMPOK TERPILIH
             onValue(ref(db, `data_jimpitan/${kel}/${thn}/${bln}`), (snapData) => {
                 const dataJimpitan = snapData.val() || {};
                 
-                // Cari tanggal aktif hanya untuk kelompok ini
+                // MENCARI TANGGAL AKTIF (Kapan kelompok ini narik uang)
                 let tglAktif = new Set();
                 Object.values(dataJimpitan).forEach(w => {
                     Object.keys(w).forEach(t => tglAktif.add(parseInt(t)));
@@ -105,10 +104,12 @@
         };
 
         function renderTable(listWarga, data, dates) {
+            // Header Tanggal Dinamis
             let hH = `<th class="nama-col">Nama Warga</th>`;
             dates.forEach(d => hH += `<th>${d}</th>`);
             document.getElementById('head-tgl').innerHTML = hH;
 
+            // Body
             let hB = "";
             let colTotals = {};
             dates.forEach(d => colTotals[d] = 0);
@@ -122,8 +123,9 @@
                 });
                 hB += `</tr>`;
             });
-            document.getElementById('body-rekap').innerHTML = hB || '<tr><td>Data kosong</td></tr>';
+            document.getElementById('body-rekap').innerHTML = hB || '<tr><td>Data warga ALL tidak ditemukan</td></tr>';
 
+            // Footer Total
             let hF = `<td class="nama-col">TOTAL</td>`;
             dates.forEach(d => hF += `<td>${colTotals[d]}</td>`);
             document.getElementById('foot-total').innerHTML = hF;
