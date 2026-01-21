@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Bendahara | SEJIWA</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0F172A">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #2DD4BF; --text: #F8FAFC; --success: #2DD4BF; --danger: #F87171; }
@@ -21,7 +18,7 @@
         .summary-card h2 { margin: 5px 0 0; font-size: 18px; color: var(--success); }
 
         .admin-nav { display: flex; gap: 10px; margin-bottom: 20px; }
-        .btn-nav { flex: 1; background: #334155; color: white; border: none; padding: 10px; border-radius: 8px; text-decoration: none; text-align: center; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-nav { flex: 1; background: #334155; color: white; border: none; padding: 10px; border-radius: 8px; text-decoration: none; text-align: center; font-size: 12px; font-weight: bold; }
 
         .filter-section { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; display: flex; gap: 10px; }
         select { flex: 1; background: #0F172A; color: white; border: 1px solid #334155; padding: 12px; border-radius: 10px; outline: none; font-size: 14px; }
@@ -30,9 +27,9 @@
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th, td { padding: 12px 10px; border: 1px solid #334155; text-align: center; }
         th { background: #1E293B; color: #94a3b8; font-weight: 600; }
-        .nama-col { text-align: left; position: sticky; left: 0; background: #1E293B; z-index: 5; font-weight: bold; min-width: 100px; border-right: 2px solid #334155; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1E293B; z-index: 5; font-weight: bold; min-width: 110px; border-right: 2px solid #334155; }
         
-        .status-isi { color: var(--success); font-weight: bold; background: rgba(45, 212, 191, 0.05); }
+        .status-isi { color: var(--success); font-weight: bold; }
         .status-kosong { color: #475569; }
 
         tfoot tr { background: #0F172A; font-weight: 800; }
@@ -61,16 +58,15 @@
             <h2 id="total-uang">Rp 0</h2>
         </div>
         <div class="summary-card">
-            <small>Status Data</small>
-            <h2 id="label-kelompok">...</h2>
+            <small>Monitoring</small>
+            <h2 id="status-aktif">AKTIF</h2>
         </div>
     </div>
 
     <div class="filter-section">
         <select id="pilih-kelompok" onchange="loadAdminData()">
-            <option value="">Pilih Kelompok...</option>
+            <option value="">-- Pilih Kelompok --</option>
         </select>
-        
         <select id="pilih-bulan" onchange="loadAdminData()">
             <option value="0">Januari</option>
             <option value="1">Februari</option>
@@ -90,28 +86,22 @@
     <div class="table-container">
         <table>
             <thead>
-                <tr id="head-tgl">
-                    <th class="nama-col">Nama Warga</th>
-                </tr>
+                <tr id="head-tgl"><th class="nama-col">Nama Warga</th></tr>
             </thead>
             <tbody id="body-rekap">
-                <tr><td colspan="5" style="padding:40px;">Pilih kelompok terlebih dahulu.</td></tr>
+                <tr><td colspan="2" style="padding:40px;">Pilih kelompok untuk melihat data.</td></tr>
             </tbody>
             <tfoot>
-                <tr id="foot-total">
-                    <td class="nama-col">TOTAL</td>
-                </tr>
+                <tr id="foot-total"><td class="nama-col">TOTAL</td></tr>
             </tfoot>
         </table>
     </div>
 
-    <div class="copyright">
-        © 2026 <span>Sekawan Technologies</span>
-    </div>
+    <div class="copyright">© 2026 <span>Sekawan Technologies</span></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAxFU7HD_9uVHWGXEO0ZtJja6rdqKHurTk",
@@ -126,91 +116,72 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Proteksi
-        const user = JSON.parse(localStorage.getItem("jimpitan_user"));
-        if(!user || user.role !== "admin") window.location.href = "login.html";
+        // Auto Load List Kelompok
+        onValue(ref(db, 'daftar_warga'), (snapshot) => {
+            const data = snapshot.val();
+            const select = document.getElementById('pilih-kelompok');
+            let options = '<option value="">-- Pilih Kelompok --</option>';
+            if(data) Object.keys(data).forEach(k => options += `<option value="${k}">${k.toUpperCase()}</option>`);
+            select.innerHTML = options;
+        });
 
-        // 1. Ambil List Kelompok Secara Otomatis dari Firebase
-        function initKelompok() {
-            const listRef = ref(db, 'daftar_warga');
-            onValue(listRef, (snapshot) => {
-                const data = snapshot.val();
-                const selectKel = document.getElementById('pilih-kelompok');
-                let options = '<option value="">-- Pilih Kelompok --</option>';
-                
-                if (data) {
-                    Object.keys(data).forEach(kel => {
-                        options += `<option value="${kel}">${kel.toUpperCase()}</option>`;
-                    });
-                }
-                selectKel.innerHTML = options;
-            });
-        }
-
-        // 2. Fungsi Utama Load Data
         window.loadAdminData = function() {
             const kel = document.getElementById('pilih-kelompok').value;
             const bln = document.getElementById('pilih-bulan').value;
             const thn = new Date().getFullYear();
-            
             if(!kel) return;
 
-            document.getElementById('label-kelompok').innerText = "LOAD...";
-
-            // Ambil Nama-nama Warga di Kelompok Itu
             onValue(ref(db, `daftar_warga/${kel}`), (snapWarga) => {
-                const listWarga = snapWarga.val() || [];
-                const listArr = Array.isArray(listWarga) ? listWarga : Object.values(listWarga);
-                
-                // Ambil Nilai Jimpitan
+                const listWarga = Array.isArray(snapWarga.val()) ? snapWarga.val() : Object.values(snapWarga.val() || {});
                 onValue(ref(db, `data_jimpitan/${kel}/${thn}/${bln}`), (snapData) => {
-                    renderMatrix(listArr.sort(), snapData.val() || {}, bln, thn);
-                    document.getElementById('label-kelompok').innerText = "AKTIF";
+                    renderMatrix(listWarga.sort(), snapData.val() || {});
                 });
             });
         };
 
-        function renderMatrix(listWarga, dataJimpitan, bln, thn) {
-            const daysInMonth = new Date(thn, parseInt(bln) + 1, 0).getDate();
+        function renderMatrix(listWarga, dataJimpitan) {
+            // Ambil semua tanggal unik yang SUDAH ADA datanya (history pengambilan)
+            let tanggalTersedia = new Set();
+            Object.values(dataJimpitan).forEach(warga => {
+                Object.keys(warga).forEach(tgl => tanggalTersedia.add(parseInt(tgl)));
+            });
             
-            // Header Tanggal
+            // Urutkan tanggal dari kecil ke besar
+            let sortedDates = Array.from(tanggalTersedia).sort((a, b) => a - b);
+
+            // Header: Hanya tanggal yang tersedia
             let hH = `<th class="nama-col">Nama Warga</th>`;
-            for (let i = 1; i <= daysInMonth; i++) hH += `<th>${i}</th>`;
+            sortedDates.forEach(tgl => hH += `<th>${tgl}</th>`);
             document.getElementById('head-tgl').innerHTML = hH;
 
+            // Body
             let hB = "";
             let totalBulanIni = 0;
-            let totalPerTgl = Array(daysInMonth + 1).fill(0);
+            let totalPerTgl = {};
+            sortedDates.forEach(t => totalPerTgl[t] = 0);
 
             listWarga.forEach(nama => {
                 hB += `<tr><td class="nama-col">${nama}</td>`;
                 const history = dataJimpitan[nama] || {};
-                for (let i = 1; i <= daysInMonth; i++) {
-                    let nilai = history[i] || 0;
-                    totalPerTgl[i] += nilai;
+                sortedDates.forEach(tgl => {
+                    let nilai = history[tgl] || 0;
+                    totalPerTgl[tgl] += nilai;
                     totalBulanIni += nilai;
                     hB += `<td class="${nilai > 0 ? 'status-isi' : 'status-kosong'}">${nilai > 0 ? nilai : '-'}</td>`;
-                }
+                });
                 hB += `</tr>`;
             });
-            document.getElementById('body-rekap').innerHTML = hB || '<tr><td colspan="5">Kosong</td></tr>';
+            document.getElementById('body-rekap').innerHTML = hB || `<tr><td colspan="${sortedDates.length + 1}">Belum ada tarikan.</td></tr>`;
 
-            // Footer Total
+            // Footer
             let hF = `<td class="nama-col">TOTAL</td>`;
-            for (let i = 1; i <= daysInMonth; i++) {
-                hF += `<td>${totalPerTgl[i]}</td>`;
-            }
+            sortedDates.forEach(tgl => hF += `<td>${totalPerTgl[tgl]}</td>`);
             document.getElementById('foot-total').innerHTML = hF;
             document.getElementById('total-uang').innerText = "Rp " + totalBulanIni.toLocaleString('id-ID');
         }
 
-        window.logout = function() {
-            localStorage.clear();
-            window.location.href = "login.html";
-        };
-
+        window.logout = function() { localStorage.clear(); window.location.href = "login.html"; };
         document.getElementById('pilih-bulan').value = new Date().getMonth();
-        initKelompok();
     </script>
 </body>
 </html>
