@@ -17,17 +17,17 @@
         .btn-scan { background: var(--accent); box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3); }
         .btn-logout { background: #334155; width: 60px; flex: none; color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
 
-        .stat-box { background: linear-gradient(135deg, #1E293B, #0F172A); padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 10px; border: 1px solid #334155; }
+        .stat-box { background: linear-gradient(135deg, #1E293B, #0F172A); padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
         .stat-box h2 { margin: 5px 0; color: var(--accent); font-size: 28px; }
 
         .scroll-container { overflow-x: auto; background: var(--card); border-radius: 12px; border: 1px solid #334155; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th, td { padding: 12px 8px; border: 1px solid #334155; text-align: center; }
         th { background: #1e293b; color: #94a3b8; }
-        .nama-col { text-align: left; position: sticky; left: 0; background: #1e293b; z-index: 10; min-width: 100px; font-weight: bold; border-right: 2px solid #334155; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1e293b; z-index: 10; min-width: 110px; font-weight: bold; border-right: 2px solid #334155; }
         
         .isi { color: var(--accent); font-weight: bold; background: rgba(0, 184, 148, 0.05); }
-        select { background: #1e293b; color: white; border: 1px solid #334155; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; outline: none; }
+        select { background: #1e293b; color: white; border: 1px solid #334155; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; outline: none; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -42,7 +42,7 @@
     </div>
 
     <div class="stat-box">
-        <small style="color: #94a3b8;">HASIL BULAN INI (<span id="label-kel">...</span>)</small>
+        <small style="color: #94a3b8; letter-spacing: 1px;">HASIL BULAN INI (<span id="label-kel">...</span>)</small>
         <h2 id="total-kelompok">Rp 0</h2>
     </div>
 
@@ -58,7 +58,7 @@
     <div class="scroll-container">
         <table>
             <thead><tr id="head-tgl"><th class="nama-col">Nama Warga</th></tr></thead>
-            <tbody id="body-rekap"><tr><td colspan="5" style="padding:20px;">Memuat data...</td></tr></tbody>
+            <tbody id="body-rekap"><tr><td colspan="5" style="padding:40px;">Memuat data...</td></tr></tbody>
             <tfoot><tr id="foot-total" style="font-weight:bold; background:#1e293b;"><td class="nama-col">TOTAL</td></tr></tfoot>
         </table>
     </div>
@@ -80,8 +80,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+        // Map nama hari ke index (Minggu=0, Senin=1, dst)
         const hariMap = {"minggu":0, "senin":1, "selasa":2, "rabu":3, "kamis":4, "jumat":5, "sabtu":6};
+        const user = JSON.parse(localStorage.getItem("jimpitan_user"));
 
         if(!user) {
             window.location.href = "index.html";
@@ -95,54 +96,64 @@
             const bln = parseInt(document.getElementById('pilih-bulan').value);
             const thn = new Date().getFullYear();
             const kelompok = user.kelompok.toLowerCase();
-            const dayToFind = hariMap[kelompok];
+            const targetHari = hariMap[kelompok];
 
-            // 1. Ambil SEMUA warga dari folder 'all'
+            // 1. Ambil Nama Warga dari folder 'all' (Sesuai Gambar Database Kamu)
             const snapWarga = await get(ref(db, `daftar_warga/all`));
             const listWarga = snapWarga.val() ? Object.values(snapWarga.val()) : [];
 
-            // 2. Generate tanggal sesuai hari ronda kelompok
-            let jadwalTgl = [];
-            let d = new Date(thn, bln, 1);
-            while(d.getMonth() === bln) {
-                if(d.getDay() === dayToFind) jadwalTgl.push(d.getDate());
-                d.setDate(d.getDate() + 1);
+            // 2. Cari Semua Tanggal yang Sesuai dengan Hari Kelompok di Bulan Ini
+            let jadwalTanggal = [];
+            let date = new Date(thn, bln, 1);
+            while (date.getMonth() === bln) {
+                if (date.getDay() === targetHari) {
+                    jadwalTanggal.push(date.getDate());
+                }
+                date.setDate(date.getDate() + 1);
             }
 
-            // 3. Ambil riwayat tarikan
+            // 3. Ambil Data Jimpitan Riwayat
             onValue(ref(db, `data_jimpitan/${kelompok}/${thn}/${bln}`), (snap) => {
-                renderTable(listWarga.sort(), snap.val() || {}, jadwalTgl);
+                const dataJimpitan = snap.val() || {};
+                renderTable(listWarga.sort(), dataJimpitan, jadwalTanggal);
             });
         };
 
         function renderTable(list, data, dates) {
+            // Render Header Tanggal Otomatis (Muncul meskipun data kosong)
             let hH = `<th class="nama-col">Nama Warga</th>`;
-            dates.forEach(tgl => hH += `<th>${tgl}</th>`);
+            dates.forEach(d => hH += `<th>${d}</th>`);
             document.getElementById('head-tgl').innerHTML = hH;
 
-            let hB = "", totalSeluruh = 0, colTotal = {};
-            dates.forEach(tgl => colTotal[tgl] = 0);
+            let hB = "", totalBulanIni = 0, colTotals = {};
+            dates.forEach(d => colTotals[d] = 0);
 
             list.forEach(nama => {
                 hB += `<tr><td class="nama-col">${nama}</td>`;
-                dates.forEach(tgl => {
-                    let nilai = (data[nama] && data[nama][tgl]) ? data[nama][tgl] : 0;
-                    colTotal[tgl] += nilai;
-                    totalSeluruh += nilai;
+                dates.forEach(d => {
+                    let nilai = (data[nama] && data[nama][d]) ? data[nama][d] : 0;
+                    colTotals[d] += nilai;
+                    totalBulanIni += nilai;
                     hB += `<td class="${nilai > 0 ? 'isi' : ''}">${nilai > 0 ? nilai : '-'}</td>`;
                 });
                 hB += `</tr>`;
             });
-            document.getElementById('body-rekap').innerHTML = hB;
+            document.getElementById('body-rekap').innerHTML = hB || '<tr><td colspan="5">Data warga tidak ditemukan</td></tr>';
 
+            // Render Footer Total
             let hF = `<td class="nama-col">TOTAL</td>`;
-            dates.forEach(tgl => hF += `<td>${colTotal[tgl]}</td>`);
+            dates.forEach(d => hF += `<td>${colTotals[d]}</td>`);
             document.getElementById('foot-total').innerHTML = hF;
-            document.getElementById('total-kelompok').innerText = "Rp " + totalSeluruh.toLocaleString('id-ID');
+            
+            // Update Card Angka di Atas
+            document.getElementById('total-kelompok').innerText = "Rp " + totalBulanIni.toLocaleString('id-ID');
         }
 
         window.logout = function() {
-            if(confirm("Keluar?")) { localStorage.clear(); window.location.href = "index.html"; }
+            if(confirm("Keluar dari aplikasi?")) {
+                localStorage.clear();
+                window.location.href = "index.html";
+            }
         };
     </script>
 </body>
