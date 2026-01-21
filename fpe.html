@@ -39,7 +39,7 @@
         <h2 id="total-kelompok">Rp 0</h2>
     </div>
 
-    <select id="pilih-bulan" onchange="loadData()">
+    <select id="pilih-bulan">
         <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
         <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
         <option value="6">Juli</option><option value="7">Agustus</option><option value="8">September</option>
@@ -49,7 +49,7 @@
     <div class="scroll-container">
         <table>
             <thead><tr id="head-tgl"><th class="nama-col">Nama Warga</th></tr></thead>
-            <tbody id="body-rekap"><tr><td colspan="5" style="padding:40px;">Memuat warga...</td></tr></tbody>
+            <tbody id="body-rekap"></tbody>
             <tfoot><tr id="foot-total" style="font-weight:bold; background:#1e293b;"><td class="nama-col">TOTAL</td></tr></tfoot>
         </table>
     </div>
@@ -71,78 +71,100 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Map hari yang sangat ketat
+        // Map Hari
         const hariMap = { "minggu":0, "senin":1, "selasa":2, "rabu":3, "kamis":4, "jumat":5, "sabtu":6 };
+        
+        // Ambil data user
         const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+        const bulanSelect = document.getElementById('pilih-bulan');
 
         if(!user) {
             window.location.href = "index.html";
         } else {
             document.getElementById('label-kel').innerText = user.kelompok.toUpperCase();
-            document.getElementById('pilih-bulan').value = new Date().getMonth();
-            setTimeout(() => window.loadData(), 300);
+            bulanSelect.value = new Date().getMonth();
+            
+            // PENTING: Jalankan fungsi loadData setelah DOM & Firebase siap
+            initApp();
         }
 
-        window.loadData = async function() {
-            const bln = parseInt(document.getElementById('pilih-bulan').value);
+        function initApp() {
+            // Pasang event listener manual agar saat bulan ganti, data reload
+            bulanSelect.addEventListener('change', loadData);
+            loadData();
+        }
+
+        async function loadData() {
+            const bln = parseInt(bulanSelect.value);
             const thn = new Date().getFullYear();
             
-            // LOGIKA PENYELAMAT: Bersihkan nama kelompok dari apapun
-            let klp = user.kelompok.toLowerCase().replace(/kelompok|group|grup/g, "").trim();
-            const targetHari = hariMap[klp];
+            // Bersihkan nama kelompok agar match dengan hariMap
+            const kelompokAsli = user.kelompok.toLowerCase().trim();
+            let kelompokHanyaHari = kelompokAsli;
+            
+            // Jika ada kata "kelompok senin", ambil "senin" nya saja
+            if(kelompokAsli.includes(" ")) {
+                let parts = kelompokAsli.split(" ");
+                kelompokHanyaHari = parts[parts.length - 1];
+            }
 
-            console.log("Petugas Login Sebagai:", klp, "Index Hari:", targetHari);
+            const targetHariIndex = hariMap[kelompokHanyaHari];
 
-            // 1. Ambil Warga dari folder 'all'
-            const snapWarga = await get(ref(db, `daftar_warga/all`));
+            // 1. Ambil Nama Warga (Folder 'all')
+            const snapWarga = await get(ref(db, 'daftar_warga/all'));
             let listWarga = [];
-            if(snapWarga.exists()){
-                const d = snapWarga.val();
-                listWarga = Array.isArray(d) ? d : Object.values(d);
+            if(snapWarga.exists()) {
+                const dataW = snapWarga.val();
+                listWarga = Array.isArray(dataW) ? dataW : Object.values(dataW);
+                listWarga.sort();
             }
 
-            // 2. Generate Tanggal (Sama persis dengan logika Admin yang lancar)
+            // 2. LOGIKA ADMIN: Generate Tanggal sesuai Kalender
             let jadwalTanggal = [];
-            let tempDate = new Date(thn, bln, 1);
-            while (tempDate.getMonth() === bln) {
-                if (tempDate.getDay() === targetHari) {
-                    jadwalTanggal.push(tempDate.getDate());
+            let d = new Date(thn, bln, 1);
+            while (d.getMonth() === bln) {
+                if (d.getDay() === targetHariIndex) {
+                    jadwalTanggal.push(d.getDate());
                 }
-                tempDate.setDate(tempDate.getDate() + 1);
+                d.setDate(d.getDate() + 1);
             }
 
-            // 3. Ambil Data Realtime
-            onValue(ref(db, `data_jimpitan/${klp}/${thn}/${bln}`), (snap) => {
-                renderTable(listWarga.sort(), snap.val() || {}, jadwalTanggal);
+            // 3. Tarik Data Jimpitan
+            const pathData = `data_jimpitan/${kelompokHanyaHari}/${thn}/${bln}`;
+            onValue(ref(db, pathData), (snapshot) => {
+                const dataJimpitan = snapshot.val() || {};
+                renderTabel(listWarga, dataJimpitan, jadwalTanggal);
             });
-        };
+        }
 
-        function renderTable(list, data, dates) {
-            // Render Header
-            let hH = `<th class="nama-col">Nama Warga</th>`;
-            dates.forEach(d => hH += `<th>${d}</th>`);
-            document.getElementById('head-tgl').innerHTML = hH;
+        function renderTabel(warga, jimpitan, tglList) {
+            // Header
+            let headerHtml = `<th class="nama-col">Nama Warga</th>`;
+            tglList.forEach(tgl => headerHtml += `<th>${tgl}</th>`);
+            document.getElementById('head-tgl').innerHTML = headerHtml;
 
-            let hB = "", totalBln = 0, colTotals = {};
-            dates.forEach(d => colTotals[d] = 0);
+            let bodyHtml = "";
+            let totalSemua = 0;
+            let totalPerTgl = {};
+            tglList.forEach(tgl => totalPerTgl[tgl] = 0);
 
-            list.forEach(nama => {
-                hB += `<tr><td class="nama-col">${nama}</td>`;
-                dates.forEach(d => {
-                    let v = (data[nama] && data[nama][d]) ? data[nama][d] : 0;
-                    colTotals[d] += v;
-                    totalBln += v;
-                    hB += `<td class="${v > 0 ? 'isi' : ''}">${v > 0 ? v : '-'}</td>`;
+            warga.forEach(nama => {
+                bodyHtml += `<tr><td class="nama-col">${nama}</td>`;
+                tglList.forEach(tgl => {
+                    let nominal = (jimpitan[nama] && jimpitan[nama][tgl]) ? jimpitan[nama][tgl] : 0;
+                    totalPerTgl[tgl] += nominal;
+                    totalSemua += nominal;
+                    bodyHtml += `<td class="${nominal > 0 ? 'isi' : ''}">${nominal > 0 ? nominal : '-'}</td>`;
                 });
-                hB += `</tr>`;
+                bodyHtml += `</tr>`;
             });
-            document.getElementById('body-rekap').innerHTML = hB;
+            document.getElementById('body-rekap').innerHTML = bodyHtml;
 
-            // Render Footer
-            let hF = `<td class="nama-col">TOTAL</td>`;
-            dates.forEach(d => hF += `<td>${colTotals[d]}</td>`);
-            document.getElementById('foot-total').innerHTML = hF;
-            document.getElementById('total-kelompok').innerText = "Rp " + totalBln.toLocaleString('id-ID');
+            // Footer
+            let footerHtml = `<td class="nama-col">TOTAL</td>`;
+            tglList.forEach(tgl => footerHtml += `<td>${totalPerTgl[tgl]}</td>`);
+            document.getElementById('foot-total').innerHTML = footerHtml;
+            document.getElementById('total-kelompok').innerText = "Rp " + totalSemua.toLocaleString('id-ID');
         }
 
         window.logout = function() {
