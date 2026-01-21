@@ -112,7 +112,7 @@
         const session = localStorage.getItem("jimpitan_user");
         if (session) {
             const userData = JSON.parse(session);
-            window.location.href = (userData.role === "admin") ? "fadmin.html" : "fpetugas.html";
+            window.location.href = (userData.role === "admin") ? "admin.html" : "petugas.html";
         }
 
         // FUNGSI LOGIN
@@ -144,9 +144,9 @@
 
                         // Redirect sesuai role
                         if(data.role === "admin") {
-                            window.location.href = "fadmin.html";
+                            window.location.href = "admin.html";
                         } else {
-                            window.location.href = "fpetugas.html";
+                            window.location.href = "petugas.html";
                         }
                     } else {
                         alert("Password salah!");
