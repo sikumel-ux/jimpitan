@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin | SEJIWA</title>
+    <title>Panel Bendahara | SEJIWA</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0F172A">
@@ -21,26 +21,25 @@
         .summary-card h2 { margin: 5px 0 0; font-size: 18px; color: var(--success); }
 
         .admin-nav { display: flex; gap: 10px; margin-bottom: 20px; }
-        .btn-nav { flex: 1; background: #334155; color: white; border: none; padding: 10px; border-radius: 8px; text-decoration: none; text-align: center; font-size: 12px; font-weight: bold; }
+        .btn-nav { flex: 1; background: #334155; color: white; border: none; padding: 10px; border-radius: 8px; text-decoration: none; text-align: center; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px; }
 
         .filter-section { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; display: flex; gap: 10px; }
-        select { flex: 1; background: #0F172A; color: white; border: 1px solid #334155; padding: 10px; border-radius: 8px; outline: none; font-size: 13px; }
+        select { flex: 1; background: #0F172A; color: white; border: 1px solid #334155; padding: 12px; border-radius: 10px; outline: none; font-size: 14px; }
 
-        .table-container { background: var(--card); border-radius: 12px; overflow-x: auto; border: 1px solid #334155; margin-bottom: 20px; }
+        .table-container { background: var(--card); border-radius: 15px; overflow-x: auto; border: 1px solid #334155; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th, td { padding: 12px 10px; border: 1px solid #334155; text-align: center; }
         th { background: #1E293B; color: #94a3b8; font-weight: 600; }
-        .nama-col { text-align: left; position: sticky; left: 0; background: #1E293B; z-index: 5; font-weight: bold; min-width: 110px; border-right: 2px solid #334155; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1E293B; z-index: 5; font-weight: bold; min-width: 100px; border-right: 2px solid #334155; }
         
-        .status-isi { color: var(--success); font-weight: bold; }
+        .status-isi { color: var(--success); font-weight: bold; background: rgba(45, 212, 191, 0.05); }
         .status-kosong { color: #475569; }
 
-        tfoot tr { background: #0F172A; }
-        tfoot td { color: var(--accent); font-weight: 800; border-top: 2px solid var(--accent); }
+        tfoot tr { background: #0F172A; font-weight: 800; }
+        tfoot td { color: var(--accent); border-top: 2px solid var(--accent); }
 
         .btn-logout { background: #334155; color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.2); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; }
-
-        .copyright { text-align: center; margin-top: auto; padding: 20px 0; font-size: 10px; color: #475569; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+        .copyright { text-align: center; margin-top: auto; padding: 20px 0; font-size: 10px; color: #475569; letter-spacing: 1px; text-transform: uppercase; }
         .copyright span { color: var(--accent); }
     </style>
 </head>
@@ -52,8 +51,8 @@
     </div>
 
     <div class="admin-nav">
-        <a href="input-user.html" class="btn-nav"><i class="fa-solid fa-user-gear"></i> KELOLA AKUN</a>
-        <a href="input-warga.html" class="btn-nav"><i class="fa-solid fa-users"></i> DATA WARGA</a>
+        <a href="input-user.html" class="btn-nav"><i class="fa-solid fa-user-gear"></i> AKUN</a>
+        <a href="input-warga.html" class="btn-nav"><i class="fa-solid fa-users"></i> WARGA</a>
     </div>
 
     <div class="summary-grid">
@@ -62,17 +61,16 @@
             <h2 id="total-uang">Rp 0</h2>
         </div>
         <div class="summary-card">
-            <small>Monitoring</small>
-            <h2 id="label-kelompok">-</h2>
+            <small>Status Data</small>
+            <h2 id="label-kelompok">...</h2>
         </div>
     </div>
 
     <div class="filter-section">
         <select id="pilih-kelompok" onchange="loadAdminData()">
-            <option value="kelompok_a">Kelompok A</option>
-            <option value="kelompok_b">Kelompok B</option>
-            <option value="kelompok_c">Kelompok C</option>
-            </select>
+            <option value="">Pilih Kelompok...</option>
+        </select>
+        
         <select id="pilih-bulan" onchange="loadAdminData()">
             <option value="0">Januari</option>
             <option value="1">Februari</option>
@@ -97,7 +95,7 @@
                 </tr>
             </thead>
             <tbody id="body-rekap">
-                <tr><td colspan="5" style="padding:40px;">Memuat Data...</td></tr>
+                <tr><td colspan="5" style="padding:40px;">Pilih kelompok terlebih dahulu.</td></tr>
             </tbody>
             <tfoot>
                 <tr id="foot-total">
@@ -113,7 +111,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAxFU7HD_9uVHWGXEO0ZtJja6rdqKHurTk",
@@ -128,30 +126,46 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Proteksi Role
+        // Proteksi
         const user = JSON.parse(localStorage.getItem("jimpitan_user"));
-        if(!user || user.role !== "admin") {
-            window.location.href = "index.html";
+        if(!user || user.role !== "admin") window.location.href = "login.html";
+
+        // 1. Ambil List Kelompok Secara Otomatis dari Firebase
+        function initKelompok() {
+            const listRef = ref(db, 'daftar_warga');
+            onValue(listRef, (snapshot) => {
+                const data = snapshot.val();
+                const selectKel = document.getElementById('pilih-kelompok');
+                let options = '<option value="">-- Pilih Kelompok --</option>';
+                
+                if (data) {
+                    Object.keys(data).forEach(kel => {
+                        options += `<option value="${kel}">${kel.toUpperCase()}</option>`;
+                    });
+                }
+                selectKel.innerHTML = options;
+            });
         }
 
-        // Set Default Bulan
-        document.getElementById('pilih-bulan').value = new Date().getMonth();
-
+        // 2. Fungsi Utama Load Data
         window.loadAdminData = function() {
             const kel = document.getElementById('pilih-kelompok').value;
             const bln = document.getElementById('pilih-bulan').value;
             const thn = new Date().getFullYear();
             
-            document.getElementById('label-kelompok').innerText = kel.toUpperCase().replace('_', ' ');
+            if(!kel) return;
 
-            // 1. Ambil Daftar Warga dari Kelompok Terpilih
+            document.getElementById('label-kelompok').innerText = "LOAD...";
+
+            // Ambil Nama-nama Warga di Kelompok Itu
             onValue(ref(db, `daftar_warga/${kel}`), (snapWarga) => {
                 const listWarga = snapWarga.val() || [];
                 const listArr = Array.isArray(listWarga) ? listWarga : Object.values(listWarga);
                 
-                // 2. Ambil Data Jimpitan
+                // Ambil Nilai Jimpitan
                 onValue(ref(db, `data_jimpitan/${kel}/${thn}/${bln}`), (snapData) => {
                     renderMatrix(listArr.sort(), snapData.val() || {}, bln, thn);
+                    document.getElementById('label-kelompok').innerText = "AKTIF";
                 });
             });
         };
@@ -159,7 +173,7 @@
         function renderMatrix(listWarga, dataJimpitan, bln, thn) {
             const daysInMonth = new Date(thn, parseInt(bln) + 1, 0).getDate();
             
-            // Header
+            // Header Tanggal
             let hH = `<th class="nama-col">Nama Warga</th>`;
             for (let i = 1; i <= daysInMonth; i++) hH += `<th>${i}</th>`;
             document.getElementById('head-tgl').innerHTML = hH;
@@ -168,27 +182,23 @@
             let totalBulanIni = 0;
             let totalPerTgl = Array(daysInMonth + 1).fill(0);
 
-            if (listWarga.length === 0) {
-                hB = `<tr><td colspan="${daysInMonth + 1}" style="padding:40px;">Belum ada warga di kelompok ini.</td></tr>`;
-            } else {
-                listWarga.forEach(nama => {
-                    hB += `<tr><td class="nama-col">${nama}</td>`;
-                    const history = dataJimpitan[nama] || {};
-                    for (let i = 1; i <= daysInMonth; i++) {
-                        let nilai = history[i] || 0;
-                        totalPerTgl[i] += nilai;
-                        totalBulanIni += nilai;
-                        hB += `<td class="${nilai > 0 ? 'status-isi' : 'status-kosong'}">${nilai > 0 ? nilai.toLocaleString('id-ID') : '-'}</td>`;
-                    }
-                    hB += `</tr>`;
-                });
-            }
-            document.getElementById('body-rekap').innerHTML = hB;
+            listWarga.forEach(nama => {
+                hB += `<tr><td class="nama-col">${nama}</td>`;
+                const history = dataJimpitan[nama] || {};
+                for (let i = 1; i <= daysInMonth; i++) {
+                    let nilai = history[i] || 0;
+                    totalPerTgl[i] += nilai;
+                    totalBulanIni += nilai;
+                    hB += `<td class="${nilai > 0 ? 'status-isi' : 'status-kosong'}">${nilai > 0 ? nilai : '-'}</td>`;
+                }
+                hB += `</tr>`;
+            });
+            document.getElementById('body-rekap').innerHTML = hB || '<tr><td colspan="5">Kosong</td></tr>';
 
-            // Footer
+            // Footer Total
             let hF = `<td class="nama-col">TOTAL</td>`;
             for (let i = 1; i <= daysInMonth; i++) {
-                hF += `<td>${totalPerTgl[i] > 0 ? totalPerTgl[i].toLocaleString('id-ID') : '0'}</td>`;
+                hF += `<td>${totalPerTgl[i]}</td>`;
             }
             document.getElementById('foot-total').innerHTML = hF;
             document.getElementById('total-uang').innerText = "Rp " + totalBulanIni.toLocaleString('id-ID');
@@ -196,10 +206,11 @@
 
         window.logout = function() {
             localStorage.clear();
-            window.location.href = "index.html";
+            window.location.href = "login.html";
         };
 
-        loadAdminData();
+        document.getElementById('pilih-bulan').value = new Date().getMonth();
+        initKelompok();
     </script>
 </body>
 </html>
