@@ -21,8 +21,11 @@
         .btn-scan { background: var(--accent); box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3); }
         .btn-logout { background: #334155; width: 60px; flex: none; color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
 
-        .stat-box { background: linear-gradient(135deg, #1E293B, #0F172A); padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
+        .stat-box { background: linear-gradient(135deg, #1E293B, #0F172A); padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 10px; border: 1px solid #334155; }
         .stat-box h2 { margin: 5px 0; color: var(--accent); font-size: 28px; }
+
+        .admin-link { text-align: center; margin-bottom: 20px; }
+        .admin-link a { color: #94a3b8; text-decoration: none; font-size: 13px; font-weight: 600; }
 
         /* Tabel Matriks */
         .scroll-container { overflow-x: auto; background: var(--card); border-radius: 12px; border: 1px solid #334155; }
@@ -49,8 +52,12 @@
     </div>
 
     <div class="stat-box">
-        <small style="color: #94a3b8; letter-spacing: 1px;">TOTAL HASIL KELOMPOK <span id="label-kel">...</span></small>
+        <small style="color: #94a3b8; letter-spacing: 1px;">HASIL BULAN INI (<span id="label-kel">...</span>)</small>
         <h2 id="total-kelompok">Rp 0</h2>
+    </div>
+
+    <div class="admin-link">
+        <a href="input-warga.html"><i class="fa-solid fa-users-gear"></i> KELOLA DAFTAR WARGA</a>
     </div>
 
     <select id="pilih-bulan" onchange="loadData()">
@@ -76,7 +83,7 @@
                 </tr>
             </thead>
             <tbody id="body-rekap">
-                <tr><td colspan="5" style="padding:20px;">Memuat data dari Firebase...</td></tr>
+                <tr><td colspan="5" style="padding:20px;">Memuat data...</td></tr>
             </tbody>
             <tfoot>
                 <tr id="foot-total" style="font-weight:bold; background:#1e293b;">
@@ -90,7 +97,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Konfigurasi Firebase
+        // Konfigurasi Database Singapura
         const firebaseConfig = {
             apiKey: "AIzaSyAxFU7HD_9uVHWGXEO0ZtJja6rdqKHurTk",
             authDomain: "jimpitan-sekawan.firebaseapp.com",
@@ -98,18 +105,16 @@
             storageBucket: "jimpitan-sekawan.firebasestorage.app",
             messagingSenderId: "634934433280",
             appId: "1:634934433280:web:abde3734bd277d3e9b2ae5",
-            databaseURL: "https://jimpitan-sekawan-default-rtdb.firebaseio.com"
+            databaseURL: "https://jimpitan-sekawan-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Register Service Worker (PWA)
+        // PWA Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('PWA Service Worker Aktif!'))
-                    .catch(err => console.log('SW Gagal:', err));
+                navigator.serviceWorker.register('sw.js');
             });
         }
 
@@ -120,8 +125,6 @@
         } else {
             document.getElementById('label-kel').innerText = user.kelompok.toUpperCase();
             document.getElementById('pilih-bulan').value = new Date().getMonth();
-            
-            // Tunggu sebentar agar fungsi terpasang ke window
             setTimeout(() => window.loadData(), 100);
         }
 
@@ -130,39 +133,44 @@
             const thn = new Date().getFullYear();
             const kelompok = user.kelompok;
 
-            const dataRef = ref(db, `data_jimpitan/${kelompok}/${thn}/${bln}`);
-            
-            onValue(dataRef, (snapshot) => {
-                const data = snapshot.val() || {};
-                renderTable(data, bln, thn);
-            }, (error) => {
-                console.error(error);
-                document.getElementById('body-rekap').innerHTML = `<tr><td colspan="5">Gagal memuat data.</td></tr>`;
+            // 1. Ambil Daftar Warga Tetap dari input-warga.html
+            const wargaRef = ref(db, `daftar_warga/${kelompok}`);
+            onValue(wargaRef, (snapshotWarga) => {
+                const listWarga = snapshotWarga.val() || [];
+                const listArr = Array.isArray(listWarga) ? listWarga : Object.values(listWarga);
+                
+                // 2. Ambil Data Jimpitan
+                const dataRef = ref(db, `data_jimpitan/${kelompok}/${thn}/${bln}`);
+                onValue(dataRef, (snapshotData) => {
+                    const dataJimpitan = snapshotData.val() || {};
+                    renderTable(listArr.sort(), dataJimpitan, bln, thn);
+                });
             });
         };
 
-        function renderTable(data, bln, thn) {
-            const listWarga = Object.keys(data);
+        function renderTable(listWarga, dataJimpitan, bln, thn) {
             const daysInMonth = new Date(thn, parseInt(bln) + 1, 0).getDate();
             
+            // Header Tanggal
             let hH = `<th class="nama-col">Nama Warga</th>`;
             for (let i = 1; i <= daysInMonth; i++) hH += `<th>${i}</th>`;
             document.getElementById('head-tgl').innerHTML = hH;
 
             let hB = "";
-            let totalSeluruhKelompok = 0;
+            let totalSeluruh = 0;
             let totalPerTgl = Array(daysInMonth + 1).fill(0);
 
             if (listWarga.length === 0) {
-                hB = `<tr><td colspan="${daysInMonth + 1}" style="padding:40px; color:#94a3b8;">Kosong.</td></tr>`;
+                hB = `<tr><td colspan="${daysInMonth + 1}" style="padding:20px;">Belum ada daftar warga. <a href="input-warga.html" style="color:var(--accent)">Isi di sini</a></td></tr>`;
             } else {
                 listWarga.forEach(nama => {
                     hB += `<tr><td class="nama-col">${nama}</td>`;
-                    const dataHarian = data[nama] || {};
+                    const history = dataJimpitan[nama] || {};
+
                     for (let i = 1; i <= daysInMonth; i++) {
-                        let nilai = dataHarian[i] || 0;
+                        let nilai = history[i] || 0;
                         totalPerTgl[i] += nilai;
-                        totalSeluruhKelompok += nilai;
+                        totalSeluruh += nilai;
                         hB += `<td class="${nilai > 0 ? 'isi' : 'kosong'}">${nilai > 0 ? nilai.toLocaleString('id-ID') : '-'}</td>`;
                     }
                     hB += `</tr>`;
@@ -170,12 +178,13 @@
             }
             document.getElementById('body-rekap').innerHTML = hB;
 
+            // Footer Total
             let hF = `<td class="nama-col">TOTAL</td>`;
             for (let i = 1; i <= daysInMonth; i++) {
                 hF += `<td>${totalPerTgl[i] > 0 ? totalPerTgl[i].toLocaleString('id-ID') : '0'}</td>`;
             }
             document.getElementById('foot-total').innerHTML = hF;
-            document.getElementById('total-kelompok').innerText = "Rp " + totalSeluruhKelompok.toLocaleString('id-ID');
+            document.getElementById('total-kelompok').innerText = "Rp " + totalSeluruh.toLocaleString('id-ID');
         }
 
         window.logout = function() {
