@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Petugas | SEJIWA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #2DD4BF; --text: #F8FAFC; --success: #2DD4BF; --danger: #F87171; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        
+        /* Gaya Greeting */
+        .greeting-box { margin-bottom: 15px; }
+        .greeting-box h2 { font-size: 20px; margin: 0; color: var(--text); }
+        .greeting-box span { color: var(--accent); text-transform: capitalize; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #334155; }
+        .header h1 { font-size: 16px; margin: 0; color: var(--accent); font-weight: 800; }
+        
+        /* Card Hasil Jimpitan */
+        .card-total { background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); padding: 20px; border-radius: 15px; border: 2px solid var(--accent); text-align: center; margin-bottom: 20px; }
+        .card-total h2 { margin: 10px 0; font-size: 28px; color: var(--success); }
+        .card-total small { color: #94a3b8; font-size: 12px; font-weight: bold; letter-spacing: 1px; }
+
+        .btn-scan { width: 100%; background: var(--accent); color: #0F172A; border: none; padding: 15px; border-radius: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; margin-bottom: 20px; }
+        .table-container { background: var(--card); border-radius: 15px; overflow-x: auto; border: 1px solid #334155; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { padding: 12px 10px; border: 1px solid #334155; text-align: center; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1E293B; z-index: 5; font-weight: bold; min-width: 130px; border-right: 2px solid #334155; }
+        .status-isi { color: var(--success); font-weight: bold; }
+        select { width: 100%; background: #0F172A; color: white; border: 1px solid #334155; padding: 12px; border-radius: 10px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fa-solid fa-user-shield"></i> PETUGAS</h1>
+        <button onclick="logout()" style="background:#334155; color:var(--danger); border:none; padding:8px 12px; border-radius:8px;">LOGOUT</button>
+    </div>
+
+    <div class="greeting-box">
+        <h2>Halo, <span id="nama-kelompok">...</span></h2>
+    </div>
+
+    <a href="fscanning.html" class="btn-scan">
+        <i class="fa-solid fa-qrcode fa-lg"></i> SCAN JIMPITAN
+    </a>
+
+    <div class="card-total">
+        <small>HASIL JIMPITAN BULAN INI</small>
+        <h2 id="val-saldo">Rp 0</h2>
+    </div>
+
+    <select id="pilih-bulan" onchange="jalankanLoadData()">
+        <option value="0">Januari</option><option value="1">Februari</option>
+        <option value="2">Maret</option><option value="3">April</option>
+        <option value="4">Mei</option><option value="5">Juni</option>
+        <option value="6">Juli</option><option value="7">Agustus</option>
+        <option value="8">September</option><option value="9">Oktober</option>
+        <option value="10">November</option><option value="11">Desember</option>
+    </select>
+
+    <div class="table-container">
+        <table>
+            <thead><tr id="head-tgl"><th class="nama-col">Nama Warga</th></tr></thead>
+            <tbody id="body-rekap"></tbody>
+            <tfoot><tr id="foot-total" style="background:#0F172A; font-weight:800; color:var(--accent);"><td class="nama-col">TOTAL</td></tr></tfoot>
+        </table>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxFU7HD_9uVHWGXEO0ZtJja6rdqKHurTk",
+            authDomain: "jimpitan-sekawan.firebaseapp.com",
+            projectId: "jimpitan-sekawan",
+            storageBucket: "jimpitan-sekawan.firebasestorage.app",
+            messagingSenderId: "634934433280",
+            appId: "1:634934433280:web:abde3734bd277d3e9b2ae5",
+            databaseURL: "https://jimpitan-sekawan-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const hariMapIndex = { "minggu":0, "senin":1, "selasa":2, "rabu":3, "kamis":4, "jumat":5, "sabtu":6 };
+        const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+
+        if(!user) {
+            window.location.href = "index.html";
+        } else {
+            // TAMPILKAN GREETING
+            document.getElementById('nama-kelompok').innerText = `Kelompok ${user.kelompok}`;
+            document.getElementById('pilih-bulan').value = new Date().getMonth();
+            setTimeout(loadDataPetugas, 500);
+        }
+
+        async function loadDataPetugas() {
+            const bln = parseInt(document.getElementById('pilih-bulan').value);
+            const thn = new Date().getFullYear();
+            const folderKel = user.kelompok.toLowerCase().trim();
+            const hariIdx = hariMapIndex[folderKel];
+
+            // 1. Ambil Saldo
+            onValue(ref(db, `saldo_petugas/${folderKel}`), (snap) => {
+                document.getElementById('val-saldo').innerText = "Rp " + (snap.val() || 0).toLocaleString('id-ID');
+            });
+
+            // 2. Ambil Daftar Warga
+            const snapWarga = await get(ref(db, `daftar_warga/all`));
+            const listWarga = snapWarga.val() ? Object.values(snapWarga.val()) : [];
+
+            // 3. Generate Tanggal
+            let dates = [];
+            let d = new Date(thn, bln, 1);
+            while(d.getMonth() === bln) {
+                if(d.getDay() === hariIdx) dates.push(d.getDate());
+                d.setDate(d.getDate() + 1);
+            }
+
+            // 4. Tarik Data Realtime
+            onValue(ref(db, `data_jimpitan/${folderKel}/${thn}/${bln}`), (snap) => {
+                renderTable(listWarga.sort(), snap.val() || {}, dates);
+            });
+        }
+
+        function renderTable(list, data, dates) {
+            let hH = `<th class="nama-col">Nama Warga</th>`;
+            dates.forEach(d => hH += `<th>${d}</th>`);
+            document.getElementById('head-tgl').innerHTML = hH;
+
+            let hB = "", colTotals = {};
+            dates.forEach(d => colTotals[d] = 0);
+
+            list.forEach(n => {
+                hB += `<tr><td class="nama-col">${n}</td>`;
+                dates.forEach(d => {
+                    let v = (data[n] && data[n][d]) ? data[n][d] : 0;
+                    colTotals[d] += v;
+                    hB += `<td class="${v > 0 ? 'status-isi' : ''}">${v > 0 ? v : '-'}</td>`;
+                });
+                hB += `</tr>`;
+            });
+            document.getElementById('body-rekap').innerHTML = hB;
+
+            let hF = `<td class="nama-col">TOTAL</td>`;
+            dates.forEach(d => hF += `<td>${colTotals[d].toLocaleString('id-ID')}</td>`);
+            document.getElementById('foot-total').innerHTML = hF;
+        }
+
+        window.jalankanLoadData = loadDataPetugas;
+        window.logout = function() { localStorage.clear(); window.location.href = "index.html"; };
+    </script>
+</body>
+</html>
