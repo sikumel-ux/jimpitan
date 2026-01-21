@@ -56,7 +56,7 @@
     <div class="table-container">
         <table>
             <thead><tr id="head-tgl"><th class="nama-col">Nama Warga</th></tr></thead>
-            <tbody id="body-rekap"><tr><td colspan="2" style="padding:40px;">Pilih kelompok ronda.</td></tr></tbody>
+            <tbody id="body-rekap"><tr><td colspan="2" style="padding:40px;">Silahkan pilih kelompok ronda.</td></tr></tbody>
             <tfoot><tr id="foot-total"><td class="nama-col">TOTAL</td></tr></tfoot>
         </table>
     </div>
@@ -84,9 +84,9 @@
             const thn = new Date().getFullYear();
             if(!kel) return;
 
-            // AMBIL SEMUA WARGA DARI FOLDER 'ALL'
-            const snapWarga = await get(ref(db, `daftar_warga/ALL`)); 
-            const listWarga = snapWarga.val() ? (Array.isArray(snapWarga.val()) ? snapWarga.val() : Object.values(snapWarga.val())) : [];
+            // AMBIL WARGA DARI FOLDER 'all' (Sesuaikan dengan gambar console kamu)
+            const snapWarga = await get(ref(db, `daftar_warga/all`)); 
+            const listWarga = snapWarga.val() ? Object.values(snapWarga.val()) : [];
 
             // AMBIL DATA JIMPITAN KELOMPOK TERPILIH
             onValue(ref(db, `data_jimpitan/${kel}/${thn}/${bln}`), (snapData) => {
@@ -104,12 +104,10 @@
         };
 
         function renderTable(listWarga, data, dates) {
-            // Header Tanggal Dinamis
             let hH = `<th class="nama-col">Nama Warga</th>`;
             dates.forEach(d => hH += `<th>${d}</th>`);
             document.getElementById('head-tgl').innerHTML = hH;
 
-            // Body
             let hB = "";
             let colTotals = {};
             dates.forEach(d => colTotals[d] = 0);
@@ -123,9 +121,8 @@
                 });
                 hB += `</tr>`;
             });
-            document.getElementById('body-rekap').innerHTML = hB || '<tr><td>Data warga ALL tidak ditemukan</td></tr>';
+            document.getElementById('body-rekap').innerHTML = hB || '<tr><td colspan="2">Belum ada riwayat tarikan</td></tr>';
 
-            // Footer Total
             let hF = `<td class="nama-col">TOTAL</td>`;
             dates.forEach(d => hF += `<td>${colTotals[d]}</td>`);
             document.getElementById('foot-total').innerHTML = hF;
