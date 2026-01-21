@@ -8,19 +8,23 @@
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --danger: #F87171; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        
         .top-nav { display: flex; gap: 10px; margin-bottom: 20px; }
         .btn-main { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: white; }
-        .btn-scan { background: var(--accent); box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3); }
+        .btn-scan { background: var(--accent); }
         .btn-logout { background: #334155; width: 60px; flex: none; color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.3); }
+
         .stat-box { background: linear-gradient(135deg, #1E293B, #0F172A); padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 20px; border: 1px solid #334155; }
         .stat-box h2 { margin: 5px 0; color: var(--accent); font-size: 28px; }
+
         .scroll-container { overflow-x: auto; background: var(--card); border-radius: 12px; border: 1px solid #334155; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th, td { padding: 12px 8px; border: 1px solid #334155; text-align: center; }
         th { background: #1e293b; color: #94a3b8; }
-        .nama-col { text-align: left; position: sticky; left: 0; background: #1e293b; z-index: 10; min-width: 110px; font-weight: bold; border-right: 2px solid #334155; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1e293b; z-index: 10; min-width: 120px; font-weight: bold; border-right: 2px solid #334155; }
+        
         .isi { color: var(--accent); font-weight: bold; background: rgba(0, 184, 148, 0.1); }
-        select { background: #1e293b; color: white; border: 1px solid #334155; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; outline: none; font-size: 14px; }
+        select { background: #1e293b; color: white; border: 1px solid #334155; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; outline: none; }
     </style>
 </head>
 <body>
@@ -40,16 +44,18 @@
     </div>
 
     <select id="pilih-bulan" onchange="loadData()">
-        <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
-        <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
-        <option value="6">Juli</option><option value="7">Agustus</option><option value="8">September</option>
-        <option value="9">Oktober</option><option value="10">November</option><option value="11">Desember</option>
+        <option value="0">Januari</option><option value="1">Februari</option>
+        <option value="2">Maret</option><option value="3">April</option>
+        <option value="4">Mei</option><option value="5">Juni</option>
+        <option value="6">Juli</option><option value="7">Agustus</option>
+        <option value="8">September</option><option value="9">Oktober</option>
+        <option value="10">November</option><option value="11">Desember</option>
     </select>
 
     <div class="scroll-container">
         <table>
             <thead><tr id="head-tgl"><th class="nama-col">Nama Warga</th></tr></thead>
-            <tbody id="body-rekap"><tr><td colspan="5" style="padding:40px;">Memuat data...</td></tr></tbody>
+            <tbody id="body-rekap"><tr><td colspan="5" style="padding:40px;">Memuat warga...</td></tr></tbody>
             <tfoot><tr id="foot-total" style="font-weight:bold; background:#1e293b;"><td class="nama-col">TOTAL</td></tr></tfoot>
         </table>
     </div>
@@ -79,31 +85,28 @@
         } else {
             document.getElementById('label-kel').innerText = user.kelompok.toUpperCase();
             document.getElementById('pilih-bulan').value = new Date().getMonth();
-            setTimeout(() => window.loadData(), 200);
+            setTimeout(() => window.loadData(), 300);
         }
 
         window.loadData = async function() {
             const bln = parseInt(document.getElementById('pilih-bulan').value);
             const thn = new Date().getFullYear();
             
-            // 1. Ambil nama kelompok dari login user
-            const kelompokUser = user.kelompok.toLowerCase().trim();
-            const targetHari = hariMap[kelompokUser];
+            // Nama kelompok petugas (misal: senin)
+            const kelompokPetugas = user.kelompok.toLowerCase().trim();
+            const targetHari = hariMap[kelompokPetugas];
 
-            if (targetHari === undefined) {
-                document.getElementById('body-rekap').innerHTML = `<tr><td colspan="5" style="padding:20px; color:red;">Kelompok '${kelompokUser}' tidak dikenal.</td></tr>`;
-                return;
-            }
-
-            // 2. Ambil DAFTAR WARGA (Folder 'all' - Huruf Kecil)
+            // 1. Ambil SEMUA WARGA dari folder 'all'
+            // Gunakan 'get' agar sekali ambil saja untuk daftar nama
             const snapWarga = await get(ref(db, `daftar_warga/all`));
             let listWarga = [];
             if(snapWarga.exists()) {
-                const val = snapWarga.val();
-                listWarga = Array.isArray(val) ? val : Object.values(val);
+                const dataWarga = snapWarga.val();
+                listWarga = Array.isArray(dataWarga) ? dataWarga : Object.values(dataWarga);
+                listWarga.sort();
             }
 
-            // 3. Generate TANGGAL JADWAL
+            // 2. Cari Tanggal (Misal: Semua hari Senin di bulan ini)
             let jadwalTanggal = [];
             let date = new Date(thn, bln, 1);
             while (date.getMonth() === bln) {
@@ -113,13 +116,15 @@
                 date.setDate(date.getDate() + 1);
             }
 
-            // 4. Ambil DATA JIMPITAN NYATA
-            onValue(ref(db, `data_jimpitan/${kelompokUser}/${thn}/${bln}`), (snap) => {
-                renderTable(listWarga.sort(), snap.val() || {}, jadwalTanggal);
+            // 3. Monitor data jimpitan
+            onValue(ref(db, `data_jimpitan/${kelompokPetugas}/${thn}/${bln}`), (snap) => {
+                const dataJimpitan = snap.val() || {};
+                renderTable(listWarga, dataJimpitan, jadwalTanggal);
             });
         };
 
         function renderTable(list, data, dates) {
+            // Header Tanggal
             let hH = `<th class="nama-col">Nama Warga</th>`;
             dates.forEach(d => hH += `<th>${d}</th>`);
             document.getElementById('head-tgl').innerHTML = hH;
@@ -128,7 +133,7 @@
             dates.forEach(d => colTotals[d] = 0);
 
             if (list.length === 0) {
-                hB = `<tr><td colspan="${dates.length + 1}" style="padding:40px;">Daftar warga 'all' tidak ditemukan di database.</td></tr>`;
+                hB = `<tr><td colspan="10" style="padding:40px;">Daftar warga di folder 'all' kosong.</td></tr>`;
             } else {
                 list.forEach(nama => {
                     hB += `<tr><td class="nama-col">${nama}</td>`;
@@ -143,6 +148,7 @@
             }
             document.getElementById('body-rekap').innerHTML = hB;
 
+            // Footer Total
             let hF = `<td class="nama-col">TOTAL</td>`;
             dates.forEach(d => hF += `<td>${colTotals[d]}</td>`);
             document.getElementById('foot-total').innerHTML = hF;
