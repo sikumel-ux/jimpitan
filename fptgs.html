@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Jimpitan | SEJIWA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #2DD4BF; --text: #F8FAFC; --success: #2DD4BF; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h1 { font-size: 18px; color: var(--accent); margin: 0; }
+
+        .info-petugas { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; }
+        .info-petugas p { margin: 5px 0; font-size: 14px; color: #94a3b8; }
+        .info-petugas b { color: var(--text); }
+
+        .list-warga { display: flex; flex-direction: column; gap: 10px; margin-bottom: 80px; }
+        .card-warga { background: var(--card); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
+        .card-warga span { font-weight: bold; font-size: 14px; }
+        
+        .input-nominal { width: 80px; background: #0F172A; border: 1px solid var(--accent); color: white; padding: 8px; border-radius: 8px; text-align: center; font-weight: bold; outline: none; }
+
+        .footer-action { position: fixed; bottom: 0; left: 0; right: 0; background: #1E293B; padding: 15px; border-top: 1px solid #334155; }
+        .btn-simpan { width: 100%; background: var(--accent); color: #0F172A; border: none; padding: 15px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fa-solid fa-hand-holding-dollar"></i> INPUT JIMPITAN</h1>
+        <button onclick="logout()" style="background:transparent; border:none; color:#F87171; font-weight:bold;">LOGOUT</button>
+    </div>
+
+    <div class="info-petugas">
+        <p>Petugas: <b id="nama-petugas">...</b></p>
+        <p>Kelompok: <b id="kelompok-petugas">...</b></p>
+        <p>Tanggal: <b id="tgl-sekarang">...</b></p>
+    </div>
+
+    <div class="list-warga" id="container-warga">
+        </div>
+
+    <div class="footer-action">
+        <button class="btn-simpan" onclick="simpanSemua()">
+            <i class="fa-solid fa-floppy-disk"></i> SIMPAN JIMPITAN
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, get, set, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxFU7HD_9uVHWGXEO0ZtJja6rdqKHurTk",
+            authDomain: "jimpitan-sekawan.firebaseapp.com",
+            projectId: "jimpitan-sekawan",
+            storageBucket: "jimpitan-sekawan.firebasestorage.app",
+            messagingSenderId: "634934433280",
+            appId: "1:634934433280:web:abde3734bd277d3e9b2ae5",
+            databaseURL: "https://jimpitan-sekawan-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Ambil Data Login
+        const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+        if(!user) window.location.href = "login.html";
+
+        document.getElementById('nama-petugas').innerText = user.username.toUpperCase();
+        document.getElementById('kelompok-petugas').innerText = user.kelompok.toUpperCase();
+        document.getElementById('tgl-sekarang').innerText = new Date().toLocaleDateString('id-ID');
+
+        async function initWarga() {
+            // Mengambil semua warga dari folder 'all' sesuai struktur yang kamu punya
+            const snap = await get(ref(db, 'daftar_warga/all'));
+            const data = snap.val();
+            let html = "";
+            if(data) {
+                Object.values(data).sort().forEach(nama => {
+                    html += `
+                        <div class="card-warga">
+                            <span>${nama}</span>
+                            <input type="number" class="input-nominal" data-nama="${nama}" placeholder="0" value="500">
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('container-warga').innerHTML = html;
+        }
+
+        window.simpanSemua = async function() {
+            const inputs = document.querySelectorAll('.input-nominal');
+            const thn = new Date().getFullYear();
+            const bln = new Date().getMonth();
+            const tgl = new Date().getDate();
+            const kelompok = user.kelompok.toLowerCase();
+            
+            let totalMasuk = 0;
+            const updates = {};
+
+            inputs.forEach(input => {
+                const nominal = parseInt(input.value) || 0;
+                const namaWarga = input.dataset.nama;
+                if(nominal > 0) {
+                    // Simpan ke riwayat jimpitan
+                    set(ref(db, `data_jimpitan/${kelompok}/${thn}/${bln}/${namaWarga}/${tgl}`), nominal);
+                    totalMasuk += nominal;
+                }
+            });
+
+            if(totalMasuk > 0) {
+                // LOGIKA PENTING: Update Saldo Petugas (Gunakan Transaction agar aman)
+                const saldoRef = ref(db, `saldo_petugas/${kelompok}`);
+                await runTransaction(saldoRef, (currentSaldo) => {
+                    return (currentSaldo || 0) + totalMasuk;
+                });
+
+                alert(`Berhasil! Total Rp ${totalMasuk.toLocaleString('id-ID')} ditambahkan ke saldo Kelompok ${kelompok.toUpperCase()}.`);
+                window.location.reload();
+            } else {
+                alert("Masukkan nominal jimpitan dulu, bro!");
+            }
+        };
+
+        window.logout = function() { localStorage.clear(); window.location.href = "login.html"; };
+        initWarga();
+    </script>
+</body>
+</html>
