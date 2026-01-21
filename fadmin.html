@@ -7,101 +7,63 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root { --bg: #0F172A; --card: #1E293B; --accent: #2DD4BF; --text: #F8FAFC; --success: #2DD4BF; --danger: #F87171; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
         
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #334155; }
         .header h1 { font-size: 16px; margin: 0; color: var(--accent); font-weight: 800; }
 
-        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .summary-card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #334155; text-align: center; }
-        .summary-card small { color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .summary-card h2 { margin: 5px 0 0; font-size: 18px; color: var(--success); }
-
-        .admin-nav { display: flex; gap: 10px; margin-bottom: 20px; }
-        .btn-nav { flex: 1; background: #334155; color: white; border: none; padding: 10px; border-radius: 8px; text-decoration: none; text-align: center; font-size: 12px; font-weight: bold; }
-
         .filter-section { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; display: flex; gap: 10px; }
         select { flex: 1; background: #0F172A; color: white; border: 1px solid #334155; padding: 12px; border-radius: 10px; outline: none; font-size: 14px; }
 
-        .table-container { background: var(--card); border-radius: 15px; overflow-x: auto; border: 1px solid #334155; margin-bottom: 20px; }
+        .table-container { background: var(--card); border-radius: 15px; overflow-x: auto; border: 1px solid #334155; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
         th, td { padding: 12px 10px; border: 1px solid #334155; text-align: center; }
-        th { background: #1E293B; color: #94a3b8; font-weight: 600; }
-        .nama-col { text-align: left; position: sticky; left: 0; background: #1E293B; z-index: 5; font-weight: bold; min-width: 110px; border-right: 2px solid #334155; }
+        th { background: #1E293B; color: #94a3b8; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1E293B; z-index: 5; font-weight: bold; min-width: 130px; border-right: 2px solid #334155; }
         
-        .status-isi { color: var(--success); font-weight: bold; }
-        .status-kosong { color: #475569; }
-
-        tfoot tr { background: #0F172A; font-weight: 800; }
-        tfoot td { color: var(--accent); border-top: 2px solid var(--accent); }
-
-        .btn-logout { background: #334155; color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.2); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .copyright { text-align: center; margin-top: auto; padding: 20px 0; font-size: 10px; color: #475569; letter-spacing: 1px; text-transform: uppercase; }
-        .copyright span { color: var(--accent); }
+        .status-isi { color: var(--success); font-weight: bold; background: rgba(45, 212, 191, 0.1); }
+        tfoot tr { background: #0F172A; font-weight: 800; color: var(--accent); }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1><i class="fa-solid fa-user-shield"></i> PANEL BENDAHARA</h1>
-        <button onclick="logout()" class="btn-logout">LOGOUT</button>
-    </div>
-
-    <div class="admin-nav">
-        <a href="input-user.html" class="btn-nav"><i class="fa-solid fa-user-gear"></i> AKUN</a>
-        <a href="input-warga.html" class="btn-nav"><i class="fa-solid fa-users"></i> WARGA</a>
-    </div>
-
-    <div class="summary-grid">
-        <div class="summary-card">
-            <small>Total Kas Bulan Ini</small>
-            <h2 id="total-uang">Rp 0</h2>
-        </div>
-        <div class="summary-card">
-            <small>Monitoring</small>
-            <h2 id="status-aktif">AKTIF</h2>
-        </div>
+        <h1><i class="fa-solid fa-user-shield"></i> REKAP JIMPITAN</h1>
+        <button onclick="logout()" style="background:#334155; color:var(--danger); border:none; padding:8px 12px; border-radius:8px; font-weight:bold;">LOGOUT</button>
     </div>
 
     <div class="filter-section">
         <select id="pilih-kelompok" onchange="loadAdminData()">
-            <option value="">-- Pilih Kelompok --</option>
+            <option value="">-- Pilih Kelompok Ronda --</option>
+            <option value="senin">SENIN</option>
+            <option value="selasa">SELASA</option>
+            <option value="rabu">RABU</option>
+            <option value="kamis">KAMIS</option>
+            <option value="jumat">JUMAT</option>
+            <option value="sabtu">SABTU</option>
+            <option value="minggu">MINGGU</option>
         </select>
         <select id="pilih-bulan" onchange="loadAdminData()">
-            <option value="0">Januari</option>
-            <option value="1">Februari</option>
-            <option value="2">Maret</option>
-            <option value="3">April</option>
-            <option value="4">Mei</option>
-            <option value="5">Juni</option>
-            <option value="6">Juli</option>
-            <option value="7">Agustus</option>
-            <option value="8">September</option>
-            <option value="9">Oktober</option>
-            <option value="10">November</option>
-            <option value="11">Desember</option>
+            <option value="0">Januari</option><option value="1">Februari</option>
+            <option value="2">Maret</option><option value="3">April</option>
+            <option value="4">Mei</option><option value="5">Juni</option>
+            <option value="6">Juli</option><option value="7">Agustus</option>
+            <option value="8">September</option><option value="9">Oktober</option>
+            <option value="10">November</option><option value="11">Desember</option>
         </select>
     </div>
 
     <div class="table-container">
         <table>
-            <thead>
-                <tr id="head-tgl"><th class="nama-col">Nama Warga</th></tr>
-            </thead>
-            <tbody id="body-rekap">
-                <tr><td colspan="2" style="padding:40px;">Pilih kelompok untuk melihat data.</td></tr>
-            </tbody>
-            <tfoot>
-                <tr id="foot-total"><td class="nama-col">TOTAL</td></tr>
-            </tfoot>
+            <thead><tr id="head-tgl"><th class="nama-col">Nama Warga (Semua)</th></tr></thead>
+            <tbody id="body-rekap"><tr><td colspan="2" style="padding:40px;">Pilih kelompok ronda untuk melihat tanggal tarikan.</td></tr></tbody>
+            <tfoot><tr id="foot-total"><td class="nama-col">TOTAL</td></tr></tfoot>
         </table>
     </div>
 
-    <div class="copyright">© 2026 <span>Sekawan Technologies</span></div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAxFU7HD_9uVHWGXEO0ZtJja6rdqKHurTk",
@@ -116,68 +78,55 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Auto Load List Kelompok
-        onValue(ref(db, 'daftar_warga'), (snapshot) => {
-            const data = snapshot.val();
-            const select = document.getElementById('pilih-kelompok');
-            let options = '<option value="">-- Pilih Kelompok --</option>';
-            if(data) Object.keys(data).forEach(k => options += `<option value="${k}">${k.toUpperCase()}</option>`);
-            select.innerHTML = options;
-        });
-
-        window.loadAdminData = function() {
+        window.loadAdminData = async function() {
             const kel = document.getElementById('pilih-kelompok').value;
             const bln = document.getElementById('pilih-bulan').value;
             const thn = new Date().getFullYear();
             if(!kel) return;
 
-            onValue(ref(db, `daftar_warga/${kel}`), (snapWarga) => {
-                const listWarga = Array.isArray(snapWarga.val()) ? snapWarga.val() : Object.values(snapWarga.val() || {});
-                onValue(ref(db, `data_jimpitan/${kel}/${thn}/${bln}`), (snapData) => {
-                    renderMatrix(listWarga.sort(), snapData.val() || {});
+            // 1. Ambil SEMUA WARGA (bukan per kelompok)
+            // Asumsi: Kamu punya node 'daftar_warga/ALL' atau ambil dari salah satu node yang lengkap
+            const snapWarga = await get(ref(db, `daftar_warga/ALL`)); 
+            const listWarga = snapWarga.val() ? (Array.isArray(snapWarga.val()) ? snapWarga.val() : Object.values(snapWarga.val())) : [];
+
+            // 2. Ambil DATA JIMPITAN kelompok tersebut
+            onValue(ref(db, `data_jimpitan/${kel}/${thn}/${bln}`), (snapData) => {
+                const dataJimpitan = snapData.val() || {};
+                
+                // Cari tanggal aktif hanya untuk kelompok ini
+                let tglAktif = new Set();
+                Object.values(dataJimpitan).forEach(w => {
+                    Object.keys(w).forEach(t => tglAktif.add(parseInt(t)));
                 });
+                let sortedDates = Array.from(tglAktif).sort((a,b) => a - b);
+
+                renderTable(listWarga.sort(), dataJimpitan, sortedDates);
             });
         };
 
-        function renderMatrix(listWarga, dataJimpitan) {
-            // Ambil semua tanggal unik yang SUDAH ADA datanya (history pengambilan)
-            let tanggalTersedia = new Set();
-            Object.values(dataJimpitan).forEach(warga => {
-                Object.keys(warga).forEach(tgl => tanggalTersedia.add(parseInt(tgl)));
-            });
-            
-            // Urutkan tanggal dari kecil ke besar
-            let sortedDates = Array.from(tanggalTersedia).sort((a, b) => a - b);
-
-            // Header: Hanya tanggal yang tersedia
+        function renderTable(listWarga, data, dates) {
             let hH = `<th class="nama-col">Nama Warga</th>`;
-            sortedDates.forEach(tgl => hH += `<th>${tgl}</th>`);
+            dates.forEach(d => hH += `<th>${d}</th>`);
             document.getElementById('head-tgl').innerHTML = hH;
 
-            // Body
             let hB = "";
-            let totalBulanIni = 0;
-            let totalPerTgl = {};
-            sortedDates.forEach(t => totalPerTgl[t] = 0);
+            let colTotals = {};
+            dates.forEach(d => colTotals[d] = 0);
 
             listWarga.forEach(nama => {
                 hB += `<tr><td class="nama-col">${nama}</td>`;
-                const history = dataJimpitan[nama] || {};
-                sortedDates.forEach(tgl => {
-                    let nilai = history[tgl] || 0;
-                    totalPerTgl[tgl] += nilai;
-                    totalBulanIni += nilai;
-                    hB += `<td class="${nilai > 0 ? 'status-isi' : 'status-kosong'}">${nilai > 0 ? nilai : '-'}</td>`;
+                dates.forEach(d => {
+                    let nilai = (data[nama] && data[nama][d]) ? data[nama][d] : 0;
+                    colTotals[d] += nilai;
+                    hB += `<td class="${nilai > 0 ? 'status-isi' : ''}">${nilai > 0 ? nilai : '-'}</td>`;
                 });
                 hB += `</tr>`;
             });
-            document.getElementById('body-rekap').innerHTML = hB || `<tr><td colspan="${sortedDates.length + 1}">Belum ada tarikan.</td></tr>`;
+            document.getElementById('body-rekap').innerHTML = hB || '<tr><td>Data kosong</td></tr>';
 
-            // Footer
             let hF = `<td class="nama-col">TOTAL</td>`;
-            sortedDates.forEach(tgl => hF += `<td>${totalPerTgl[tgl]}</td>`);
+            dates.forEach(d => hF += `<td>${colTotals[d]}</td>`);
             document.getElementById('foot-total').innerHTML = hF;
-            document.getElementById('total-uang').innerText = "Rp " + totalBulanIni.toLocaleString('id-ID');
         }
 
         window.logout = function() { localStorage.clear(); window.location.href = "login.html"; };
