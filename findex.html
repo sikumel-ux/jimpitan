@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SEJIWA | Sistem Jimpitan Warga</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0F172A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1048/1048953.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #00B894; --text: #F8FAFC; --border: #334155; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 20px; line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .header { text-align: center; margin-bottom: 25px; margin-top: 20px; }
+        .header h2 { margin: 0; color: var(--accent); font-size: 28px; font-weight: 800; letter-spacing: 1px; }
+        .header p { color: #94A3B8; font-size: 14px; margin-top: 5px; }
+
+        /* Tab System */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 12px; text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; font-weight: bold; color: #94A3B8; transition: 0.3s; }
+        .tab.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3); }
+
+        /* Card Style */
+        .guide-card { background: var(--card); border-radius: 20px; border: 1px solid var(--border); padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 20px; display: none; }
+        .guide-card.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .step { display: flex; gap: 15px; margin-bottom: 20px; text-align: left; }
+        .step-num { width: 30px; height: 30px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; font-size: 14px; }
+        .step-content b { color: var(--accent); display: block; margin-bottom: 5px; font-size: 16px; }
+        .step-content p { margin: 0; font-size: 14px; color: #CBD5E1; }
+
+        .feature-box { background: rgba(0, 184, 148, 0.05); border-radius: 12px; padding: 15px; margin-top: 15px; border-left: 4px solid var(--accent); text-align: left; }
+        .feature-box h4 { margin: 0 0 10px; font-size: 15px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+        .feature-box ul { margin: 0; padding-left: 20px; font-size: 13px; color: #CBD5E1; }
+        .feature-box li { margin-bottom: 5px; }
+
+        /* Button Login Utama */
+        .btn-login-main { display: block; width: 100%; background: var(--accent); color: white; text-align: center; padding: 16px; border-radius: 15px; text-decoration: none; font-weight: 800; font-size: 16px; margin-top: auto; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0, 184, 148, 0.2); transition: 0.2s; }
+        .btn-login-main:active { transform: scale(0.98); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2><i class="fa-solid fa-hand-holding-hand"></i> SEJIWA</h2>
+    <p>Sistem Jimpitan Warga</p>
+</div>
+
+<div class="tabs">
+    <div class="tab active" onclick="switchTab('petugas', event)">PETUGAS</div>
+    <div class="tab" onclick="switchTab('admin', event)">ADMIN</div>
+</div>
+
+<div id="petugas" class="guide-card active">
+    <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+            <b>Login Harian</b>
+            <p>Masuk menggunakan akun jadwal ronda Anda (Contoh: senin, selasa).</p>
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+            <b>Scan Barcode Warga</b>
+            <p>Klik tombol "Ambil Jimpitan", arahkan kamera ke barcode yang ada di rumah warga.</p>
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+            <b>Cek Rekapitulasi</b>
+            <p>Halaman utama akan menampilkan tabel warga yang sudah/belum mengisi jimpitan.</p>
+        </div>
+    </div>
+
+    <div class="feature-box">
+        <h4><i class="fa-solid fa-star"></i> Fitur Petugas:</h4>
+        <ul>
+            <li>Scan QR Code otomatis masuk database.</li>
+            <li>Total saldo harian terhitung otomatis.</li>
+            <li>Riwayat tarikan per bulan (Real-time).</li>
+        </ul>
+    </div>
+</div>
+
+<div id="admin" class="guide-card">
+    <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+            <b>Pantau Seluruh Kelompok</b>
+            <p>Admin dapat melihat total uang yang terkumpul dari semua kelompok ronda.</p>
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+            <b>Terima Setoran</b>
+            <p>Saat koordinator menyerahkan uang jimpitan, klik tombol "Terima" untuk memvalidasi.</p>
+        </div>
+    </div>
+    <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+            <b>Otomatis Reset Saldo</b>
+            <p>Setelah tombol "Terima" diklik, saldo akan kembali ke Rp 0 secara otomatis.</p>
+        </div>
+    </div>
+
+    <div class="feature-box">
+        <h4><i class="fa-solid fa-gears"></i> Fitur Admin:</h4>
+        <ul>
+            <li>Rekap total uang kas masuk semua kelompok.</li>
+            <li>Reset saldo petugas per kelompok ronda.</li>
+            <li>Penyimpanan histori setoran permanen.</li>
+        </ul>
+    </div>
+</div>
+
+<a href="flogin.html" class="btn-login-main">LOGIN SEKARANG</a>
+
+<script>
+    // PWA Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Gagal:', err));
+        });
+    }
+
+    function switchTab(type, event) {
+        // Switch tab buttons
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        // Switch content cards
+        document.querySelectorAll('.guide-card').forEach(c => c.classList.remove('active'));
+        document.getElementById(type).classList.add('active');
+    }
+</script>
+
+</body>
+</html>
