@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Bendahara | SEJIWA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #2DD4BF; --text: #F8FAFC; --success: #2DD4BF; --danger: #F87171; --warning: #FBBF24; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #334155; }
+        .header h1 { font-size: 16px; margin: 0; color: var(--accent); font-weight: 800; }
+
+        .summary-container { margin-bottom: 20px; }
+        .card-main { background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); padding: 20px; border-radius: 15px; border: 2px solid var(--warning); text-align: center; margin-bottom: 15px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
+        .card-total { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--accent); text-align: center; margin-bottom: 15px; display: none; }
+        
+        small { color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+        h2 { margin: 5px 0; font-size: 24px; color: var(--success); }
+        .val-kas { color: var(--warning) !important; }
+
+        .filter-section { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; display: flex; gap: 10px; }
+        select { flex: 1; background: #0F172A; color: white; border: 1px solid #334155; padding: 12px; border-radius: 10px; outline: none; font-size: 14px; }
+
+        .table-container { background: var(--card); border-radius: 15px; overflow-x: auto; border: 1px solid #334155; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { padding: 12px 10px; border: 1px solid #334155; text-align: center; }
+        th { background: #1E293B; color: #94a3b8; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1E293B; z-index: 5; font-weight: bold; min-width: 130px; border-right: 2px solid #334155; }
+        
+        .status-isi { color: var(--success); font-weight: bold; }
+        .btn-terima { width: 100%; background: var(--success); color: #0F172A; border: none; padding: 15px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
+        .btn-terima:active { transform: scale(0.98); }
+        tfoot tr { background: #0F172A; font-weight: 800; color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fa-solid fa-building-columns"></i> KAS BENDAHARA</h1>
+        <button onclick="logout()" style="background:#334155; color:var(--danger); border:none; padding:8px 12px; border-radius:8px; font-weight:bold;">LOGOUT</button>
+    </div>
+
+    <div class="summary-container">
+        <div class="card-main">
+            <small>TOTAL SALDO KAS BESAR (BRANKAS)</small>
+            <h2 id="val-kas-besar" class="val-kas">Rp 0</h2>
+        </div>
+
+        <div class="card-total" id="summary-box">
+            <small id="title-card">SALDO PETUGAS</small>
+            <h2 id="val-saldo-petugas">Rp 0</h2>
+            <div style="font-size: 10px; color: var(--accent); border: 1px solid var(--accent); display: inline-block; padding: 2px 8px; border-radius: 10px; margin-top: 5px;">BELUM DISETOR</div>
+        </div>
+    </div>
+
+    <div class="filter-section">
+        <select id="pilih-kelompok" onchange="loadAdminData()">
+            <option value="">-- Pilih Kelompok --</option>
+            <option value="1">SENIN</option><option value="2">SELASA</option>
+            <option value="3">RABU</option><option value="4">KAMIS</option>
+            <option value="5">JUMAT</option><option value="6">SABTU</option>
+            <option value="0">MINGGU</option>
+        </select>
+        <select id="pilih-bulan" onchange="loadAdminData()">
+            <option value="0">Januari</option><option value="1">Februari</option>
+            <option value="2">Maret</option><option value="3">April</option>
+            <option value="4">Mei</option><option value="5">Juni</option>
+            <option value="6">Juli</option><option value="7">Agustus</option>
+            <option value="8">September</option><option value="9">Oktober</option>
+            <option value="10">November</option><option value="11">Desember</option>
+        </select>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead><tr id="head-tgl"><th class="nama-col">Nama Warga</th></tr></thead>
+            <tbody id="body-rekap">
+                <tr><td colspan="2" style="padding:40px; color: #94a3b8;">Silakan pilih kelompok untuk melihat data jimpitan warga.</td></tr>
+            </tbody>
+            <tfoot><tr id="foot-total"><td class="nama-col">TOTAL</td></tr></tfoot>
+        </table>
+    </div>
+
+    <button id="btn-setor" class="btn-terima" onclick="terimaSetoran()">
+        <i class="fa-solid fa-hand-holding-dollar"></i> TERIMA SETORAN MASUK KAS
+    </button>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, get, set, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxFU7HD_9uVHWGXEO0ZtJja6rdqKHurTk",
+            authDomain: "jimpitan-sekawan.firebaseapp.com",
+            projectId: "jimpitan-sekawan",
+            storageBucket: "jimpitan-sekawan.firebasestorage.app",
+            messagingSenderId: "634934433280",
+            appId: "1:634934433280:web:abde3734bd277d3e9b2ae5",
+            databaseURL: "https://jimpitan-sekawan-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const namaHari = ["minggu", "senin", "selasa", "rabu", "kamis", "jumat", "sabtu"];
+
+        // Proteksi User
+        const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+        if (!user || user.role !== "admin") {
+            window.location.href = "index.html";
+        }
+
+        // Realtime Monitor Kas Besar
+        onValue(ref(db, `kas_bendahara/total`), (snap) => {
+            document.getElementById('val-kas-besar').innerText = "Rp " + (snap.val() || 0).toLocaleString('id-ID');
+        });
+
+        window.loadAdminData = async function() {
+            const hariIdx = document.getElementById('pilih-kelompok').value;
+            const bln = parseInt(document.getElementById('pilih-bulan').value);
+            const thn = new Date().getFullYear();
+            
+            if(hariIdx === "") {
+                document.getElementById('summary-box').style.display = "none";
+                document.getElementById('btn-setor').style.display = "none";
+                return;
+            }
+
+            const folderKel = namaHari[hariIdx];
+            document.getElementById('summary-box').style.display = "block";
+            document.getElementById('btn-setor').style.display = "flex";
+            document.getElementById('title-card').innerText = `SALDO PETUGAS ${folderKel.toUpperCase()}`;
+
+            // Ambil Saldo Petugas Terpilih
+            onValue(ref(db, `saldo_petugas/${folderKel}`), (snap) => {
+                document.getElementById('val-saldo-petugas').innerText = "Rp " + (snap.val() || 0).toLocaleString('id-ID');
+            });
+
+            // Ambil Daftar Warga (Sama dengan kode petugas)
+            const snapWarga = await get(ref(db, `daftar_warga/all`));
+            let listWarga = [];
+            if (snapWarga.exists()) {
+                listWarga = Object.values(snapWarga.val()).filter(n => n !== null);
+                listWarga.sort((a, b) => String(a).localeCompare(String(b)));
+            }
+
+            // Hitung Tanggal sesuai Kelompok (Hari)
+            let dates = [];
+            let d = new Date(thn, bln, 1);
+            while(d.getMonth() === bln) {
+                if(d.getDay() === parseInt(hariIdx)) dates.push(d.getDate());
+                d.setDate(d.getDate() + 1);
+            }
+
+            // Tarik Rekapitulasi Jimpitan
+            onValue(ref(db, `data_jimpitan/${folderKel}/${thn}/${bln}`), (snap) => {
+                renderTable(listWarga, snap.val() || {}, dates);
+            });
+        };
+
+        function renderTable(list, data, dates) {
+            let hH = `<th class="nama-col">Nama Warga</th>`;
+            dates.forEach(d => hH += `<th>${d}</th>`);
+            document.getElementById('head-tgl').innerHTML = hH;
+
+            let hB = "", colTotals = {};
+            dates.forEach(d => colTotals[d] = 0);
+
+            list.forEach(n => {
+                hB += `<tr><td class="nama-col">${n}</td>`;
+                dates.forEach(d => {
+                    let v = (data[n] && data[n][d]) ? data[n][d] : 0;
+                    colTotals[d] += v;
+                    hB += `<td class="${v > 0 ? 'status-isi' : ''}">${v > 0 ? v : '-'}</td>`;
+                });
+                hB += `</tr>`;
+            });
+            document.getElementById('body-rekap').innerHTML = hB;
+
+            let hF = `<td class="nama-col">TOTAL BULAN INI</td>`;
+            dates.forEach(d => hF += `<td>${colTotals[d].toLocaleString('id-ID')}</td>`);
+            document.getElementById('foot-total').innerHTML = hF;
+        }
+
+        window.terimaSetoran = async function() {
+            const hariIdx = document.getElementById('pilih-kelompok').value;
+            const folderKel = namaHari[hariIdx];
+            
+            const snapSaldo = await get(ref(db, `saldo_petugas/${folderKel}`));
+            const saldoPetugas = snapSaldo.val() || 0;
+
+            if (saldoPetugas <= 0) {
+                alert(`Saldo Kelompok ${folderKel.toUpperCase()} masih kosong.`);
+                return;
+            }
+
+            if(confirm(`Terima setoran Rp ${saldoPetugas.toLocaleString('id-ID')} dari Kelompok ${folderKel.toUpperCase()}?`)) {
+                // 1. Update Kas Besar
+                const snapKas = await get(ref(db, `kas_bendahara/total`));
+                const kasLama = snapKas.val() || 0;
+                await set(ref(db, `kas_bendahara/total`), kasLama + saldoPetugas);
+
+                // 2. Simpan Riwayat/Log
+                await push(ref(db, `kas_bendahara/log_setoran`), {
+                    kelompok: folderKel,
+                    jumlah: saldoPetugas,
+                    tanggal: new Date().toLocaleString('id-ID'),
+                    diterimaOleh: user.kelompok // Atau field nama user lain
+                });
+
+                // 3. Reset Saldo Petugas
+                await set(ref(db, `saldo_petugas/${folderKel}`), 0);
+                
+                alert("Setoran berhasil diterima dan masuk Kas Besar!");
+            }
+        };
+
+        window.logout = function() { localStorage.clear(); window.location.href = "index.html"; };
+        document.getElementById('pilih-bulan').value = new Date().getMonth();
+    </script>
+</body>
+</html>
