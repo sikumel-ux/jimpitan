@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Management | SEJIWA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root { --bg: #0F172A; --card: #1E293B; --accent: #2DD4BF; --text: #F8FAFC; --success: #2DD4BF; --danger: #F87171; --warning: #FBBF24; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 15px; margin: 0; padding-bottom: 80px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #334155; }
+        .header h1 { font-size: 14px; margin: 0; color: var(--accent); font-weight: 800; }
+
+        .filter-section { background: var(--card); padding: 12px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; display: flex; gap: 10px; }
+        select { flex: 1; background: #0F172A; color: white; border: 1px solid #334155; padding: 12px; border-radius: 10px; outline: none; font-size: 14px; }
+
+        .table-container { background: var(--card); border-radius: 15px; overflow-x: auto; border: 1px solid #334155; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { padding: 12px 10px; border: 1px solid #334155; text-align: center; }
+        .nama-col { text-align: left; position: sticky; left: 0; background: #1E293B; z-index: 5; font-weight: bold; min-width: 130px; border-right: 2px solid #334155; }
+        
+        /* Modal & Tabs */
+        .modal { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.95); align-items: center; justify-content: center; }
+        .modal-content { background: var(--card); padding: 20px; border-radius: 15px; width: 90%; max-width: 450px; border: 1px solid var(--accent); max-height: 90vh; overflow-y: auto; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        .tab-btn { flex: 1; padding: 8px; border: none; background: transparent; color: #94a3b8; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .tab-btn.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+        
+        input, select { width: 100%; padding: 12px; margin: 8px 0; background: #0F172A; border: 1px solid #334155; color: white; border-radius: 8px; box-sizing: border-box; }
+        .btn-act { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--accent); color: #0F172A; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px rgba(45,212,191,0.4); border: none; z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1 id="role-title">PANEL MANAGEMENT</h1>
+        <button onclick="logout()" style="background:#334155; color:var(--danger); border:none; padding:8px 12px; border-radius:8px; font-weight:bold;">OUT</button>
+    </div>
+
+    <div class="filter-section">
+        <select id="pilih-kelompok" onchange="loadAdminData()">
+            <option value="">-- Pilih Kelompok --</option>
+            <option value="1">SENIN</option><option value="2">SELASA</option>
+            <option value="3">RABU</option><option value="4">KAMIS</option>
+            <option value="5">JUMAT</option><option value="6">SABTU</option>
+            <option value="0">MINGGU</option>
+        </select>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead><tr id="head-tgl"><th class="nama-col">Nama Warga</th></tr></thead>
+            <tbody id="body-rekap"></tbody>
+        </table>
+    </div>
+
+    <button id="fab-humas" class="fab" onclick="openModal()">
+        <i class="fa-solid fa-user-plus"></i>
+    </button>
+
+    <div id="modal-humas" class="modal">
+        <div class="modal-content">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('warga')">WARGA</button>
+                <button class="tab-btn" onclick="switchTab('user')">AKUN USER</button>
+            </div>
+
+            <div id="tab-warga">
+                <small>Tambah warga ke daftar jimpitan</small>
+                <input type="text" id="new-warga-nama" placeholder="Nama Warga Baru...">
+                <button class="btn-act" style="background:var(--accent);" onclick="simpanWarga()">SIMPAN WARGA</button>
+            </div>
+
+            <div id="tab-user" style="display:none;">
+                <small>Buat akun login petugas/admin</small>
+                <input type="text" id="u-nama" placeholder="Nama Lengkap (Contoh: Budi)">
+                <input type="text" id="u-user" placeholder="Username untuk Login">
+                <input type="password" id="u-pass" placeholder="Password">
+                <select id="u-role">
+                    <option value="petugas">Role: Petugas Ronda</option>
+                    <option value="admin">Role: Admin (Bendahara)</option>
+                    <option value="humas">Role: Humas (Data)</option>
+                </select>
+                <select id="u-kel">
+                    <option value="senin">Kelompok: Senin</option>
+                    <option value="selasa">Kelompok: Selasa</option>
+                    <option value="rabu">Kelompok: Rabu</option>
+                    <option value="kamis">Kelompok: Kamis</option>
+                    <option value="jumat">Kelompok: Jumat</option>
+                    <option value="sabtu">Kelompok: Sabtu</option>
+                    <option value="minggu">Kelompok: Minggu</option>
+                    <option value="admin">Khusus Bendahara/Humas</option>
+                </select>
+                <button class="btn-act" style="background:var(--warning);" onclick="simpanUser()">BUAT AKUN</button>
+            </div>
+
+            <button class="btn-act" style="background:#334155; color:white; margin-top:20px;" onclick="closeModal()">TUTUP</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Konfigurasi tetap sama
+        const firebaseConfig = {
+            apiKey: "AIzaSyAxFU7HD_9uVHWGXEO0ZtJja6rdqKHurTk",
+            authDomain: "jimpitan-sekawan.firebaseapp.com",
+            projectId: "jimpitan-sekawan",
+            storageBucket: "jimpitan-sekawan.firebasestorage.app",
+            messagingSenderId: "634934433280",
+            appId: "1:634934433280:web:abde3734bd277d3e9b2ae5",
+            databaseURL: "https://jimpitan-sekawan-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const user = JSON.parse(localStorage.getItem("jimpitan_user"));
+
+        if (!user || (user.role !== 'admin' && user.role !== 'humas')) {
+            window.location.href = "index.html";
+        }
+
+        if (user.role === 'humas') document.getElementById('fab-humas').style.display = 'flex';
+
+        // TABS LOGIC
+        window.switchTab = (type) => {
+            document.getElementById('tab-warga').style.display = type === 'warga' ? 'block' : 'none';
+            document.getElementById('tab-user').style.display = type === 'user' ? 'block' : 'none';
+            const btns = document.querySelectorAll('.tab-btn');
+            btns[0].className = type === 'warga' ? 'tab-btn active' : 'tab-btn';
+            btns[1].className = type === 'user' ? 'tab-btn active' : 'tab-btn';
+        }
+
+        window.openModal = () => document.getElementById('modal-humas').style.display = 'flex';
+        window.closeModal = () => document.getElementById('modal-humas').style.display = 'none';
+
+        // SIMPAN WARGA
+        window.simpanWarga = async () => {
+            const nama = document.getElementById('new-warga-nama').value.trim();
+            if(!nama) return alert("Isi nama!");
+            const snap = await get(ref(db, `daftar_warga/all`));
+            let list = snap.val() ? Object.values(snap.val()) : [];
+            list.push(nama);
+            await set(ref(db, `daftar_warga/all`), list);
+            alert("Warga Berhasil Ditambah!");
+            document.getElementById('new-warga-nama').value = "";
+            closeModal();
+        };
+
+        // SIMPAN USER BARU
+        window.simpanUser = async () => {
+            const uUser = document.getElementById('u-user').value.trim();
+            const uPass = document.getElementById('u-pass').value.trim();
+            const uNama = document.getElementById('u-nama').value.trim();
+            const uRole = document.getElementById('u-role').value;
+            const uKel = document.getElementById('u-kel').value;
+
+            if(!uUser || !uPass || !uNama) return alert("Lengkapi data!");
+
+            await set(ref(db, `users/${uUser}`), {
+                username: uUser,
+                password: uPass,
+                nama: uNama,
+                role: uRole,
+                kelompok: uKel
+            });
+
+            alert("Akun Petugas Berhasil Dibuat!");
+            closeModal();
+        };
+
+        // (Fungsi renderTable & loadAdminData tetap sama dengan kode sebelumnya...)
+        window.logout = () => { localStorage.clear(); window.location.href="index.html"; };
+    </script>
+</body>
+</html>
